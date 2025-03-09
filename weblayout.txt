@@ -1,0 +1,14 @@
+header
+navigation
+main content
+footer
+other
+    slideshow
+    sidebar
+    tabbar
+    banner
+    form
+    dialog/modal
+    toast
+    breadcrumb (đường dẫn)
+    
