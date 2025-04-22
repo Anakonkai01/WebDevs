@@ -166,3 +166,28 @@ INSERT INTO reviews (product_id, content) VALUES
                                               (19,'Màn 4K HDR đỉnh thật');
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+
+
+
+ALTER TABLE `orders`
+ADD COLUMN `customer_name` VARCHAR(255) NOT NULL AFTER `user_id`,
+ADD COLUMN `customer_address` TEXT NOT NULL AFTER `customer_name`,
+ADD COLUMN `customer_phone` VARCHAR(20) NOT NULL AFTER `customer_address`,
+ADD COLUMN `customer_email` VARCHAR(255) DEFAULT NULL AFTER `customer_phone`,
+ADD COLUMN `notes` TEXT DEFAULT NULL AFTER `customer_email`,
+ADD COLUMN `status` VARCHAR(50) NOT NULL DEFAULT 'Pending' AFTER `total`;
+-- Các trạng thái ví dụ: Pending, Processing, Shipped, Delivered, Cancelled
+
+
+
+CREATE TABLE wishlist (
+                          id INT AUTO_INCREMENT PRIMARY KEY,
+                          user_id INT NOT NULL,
+                          product_id INT NOT NULL,
+                          added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                          FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    -- Đảm bảo mỗi user chỉ thêm 1 sản phẩm vào wishlist 1 lần duy nhất
+                          UNIQUE KEY unique_user_product (user_id, product_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

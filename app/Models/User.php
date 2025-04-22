@@ -88,4 +88,23 @@ class User extends BaseModel{
         $stmt = Database::prepare($sql,"i",[$id]);
         return $stmt->execute();
     }
+
+
+    /**
+     * Kiểm tra mật khẩu hiện tại của người dùng có đúng không.
+     * @param int $id ID người dùng
+     * @param string $password Mật khẩu cần kiểm tra
+     * @return bool True nếu mật khẩu đúng, False nếu sai hoặc không tìm thấy user
+     */
+    public static function verifyPassword(int $id, string $password): bool {
+        $user = self::find($id); // Dùng lại hàm find đã có trong BaseModel/User
+        if ($user && isset($user['password'])) {
+            // So sánh password người dùng nhập với hash trong DB
+            return password_verify($password, $user['password']);
+        }
+        // Trả về false nếu không tìm thấy user hoặc không có cột password
+        return false;
+    }
+
+
 }

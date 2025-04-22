@@ -1,6 +1,7 @@
 <?php
 require_once BASE_PATH . '/app/controllers/BaseController.php';
 require_once BASE_PATH . '/app/models/Product.php';
+require_once BASE_PATH . '/app/Models/Wishlist.php'; // Cần nếu index() có dùng
 
 class HomeController extends BaseController
 {
@@ -42,5 +43,15 @@ class HomeController extends BaseController
             'brand'          => $brand,
             'brands'         => $brands // <--- TRUYỀN SANG VIEW
         ]);
+    }
+
+
+    /**
+     * Hiển thị trang liên hệ tĩnh
+     */
+    public function contact() {
+        // Đối với trang tĩnh, thường không cần lấy dữ liệu từ Model
+        // Chỉ cần render view và có thể truyền tiêu đề trang
+        $this->render('contact', ['pageTitle' => 'Liên hệ']);
     }
 }
