@@ -61,13 +61,44 @@ class ProductController extends BaseController{
         // *** KẾT THÚC BỔ SUNG ***
 
 
+
+
+        // --- LẤY SẢN PHẨM LIÊN QUAN --- (Ví dụ: Cùng hãng, tối đa 4 SP, trừ SP hiện tại)
+        $relatedProducts = [];
+        if ($product && !empty($product['brand'])) {
+            // Giả sử Product Model có hàm getByBrand($brand, $limit, $excludeId)
+            // Nếu chưa có, bạn cần thêm hàm này vào Product.php
+            try {
+                // Tạm dùng hàm searchByName hoặc getLatest nếu chưa có getByBrand phức tạp
+                // $relatedProducts = Product::getByBrand($product['brand'], 4, $productId);
+                // Thay thế bằng cách lấy 4 sản phẩm mới nhất cùng hãng (đơn giản hơn)
+                $allRelated = Product::getByBrand($product['brand']); // Lấy hết SP cùng hãng
+                $count = 0;
+                foreach($allRelated as $relP) {
+                    if ($relP['id'] != $productId && $count < 4) { // Loại trừ SP hiện tại và giới hạn 4
+                        $relatedProducts[] = $relP;
+                        $count++;
+                    }
+                }
+
+            } catch (Exception $e) {
+                // Xử lý nếu hàm getByBrand chưa có hoặc lỗi
+                error_log("Error fetching related products: " . $e->getMessage());
+                $relatedProducts = []; // Đặt lại mảng rỗng
+            }
+        }
+        // --- KẾT THÚC LẤY SẢN PHẨM LIÊN QUAN ---
+
+
         // --- Chuẩn bị dữ liệu cho View ---
         // Chuẩn bị dữ liệu cho View
         $data = [
             'product' => $product,
             'reviews' => $reviews,
             'isLoggedIn' => $isLoggedIn,         // <-- Truyền trạng thái đăng nhập
-            'wishlistedIds' => $wishlistedIds     // <-- Truyền danh sách ID đã thích
+            'wishlistedIds' => $wishlistedIds,     // <-- Truyền danh sách ID đã thích
+            'relatedProducts' => $relatedProducts, // <-- Truyền sản phẩm liên quan
+            'pageTitle' => $product ? $product['name'] : 'Chi tiết sản phẩm' // <-- Đặt tiêu đề trang
         ];
 
         // --- Render View chi tiết sản phẩm ---

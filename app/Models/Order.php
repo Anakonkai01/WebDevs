@@ -51,15 +51,97 @@ class Order extends BaseModel
         return parent::find($id); // dùng lại từ BaseModel
     }
 
-    public static function getByUser(int $user_id): array
+    /**
+     * Lấy danh sách đơn hàng của user, hỗ trợ lọc và phân trang
+     * @param int $user_id ID người dùng
+     * @param string $statusFilter Trạng thái cần lọc ('all', 'Pending', 'Processing', 'Shipped', etc.)
+     * @param int|null $limit Số lượng đơn hàng mỗi trang (null để lấy tất cả)
+     * @param int $offset Vị trí bắt đầu lấy
+     * @return array Mảng các đơn hàng
+     */
+    public static function getByUser(int $user_id, string $statusFilter = 'all', ?int $limit = null, int $offset = 0): array
     {
-        $sql = "SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC"; // Sắp xếp mới nhất trước
-        $stmt = Database::prepare($sql, "i", [$user_id]);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
-        $stmt->close();
-        return $data;
+        $params = [$user_id];
+        $types = "i";
+        $sql = "SELECT * FROM orders WHERE user_id = ?";
+
+        // Thêm điều kiện lọc theo status nếu không phải 'all'
+        if ($statusFilter !== 'all' && !empty($statusFilter)) {
+            $sql .= " AND status = ?";
+            $params[] = $statusFilter;
+            $types .= "s";
+        }
+
+        $sql .= " ORDER BY created_at DESC"; // Sắp xếp mới nhất trước
+
+        // Thêm LIMIT và OFFSET nếu có $limit
+        if ($limit !== null) {
+            $sql .= " LIMIT ? OFFSET ?";
+            $params[] = $limit;
+            $params[] = $offset;
+            $types .= "ii";
+        }
+
+        $stmt = Database::prepare($sql, $types, $params);
+        if ($stmt && $stmt->execute()) {
+            $result = $stmt->get_result();
+            $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+            $stmt->close();
+            return $data;
+        }
+        if ($stmt) $stmt->close();
+        return [];
+    }
+
+    /**
+     * Đếm tổng số đơn hàng của user, hỗ trợ lọc theo trạng thái
+     * @param int $user_id ID người dùng
+     * @param string $statusFilter Trạng thái cần lọc ('all', 'Pending', 'Processing', 'Shipped', etc.)
+     * @return int Tổng số đơn hàng
+     */
+    public static function countByUser(int $user_id, string $statusFilter = 'all'): int
+    {
+        $params = [$user_id];
+        $types = "i";
+        $sql = "SELECT COUNT(*) as total FROM orders WHERE user_id = ?";
+
+        // Thêm điều kiện lọc theo status nếu không phải 'all'
+        if ($statusFilter !== 'all' && !empty($statusFilter)) {
+            $sql .= " AND status = ?";
+            $params[] = $statusFilter;
+            $types .= "s";
+        }
+
+        $stmt = Database::prepare($sql, $types, $params);
+        if ($stmt && $stmt->execute()) {
+            $result = $stmt->get_result();
+            $row = $result ? $result->fetch_assoc() : null;
+            $stmt->close();
+            return $row ? (int)$row['total'] : 0;
+        }
+        if ($stmt) $stmt->close();
+        return 0;
+    }
+
+
+    /**
+     * Cập nhật trạng thái cho một đơn hàng cụ thể
+     * @param int $orderId ID đơn hàng
+     * @param string $newStatus Trạng thái mới
+     * @return bool True nếu cập nhật thành công, False nếu thất bại
+     */
+    public static function updateStatus(int $orderId, string $newStatus): bool
+    {
+        $sql = "UPDATE orders SET status = ? WHERE id = ?";
+        $stmt = Database::prepare($sql, "si", [$newStatus, $orderId]);
+        if ($stmt && $stmt->execute()) {
+            $affectedRows = $stmt->affected_rows;
+            $stmt->close();
+            // Trả về true nếu có đúng 1 dòng bị ảnh hưởng
+            return $affectedRows === 1;
+        }
+        if ($stmt) $stmt->close();
+        return false;
     }
 
     public static function delete(int $id): bool

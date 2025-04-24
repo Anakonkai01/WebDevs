@@ -326,4 +326,35 @@ class Product extends BaseModel
         $product = self::find($productId); // Dùng lại hàm find từ BaseModel/Product
         return $product ? (int)$product['stock'] : null;
     }
+
+
+
+
+    /**
+     * Tăng số lượng tồn kho của sản phẩm.
+     * !!! CẢNH BÁO: Nên sử dụng transaction trong Controller khi gọi hàm này
+     * !!! cùng với việc cập nhật trạng thái đơn hàng (ví dụ: khi hủy đơn).
+     *
+     * @param int $productId ID sản phẩm
+     * @param int $quantity Số lượng cần tăng
+     * @return bool True nếu thành công, False nếu thất bại
+     */
+    public static function increaseStock(int $productId, int $quantity): bool
+    {
+        // Đảm bảo số lượng tăng là dương
+        if ($quantity <= 0) {
+            return false;
+        }
+
+        $sql = "UPDATE " . self::$table . " SET stock = stock + ? WHERE id = ?";
+        $stmt = Database::prepare($sql, "ii", [$quantity, $productId]);
+        if ($stmt && $stmt->execute()) {
+            // Kiểm tra xem có đúng 1 dòng được cập nhật không
+            $success = $stmt->affected_rows === 1;
+            $stmt->close();
+            return $success;
+        }
+        if ($stmt) $stmt->close();
+        return false;
+    }
 }

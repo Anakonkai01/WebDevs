@@ -166,19 +166,41 @@ class UserController extends BaseController {
     public function showProfile() {
         // 1. Kiểm tra xem người dùng đã đăng nhập chưa
         if (!isset($_SESSION['user_id'])) {
+            // Lưu trang định đến sau khi đăng nhập
+            $_SESSION['redirect_after_login'] = '?page=profile';
+            $_SESSION['flash_message'] = ['type' => 'info', 'message' => 'Vui lòng đăng nhập để xem hồ sơ.'];
             $this->redirect('?page=login'); // Chuyển hướng đến trang đăng nhập nếu chưa
             return;
         }
+        $userId = $_SESSION['user_id']; // Lấy user ID
 
-        // 2. Lấy thông báo flash (nếu có, ví dụ sau khi đổi MK thành công)
+        // 2. Lấy thông tin chi tiết của người dùng từ DB *** THAY ĐỔI Ở ĐÂY ***
+        $user = User::find($userId); // Gọi User Model để lấy thông tin đầy đủ
+
+        // Kiểm tra xem có lấy được thông tin user không
+        if (!$user) {
+            // Xử lý trường hợp không tìm thấy user (dù đã đăng nhập - hiếm khi xảy ra)
+            // Đăng xuất và báo lỗi
+            unset($_SESSION['user_id']);
+            unset($_SESSION['username']);
+            session_regenerate_id(true);
+            $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Lỗi: Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại.'];
+            $this->redirect('?page=login');
+            return;
+        }
+
+        // 3. Lấy thông báo flash (nếu có, ví dụ sau khi đổi MK thành công)
         $flashMessage = $_SESSION['flash_message'] ?? null;
         if ($flashMessage) {
             unset($_SESSION['flash_message']); // Xóa sau khi lấy
         }
 
-        // 3. Render view profile.php
-        // Không cần lấy data user phức tạp nếu chỉ hiển thị username từ session
-        $this->render('profile', ['flashMessage' => $flashMessage]);
+        // 4. Render view profile.php và truyền cả $user và $flashMessage *** THAY ĐỔI Ở ĐÂY ***
+        $this->render('profile', [
+            'user' => $user, // Truyền thông tin user đầy đủ sang view
+            'flashMessage' => $flashMessage,
+            'pageTitle' => 'Hồ sơ của bạn' // Đặt tiêu đề trang
+        ]);
     }
 
     /**

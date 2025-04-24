@@ -27,6 +27,17 @@ class HomeController extends BaseController
             $products = Product::getLatest(12);
         }
 
+
+        // *** ADD THIS ***
+        $isLoggedIn = isset($_SESSION['user_id']); // Check login status
+        $wishlistedIds = []; // Initialize empty array
+        if ($isLoggedIn) {
+            // Make sure Wishlist model is included if not autoloaded
+            require_once BASE_PATH . '/app/Models/Wishlist.php';
+            $wishlistedIds = Wishlist::getWishlistedProductIds($_SESSION['user_id']);
+        }
+// *** END ADD ***
+
         // Các danh sách phụ cho homepage
         $latestProducts   = Product::getLatest(6);
         $topRatedProducts = Product::getTopRated(5);
@@ -41,7 +52,9 @@ class HomeController extends BaseController
             'mostReviewed'   => $mostReviewed,
             'search'         => $search,
             'brand'          => $brand,
-            'brands'         => $brands // <--- TRUYỀN SANG VIEW
+            'brands'         => $brands, // <--- TRUYỀN SANG VIEW
+            'isLoggedIn' => $isLoggedIn,     // <-- Pass login status
+            'wishlistedIds' => $wishlistedIds // <-- Pass wishlist IDs
         ]);
     }
 

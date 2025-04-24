@@ -173,4 +173,110 @@ class CartController extends BaseController {
         $this->redirect('?page=cart');
     }
 
+
+
+
+    /**
+     * Thêm lại các sản phẩm từ một đơn hàng cũ vào giỏ hàng hiện tại
+     */
+    public function reorder() {
+        // 1. Kiểm tra đăng nhập (người dùng phải đăng nhập để xem lịch sử và đặt lại)
+        if (!isset($_SESSION['user_id'])) {
+            $this->redirect('?page=login');
+            return;
+        }
+        $userId = $_SESSION['user_id'];
+
+        // 2. Lấy orderId từ GET và validate
+        $orderId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        if (!$orderId) {
+            $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'ID đơn hàng không hợp lệ để đặt lại.'];
+            $this->redirect('?page=order_history');
+            return;
+        }
+
+        // 3. Lấy thông tin đơn hàng cũ và kiểm tra quyền sở hữu
+        $order = Order::find($orderId);
+        if (!$order || $order['user_id'] != $userId) {
+            $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Không tìm thấy đơn hàng hoặc bạn không có quyền đặt lại đơn hàng này.'];
+            $this->redirect('?page=order_history');
+            return;
+        }
+
+        // 4. Lấy chi tiết các sản phẩm trong đơn hàng cũ
+        $orderItems = OrderItem::getItemsByOrder($orderId);
+        if (empty($orderItems)) {
+            $_SESSION['flash_message'] = ['type' => 'info', 'message' => 'Đơn hàng này không có sản phẩm nào để đặt lại.'];
+            $this->redirect('?page=order_history');
+            return;
+        }
+
+        // 5. Xử lý thêm vào giỏ hàng hiện tại
+        $addedItems = [];
+        $failedItems = [];
+        $cart = $_SESSION['cart'] ?? []; // Lấy giỏ hàng hiện tại
+
+        foreach ($orderItems as $item) {
+            $productId = $item['product_id'];
+            $quantityToAdd = (int)$item['quantity'];
+
+            // Lấy thông tin sản phẩm hiện tại (để check stock và lấy info)
+            $product = Product::find($productId);
+
+            if (!$product) {
+                $failedItems[] = "Sản phẩm ID {$productId} không còn tồn tại.";
+                continue; // Bỏ qua sản phẩm này
+            }
+
+            $productName = $product['name'];
+            $currentStock = (int)$product['stock'];
+            $quantityInCart = isset($cart[$productId]) ? (int)$cart[$productId]['quantity'] : 0;
+            $totalQuantityNeeded = $quantityInCart + $quantityToAdd;
+
+            // Kiểm tra tồn kho
+            if ($currentStock < $totalQuantityNeeded) {
+                // Không đủ hàng, chỉ thêm tối đa số lượng còn lại (nếu còn)
+                $canAdd = $currentStock - $quantityInCart;
+                if ($canAdd > 0) {
+                    // Thêm số lượng tối đa có thể
+                    $cart[$productId] = [
+                        'id'        => $productId,
+                        'name'      => $productName,
+                        'price'     => (float)$product['price'],
+                        'image'     => $product['image'],
+                        'quantity'  => $quantityInCart + $canAdd // Cập nhật số lượng tối đa
+                    ];
+                    $addedItems[] = "\"{$productName}\" (Đã thêm {$canAdd}, không đủ {$quantityToAdd})";
+                } else {
+                    $failedItems[] = "\"{$productName}\" (Hết hàng hoặc giỏ hàng đã có tối đa)";
+                }
+
+            } else {
+                // Đủ hàng, thêm hoặc cập nhật giỏ hàng
+                if (isset($cart[$productId])) {
+                    $cart[$productId]['quantity'] += $quantityToAdd; // Cập nhật số lượng
+                } else {
+                    $cart[$productId] = [
+                        'id'        => $productId,
+                        'name'      => $productName,
+                        'price'     => (float)$product['price'],
+                        'image'     => $product['image'],
+                        'quantity'  => $quantityToAdd // Thêm mới
+                    ];
+                }
+                $addedItems[] = "\"{$productName}\" (SL: {$quantityToAdd})";
+            }
+        }
+
+        // 6. Lưu lại giỏ hàng vào session
+        $_SESSION['cart'] = $cart;
+
+        // 7. Tạo thông báo kết quả
+        $successMsg = !empty($addedItems) ? 'Đã thêm vào giỏ: ' . implode(', ', $addedItems) . '.' : '';
+        $errorMsg = !empty($failedItems) ? ' Không thể thêm: ' . implode(', ', $failedItems) . '.' : '';
+        $_SESSION['flash_message'] = ['type' => 'info', 'message' => trim($successMsg . $errorMsg)];
+
+        // 8. Chuyển hướng đến trang giỏ hàng
+        $this->redirect('?page=cart');
+    }
 }

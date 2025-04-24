@@ -63,6 +63,35 @@ if(isset($_SESSION['user_id'])) {
             h1 { text-align: center; margin-bottom: 30px; }
             h2 { border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 20px; margin-top: 30px; font-size: 1.5em;}
 
+
+            /* --- CSS cho Sticky Footer --- */
+            html {
+                height: 100%; /* Đảm bảo thẻ html chiếm toàn bộ chiều cao */
+            }
+
+            body {
+                display: flex;           /* Sử dụng Flexbox */
+                flex-direction: column;  /* Các thành phần con xếp chồng lên nhau */
+                min-height: 100vh;       /* Chiều cao tối thiểu bằng chiều cao màn hình */
+                /* Giữ lại các style cũ của body nếu cần */
+                font-family: sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f4f6f9;
+                color: #333;
+                font-size: 15px;
+            }
+
+            main.container { /* Chọn thẻ main có class container */
+                flex-grow: 1; /* Cho phép main content "lớn lên" để đẩy footer xuống */
+                /* Giữ lại các style cũ của main.container */
+                max-width: 1200px;
+                margin: 0 auto; /* Căn giữa container */
+                width: 100%; /* Đảm bảo container chiếm không gian */
+                padding: 30px 15px; /* Điều chỉnh padding của main */
+            }
+
+            /* --- Kết thúc CSS cho Sticky Footer --- */
         </style>
     </head>
 <body>

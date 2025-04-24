@@ -198,6 +198,25 @@ switch ($page) {
 
 
 
+
+
+    // *** THÊM ROUTE HỦY ĐƠN HÀNG ***
+    case 'cancel_order':
+        // Phương thức này thường dùng GET với ID
+        (new OrderController())->cancelOrder();
+        break;
+
+
+
+
+    // *** THÊM ROUTE ĐẶT LẠI ĐƠN HÀNG ***
+    case 'reorder':
+        // Phương thức này thường dùng GET với ID
+        (new CartController())->reorder();
+        break;
+
+
+
     default:
         http_response_code(404);
         echo "<h2>404 - Trang không tìm thấy</h2>";

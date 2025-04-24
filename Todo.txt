@@ -1,0 +1,5 @@
+- add wishlist for home page
+- make home page oke hon
+- chỉnh sửa lại chức năng thêm bớt trong trang cart nhìn xấu quá
+- chỉnh sửa lại font end, có (boostrap, ajax, ...)
+-
