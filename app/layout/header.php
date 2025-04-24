@@ -1,155 +1,172 @@
 <?php
-// Web/app/Views/layout/header.php
-if (session_status() == PHP_SESSION_NONE) { session_start(); } // Đảm bảo session bắt đầu
+// Web/app/layout/header.php
+if (session_status() == PHP_SESSION_NONE) { session_start(); }
 
-// --- Giả sử bạn có cách lấy số lượng SP trong giỏ hàng và wishlist ---
-// Ví dụ đơn giản:
+// Get cart count
 $cartItemCount = count($_SESSION['cart'] ?? []);
-$wishlistItemCount = 0; // Cần logic lấy từ DB nếu đã login
-if(isset($_SESSION['user_id'])) {
-    // Giả sử bạn có thể gọi Wishlist model ở đây hoặc đã lấy sẵn từ controller nào đó
-    // require_once BASE_PATH . '/app/Models/Wishlist.php'; // Không nên require model trong view
-    // $wishlistItemCount = count(Wishlist::getWishlistedProductIds($_SESSION['user_id']));
-    // Tạm thời để là 0 hoặc lấy từ một biến global/truyền vào nếu có
-}
-// --- Kết thúc phần giả sử ---
 
+// Get wishlist count (ensure $wishlistedIds is available if needed globally, otherwise fetch)
+// Example: Fetching if not passed by controller (Not ideal in view, but for completeness)
+$wishlistItemCount = 0;
+if (isset($_SESSION['user_id'])) {
+    // Prefer getting $wishlistedIds from controller data if passed
+    // If not passed, fallback to direct model call (less optimal)
+    if (!isset($wishlistedIds)) { // Check if controller provided it
+        require_once BASE_PATH . '/app/Models/Wishlist.php'; // Need model if called directly
+        $tempWishlistIds = Wishlist::getWishlistedProductIds((int)$_SESSION['user_id']);
+        $wishlistItemCount = is_array($tempWishlistIds) ? count($tempWishlistIds) : 0;
+    } elseif (is_array($wishlistedIds)) {
+        $wishlistItemCount = count($wishlistedIds); // Use controller data if available
+    }
+}
+
+// Determine current page for active link styling
+$currentPage = $_GET['page'] ?? 'home';
 ?>
     <!DOCTYPE html>
     <html lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title><?= $pageTitle ?? 'Trang chủ' ?> - My Shop</title>
-        <?php // Thêm link tới FontAwesome nếu bạn dùng icon ?>
+        <title><?= htmlspecialchars($pageTitle ?? 'MyShop') ?></title>
+
+        <link href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
         <style>
-            /* --- Reset & Basic Styles --- */
-            body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f4f6f9; color: #333; font-size: 15px; }
-            .container { max-width: 1200px; margin: 0 auto; padding: 0 15px; }
-            a { color: #007bff; text-decoration: none; }
-            a:hover { text-decoration: underline; }
-            img { max-width: 100%; height: auto; }
-            ul { list-style: none; padding: 0; margin: 0; }
-            button { cursor: pointer; }
-
-            /* --- Header Styles --- */
-            .site-header { background-color: #ffffff; padding: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
-            .header-container { display: flex; justify-content: space-between; align-items: center; }
-            .site-logo a { font-size: 1.8em; font-weight: bold; color: #333; text-decoration: none; }
-            .main-navigation ul { display: flex; gap: 25px; }
-            .main-navigation a { color: #333; font-weight: 500; font-size: 1.05em; padding: 5px 0; position: relative; text-decoration: none; }
-            .main-navigation a::after { content: ''; position: absolute; width: 0; height: 2px; bottom: -2px; left: 0; background-color: #007bff; transition: width 0.3s ease; }
-            .main-navigation a:hover::after, .main-navigation a.active::after { width: 100%; }
-            .header-actions { display: flex; align-items: center; gap: 20px; }
-            .header-actions a { color: #555; font-size: 1.2em; position: relative; }
-            .header-actions a span.count {
-                position: absolute; top: -8px; right: -10px; background-color: red; color: white;
-                font-size: 0.7em; border-radius: 50%; width: 18px; height: 18px;
-                display: flex; justify-content: center; align-items: center; font-weight: bold;
-            }
-            .user-menu span { margin-right: 10px; }
-            .user-menu a { font-size: 1em; margin-left: 5px;}
-
-            /* --- Flash Message Style --- */
-            .flash-message { padding: 15px; margin: 20px auto; border-radius: 5px; border: 1px solid transparent; text-align: center; max-width: 1170px; }
-            .flash-message.success { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
-            .flash-message.error { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
-            .flash-message.info { background-color: #d1ecf1; color: #0c5460; border-color: #bee5eb; }
-
-            /* --- Main Content Basic Style --- */
-            main { padding: 30px 0; }
-            h1, h2, h3 { color: #343a40; }
-            h1 { text-align: center; margin-bottom: 30px; }
-            h2 { border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 20px; margin-top: 30px; font-size: 1.5em;}
-
-
-            /* --- CSS cho Sticky Footer --- */
-            html {
-                height: 100%; /* Đảm bảo thẻ html chiếm toàn bộ chiều cao */
+            body { display: flex; flex-direction: column; min-height: 100vh; background-color: #f8f9fa; }
+            main { flex-grow: 1; }
+            .site-footer { background-color: #343a40; color: #f8f9fa; padding: 40px 0; }
+            .site-footer a { color: #adb5bd; } .site-footer a:hover { color: #fff; }
+            /* Consistent icon sizing in header actions */
+            .header-actions .nav-link i,
+            .header-actions .dropdown-toggle i { font-size: 1.2rem; /* Adjust size as needed */ vertical-align: middle; }
+            .header-actions .badge { /* Position badge relative to icon link */
+                position: absolute;
+                /* Sửa giá trị top ở đây, ví dụ: thành -2px để dịch xuống 3px so với -5px */
+                top: 10px;
+                right: -8px; /* Giữ nguyên hoặc điều chỉnh nếu cần */
+                font-size: 0.65em;
+                padding: 0.2em 0.4em;
             }
 
-            body {
-                display: flex;           /* Sử dụng Flexbox */
-                flex-direction: column;  /* Các thành phần con xếp chồng lên nhau */
-                min-height: 100vh;       /* Chiều cao tối thiểu bằng chiều cao màn hình */
-                /* Giữ lại các style cũ của body nếu cần */
-                font-family: sans-serif;
-                margin: 0;
-                padding: 0;
-                background-color: #f4f6f9;
-                color: #333;
-                font-size: 15px;
-            }
-
-            main.container { /* Chọn thẻ main có class container */
-                flex-grow: 1; /* Cho phép main content "lớn lên" để đẩy footer xuống */
-                /* Giữ lại các style cũ của main.container */
-                max-width: 1200px;
-                margin: 0 auto; /* Căn giữa container */
-                width: 100%; /* Đảm bảo container chiếm không gian */
-                padding: 30px 15px; /* Điều chỉnh padding của main */
-            }
-
-            /* --- Kết thúc CSS cho Sticky Footer --- */
+            .navbar-brand { font-weight: 600; }
+            .navbar .nav-link { padding-left: 0.8rem; padding-right: 0.8rem; }
+            .dropdown-menu { font-size: 0.95rem; }
+            .flash-message { margin-top: 1rem; } /* Ensure flash message has margin */
         </style>
     </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
 
-    <header class="site-header">
-        <div class="container header-container">
-            <div class="site-logo">
-                <a href="?page=home">MyShop</a>
-            </div>
-            <nav class="main-navigation">
-                <ul>
-                    <?php $currentPage = $_GET['page'] ?? 'home'; // Lấy trang hiện tại để active link ?>
-                    <li><a href="?page=home" class="<?= ($currentPage == 'home') ? 'active' : '' ?>">Trang chủ</a></li>
-                    <li><a href="?page=shop_grid" class="<?= ($currentPage == 'shop_grid') ? 'active' : '' ?>">Cửa hàng</a></li>
-                    <?php // Thêm các link khác nếu cần: Giới thiệu, Tin tức... ?>
-                    <li><a href="?page=contact" class="<?= ($currentPage == 'contact') ? 'active' : '' ?>">Liên hệ</a></li>
-                </ul>
-            </nav>
-            <div class="header-actions">
-                <?php // Nút tìm kiếm có thể để ở đây hoặc trong Hero section ?>
-                <?php /* <a href="#search-modal" title="Tìm kiếm"><i class="fas fa-search"></i></a> */ ?>
+    <header class="site-header sticky-top bg-white shadow-sm border-bottom"> <?php // Changed to bg-white, added border ?>
+        <nav class="navbar navbar-expand-lg navbar-light"> <?php // Removed container here, will add inside ?>
+            <div class="container"> <?php // Use a standard container for content alignment ?>
+                <a class="navbar-brand fs-4" href="?page=home">MyShop</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="mainNavbar">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link <?= ($currentPage == 'home') ? 'active fw-semibold' : '' ?>" href="?page=home">Trang chủ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= ($currentPage == 'shop_grid') ? 'active fw-semibold' : '' ?>" href="?page=shop_grid">Cửa hàng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= ($currentPage == 'contact') ? 'active fw-semibold' : '' ?>" href="?page=contact">Liên hệ</a>
+                        </li>
+                        <?php // Add other main navigation links here ?>
+                    </ul>
 
-                <?php // Wishlist ?>
-                <a href="?page=wishlist" title="Danh sách yêu thích">
-                    <i class="fas fa-heart"></i>
-                    <?php if ($wishlistItemCount > 0): ?>
-                        <span class="count"><?= $wishlistItemCount ?></span>
-                    <?php endif; ?>
-                </a>
+                    <?php // Right-aligned items: Icons and User Menu ?>
+                    <ul class="navbar-nav ms-auto d-flex flex-row align-items-center header-actions"> <?php // Use flex-row for horizontal layout on mobile when collapsed ?>
+                        <?php // Wishlist ?>
+                        <li class="nav-item me-2 me-lg-3"> <?php // Add margin ?>
+                            <a class="nav-link position-relative" href="?page=wishlist" title="Danh sách yêu thích">
+                                <i class="fas fa-heart"></i>
+                                <?php // *** THÊM ID VÀO ĐÂY *** ?>
+                                <span class="badge bg-danger rounded-pill translate-middle-y"
+                                      id="header-wishlist-count" <?php // <<< THÊM ID NÀY ?>
+                                      style="<?= $wishlistItemCount > 0 ? '' : 'display: none;' ?>">
+                                    <?= $wishlistItemCount ?>
+                                </span>
+                            </a>
+                        </li>
 
-                <?php // Cart ?>
-                <a href="?page=cart" title="Giỏ hàng">
-                    <i class="fas fa-shopping-cart"></i>
-                    <?php if ($cartItemCount > 0): ?>
-                        <span class="count"><?= $cartItemCount ?></span>
-                    <?php endif; ?>
-                </a>
+                        <?php // Cart ?>
+                        <li class="nav-item me-2 me-lg-3">
+                            <a class="nav-link position-relative" href="?page=cart" title="Giỏ hàng">
+                                <i class="fas fa-shopping-cart"></i>
+                                <?php // Thêm ID vào span này ?>
+                                <span class="badge bg-danger rounded-pill translate-middle-y" id="header-cart-count" style="<?= $cartItemCount > 0 ? '' : 'display: none;' ?>">
+                                <?= $cartItemCount ?>
+                            </span>
+                            </a>
+                        </li>
 
-                <?php // User Menu ?>
-                <div class="user-menu">
-                    <?php if (isset($_SESSION['user_id'])): ?>
-                        <span><a href="?page=profile" title="Tài khoản">Chào, <strong><?= htmlspecialchars($_SESSION['username']) ?></strong>!</a></span>
-                        <a href="?page=logout" title="Đăng xuất"><i class="fas fa-sign-out-alt"></i></a>
-                    <?php else: ?>
-                        <a href="?page=login" title="Đăng nhập"><i class="fas fa-user"></i></a>
-                        <a href="?page=register" title="Đăng ký" style="margin-left: 10px;">Đăng ký</a>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
+                        <?php // Separator (Optional) ?>
+                        <?php /*
+                    <li class="nav-item d-none d-lg-block">
+                        <span class="nav-link text-muted">|</span>
+                    </li>
+                    */ ?>
+
+                        <?php // User Menu Dropdown ?>
+                        <li class="nav-item dropdown">
+                            <?php if (isset($_SESSION['user_id'])): ?>
+                                <?php // Logged In: Show Username and Dropdown ?>
+                                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userAccountDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user-circle me-2"></i> <?php // User circle icon ?>
+                                    <?= htmlspecialchars($_SESSION['username']) ?>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userAccountDropdown">
+                                    <li><a class="dropdown-item" href="?page=profile"><i class="fas fa-user-edit me-2 text-muted"></i>Hồ sơ</a></li>
+                                    <li><a class="dropdown-item" href="?page=order_history"><i class="fas fa-history me-2 text-muted"></i>Lịch sử đơn hàng</a></li>
+                                    <li><a class="dropdown-item" href="?page=wishlist"><i class="fas fa-heart me-2 text-muted"></i>Danh sách yêu thích</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="?page=logout"><i class="fas fa-sign-out-alt me-2 text-muted"></i>Đăng xuất</a></li>
+                                </ul>
+                            <?php else: ?>
+                                <?php // Logged Out: Show Login/Register Links (Can be dropdown or direct links) ?>
+                                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userAccountDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user me-2"></i>
+                                    Tài khoản
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userAccountDropdown">
+                                    <li><a class="dropdown-item" href="?page=login"><i class="fas fa-sign-in-alt me-2 text-muted"></i>Đăng nhập</a></li>
+                                    <li><a class="dropdown-item" href="?page=register"><i class="fas fa-user-plus me-2 text-muted"></i>Đăng ký</a></li>
+                                </ul>
+                                <?php // Alternative: Direct Links
+                                /*
+                                <li class="nav-item">
+                                    <a class="nav-link" href="?page=login">Đăng nhập</a>
+                                </li>
+                                <li class="nav-item">
+                                     <a class="nav-link" href="?page=register">Đăng ký</a>
+                                </li>
+                                */
+                                ?>
+                            <?php endif; ?>
+                        </li>
+                    </ul>
+                </div> <?php // End navbar-collapse ?>
+            </div> <?php // End container ?>
+        </nav>
     </header>
 
-<main class="container">
-<?php // Hiển thị flash message ngay dưới header ?>
-<?php $flashMessage = $_SESSION['flash_message'] ?? null; if ($flashMessage): unset($_SESSION['flash_message']); ?>
-    <div class="flash-message <?= htmlspecialchars($flashMessage['type']) ?>">
+<main class="container my-4"> <?php // Added my-4 for margin top/bottom ?>
+<?php // Display flash message
+$flashMessage = $_SESSION['flash_message'] ?? null;
+// Check if it's an array and has the necessary keys
+if ($flashMessage && is_array($flashMessage) && isset($flashMessage['type']) && isset($flashMessage['message'])):
+    unset($_SESSION['flash_message']); // Clear after displaying
+    ?>
+    <div class="alert alert-<?= htmlspecialchars($flashMessage['type']) ?> alert-dismissible fade show flash-message" role="alert">
         <?= htmlspecialchars($flashMessage['message']) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 <?php endif; ?>
 
-<?php // Nội dung chính của trang sẽ được chèn vào đây ?>
+<?php // Main page content starts here ?>

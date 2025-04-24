@@ -38,13 +38,19 @@ switch ($page) {
         break;
 
     case 'cart_add':
-        $productId = $_GET['id'] ?? null;
-        $quantity = $_GET['quantity'] ?? 1;
-        if ($productId) {
+        // Lấy ID và số lượng từ $_REQUEST thay vì $_GET
+        $productId = $_REQUEST['id'] ?? null;
+        $quantity = $_REQUEST['quantity'] ?? 1;
+
+        // Kiểm tra xem có productId không
+        if ($productId !== null && filter_var($productId, FILTER_VALIDATE_INT)) { // Thêm kiểm tra INT cho chắc chắn
+            // Gọi phương thức add của CartController
+            // Controller sẽ tự kiểm tra ajax và xử lý tiếp
             (new CartController())->add((int)$productId, (int)$quantity);
         } else {
+            // Nếu không có productId hoặc không hợp lệ -> báo lỗi
             http_response_code(400);
-            echo "<h2>400 - Thiếu ID sản phẩm để thêm vào giỏ</h2>";
+            echo "<h2>400 - Thiếu ID sản phẩm hoặc ID không hợp lệ để thêm vào giỏ</h2>";
         }
         break;
 

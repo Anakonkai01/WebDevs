@@ -1,5 +1,3 @@
-- add wishlist for home page
-- make home page oke hon
-- chỉnh sửa lại chức năng thêm bớt trong trang cart nhìn xấu quá
-- chỉnh sửa lại font end, có (boostrap, ajax, ...)
--
+- hiển thị thông báo hãy đăng nhập tài khoản khi nhấn vào add wishlist trong trường hợp người dùng chưa đăng nhập tài khoản
+- trong trang product_detail, khi thêm vào giỏ hàng thì thêm vào thôi chứ ko chuyển sang trang cart
+- trong trang cart thì thêm tính năng click ở đầu để người dùng dễ trong việc thanh toán, nếu người dùng không muốn mua cái đó thì chỉ cần bỏ click ra chứ không cần phải giảm số lượng sản phẩm về con số 0,

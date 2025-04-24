@@ -1,50 +1,61 @@
 <?php
 // Web/app/Views/login.php
 $errorMessage = $errorMessage ?? null;
+// No need for full header/footer for this simple page, but include Bootstrap CSS
 ?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập</title>
+    <link href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 80vh; background-color: #f4f4f4; }
-        .login-container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 350px; }
-        h1 { text-align: center; margin-bottom: 20px; color: #333; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        input[type="text"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; }
-        button:hover { background-color: #0056b3; }
-        .error-message { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 10px; border-radius: 4px; margin-bottom: 15px; text-align: center;}
-        .register-link { text-align: center; margin-top: 15px; }
-        .register-link a { color: #007bff; text-decoration: none; }
-        .register-link a:hover { text-decoration: underline; }
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f8f9fa; /* Light background */
+        }
+        .login-container {
+            max-width: 400px;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
-<div class="login-container">
-    <h1>Đăng nhập</h1>
+<div class="login-container p-4">
+    <div class="card shadow-sm">
+        <div class="card-body p-4 p-lg-5">
+            <div class="text-center mb-4">
+                <a href="?page=home" class="navbar-brand fw-bold fs-4 mb-3 d-inline-block">MyShop</a>
+                <h1 class="h3 mb-3 fw-normal">Đăng nhập</h1>
+            </div>
 
-    <?php if ($errorMessage): ?>
-        <div class="error-message"><?= htmlspecialchars($errorMessage) ?></div>
-    <?php endif; ?>
+            <?php if ($errorMessage): ?>
+                <div class="alert alert-danger small" role="alert"><?= htmlspecialchars($errorMessage) ?></div>
+            <?php endif; ?>
 
-    <form action="?page=handle_login" method="POST">
-        <div class="form-group">
-            <label for="username">Tên đăng nhập:</label>
-            <input type="text" id="username" name="username" required>
+            <form action="?page=handle_login" method="POST">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Tên đăng nhập" required>
+                    <label for="username">Tên đăng nhập</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Mật khẩu" required>
+                    <label for="password">Mật khẩu</label>
+                </div>
+                <?php // Optional: Add "Remember me" checkbox ?>
+                <button class="w-100 btn btn-lg btn-primary" type="submit">Đăng nhập</button>
+            </form>
+
+            <div class="text-center mt-4">
+                <small class="text-muted">Chưa có tài khoản? <a href="?page=register" class="text-decoration-none">Đăng ký ngay</a></small>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="password">Mật khẩu:</label>
-            <input type="password" id="password" name="password" required>
-        </div>
-        <button type="submit">Đăng nhập</button>
-    </form>
-
-    <div class="register-link">
-        Chưa có tài khoản? <a href="?page=register">Đăng ký ngay</a>
     </div>
 </div>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

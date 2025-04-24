@@ -1,140 +1,137 @@
 <?php
 // Web/app/Views/order_detail.php
-$order = $order ?? null; // Lấy thông tin đơn hàng chính
-$orderItems = $orderItems ?? []; // Lấy danh sách sản phẩm chi tiết
+$order = $order ?? null;
+$orderItems = $orderItems ?? [];
 
 if (!$order) {
-    echo "<p>Không tìm thấy thông tin đơn hàng.</p>";
+    $pageTitle = 'Lỗi đơn hàng'; include_once __DIR__ . '/../layout/header.php';
+    echo "<div class='container my-4'><div class='alert alert-danger'>Không tìm thấy thông tin đơn hàng.</div></div>";
+    include_once __DIR__ . '/../layout/footer.php';
     return;
 }
 
-// Helper để hiển thị trạng thái với màu sắc
-function getStatusClass($status) {
-    $statusLower = strtolower($status ?? 'Pending');
-    switch ($statusLower) {
-        case 'processing': return 'status-Processing';
-        case 'shipped': return 'status-Shipped';
-        case 'delivered': return 'status-Delivered';
-        case 'cancelled': return 'status-Cancelled';
-        case 'pending':
-        default: return 'status-Pending';
-    }
+// Helper function (copy from order_history.php)
+function getStatusBadgeClassOd($status) { /* ... function code ... */
+    switch ($status) { case 'Processing': return 'bg-info text-dark'; case 'Shipped': return 'bg-primary'; case 'Delivered': return 'bg-success'; case 'Cancelled': return 'bg-danger'; case 'Pending': default: return 'bg-warning text-dark'; }
+}
+function translate_status_od(string $status): string { /* ... function code ... */
+    $map = [ 'all' => 'Tất cả', 'Pending' => 'Chờ xử lý', 'Processing' => 'Đang xử lý', 'Shipped' => 'Đang giao', 'Delivered' => 'Đã giao', 'Cancelled' => 'Đã hủy' ];
+    return $map[$status] ?? ucfirst($status);
 }
 
+$pageTitle = 'Chi tiết Đơn hàng #' . htmlspecialchars($order['id']);
+include_once __DIR__ . '/../layout/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Chi tiết Đơn hàng #<?= htmlspecialchars($order['id']) ?></title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background-color: #f8f9fa; line-height: 1.6; }
-        .container { max-width: 900px; margin: auto; background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 1px 5px rgba(0,0,0,0.1); }
-        h1 { border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 25px; text-align: center; color: #333; }
-        .order-info, .shipping-info, .items-info { margin-bottom: 30px; }
-        h2 { border-bottom: 1px dashed #ddd; padding-bottom: 8px; margin-bottom: 15px; font-size: 1.4em; color: #0056b3;}
-        .info-grid { display: grid; grid-template-columns: 150px 1fr; gap: 5px 15px; margin-bottom: 10px; }
-        .info-grid dt { font-weight: bold; color: #555; text-align: right; }
-        .info-grid dd { margin: 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; }
-        th { background-color: #e9ecef; font-weight: bold; }
-        td img { max-width: 50px; height: auto; vertical-align: middle; margin-right: 10px; border: 1px solid #eee;}
-        .text-right { text-align: right; }
-        .total-row td { font-weight: bold; font-size: 1.1em; border-top: 2px solid #aaa;}
-        .back-link { display: inline-block; margin-top: 20px; color: #007bff; text-decoration: none; }
-        .back-link:hover { text-decoration: underline; }
-        /* Status colors (copy from order_history) */
-        .status-Pending { color: #ffc107; font-weight: bold; }
-        .status-Processing { color: #17a2b8; font-weight: bold; }
-        .status-Shipped { color: #007bff; font-weight: bold; }
-        .status-Delivered { color: #28a745; font-weight: bold; }
-        .status-Cancelled { color: #dc3545; font-weight: bold; }
+        .order-detail-item-img { width: 60px; height: 60px; object-fit: contain; }
     </style>
-</head>
-<body>
-<div class="container">
-    <h1>Chi tiết Đơn hàng #<?= htmlspecialchars($order['id']) ?></h1>
 
-    <div class="order-info">
-        <h2>Thông tin Đơn hàng</h2>
-        <dl class="info-grid">
-            <dt>Mã đơn hàng:</dt>
-            <dd>#<?= htmlspecialchars($order['id']) ?></dd>
+    <div class="container my-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Chi tiết Đơn hàng <span class="text-primary">#<?= htmlspecialchars($order['id']) ?></span></h1>
+            <a href="?page=order_history" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-2"></i>Quay lại Lịch sử</a>
+        </div>
 
-            <dt>Ngày đặt:</dt>
-            <dd><?= htmlspecialchars(date('d/m/Y H:i', strtotime($order['created_at']))) ?></dd>
 
-            <dt>Tổng tiền:</dt>
-            <dd><?= number_format($order['total'], 0, ',', '.') ?>₫</dd>
+        <div class="row g-4">
+            <?php // Order & Shipping Info Column ?>
+            <div class="col-lg-5">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header"><h2 class="h5 mb-0">Thông tin Đơn hàng</h2></div>
+                    <div class="card-body">
+                        <dl class="row mb-0 small">
+                            <dt class="col-5 text-sm-end">Mã đơn hàng:</dt>
+                            <dd class="col-7 fw-bold">#<?= htmlspecialchars($order['id']) ?></dd>
 
-            <dt>Trạng thái:</dt>
-            <dd>
-                <?php $status = htmlspecialchars($order['status'] ?? 'Pending'); ?>
-                <span class="<?= getStatusClass($status) ?>"><?= str_replace('_', ' ', $status) ?></span>
-            </dd>
+                            <dt class="col-5 text-sm-end">Ngày đặt:</dt>
+                            <dd class="col-7"><?= htmlspecialchars(date('d/m/Y H:i', strtotime($order['created_at']))) ?></dd>
 
-            <dt>Ghi chú:</dt>
-            <dd><?= htmlspecialchars($order['notes'] ?? '(Không có)') ?></dd>
-        </dl>
-    </div>
+                            <dt class="col-5 text-sm-end">Tổng tiền:</dt>
+                            <dd class="col-7 fw-bold text-danger"><?= number_format($order['total'], 0, ',', '.') ?>₫</dd>
 
-    <div class="shipping-info">
-        <h2>Thông tin Giao hàng</h2>
-        <dl class="info-grid">
-            <dt>Người nhận:</dt>
-            <dd><?= htmlspecialchars($order['customer_name']) ?></dd>
+                            <dt class="col-5 text-sm-end">Trạng thái:</dt>
+                            <dd class="col-7">
+                                <?php $status = htmlspecialchars($order['status'] ?? 'Pending'); ?>
+                                <span class="badge rounded-pill <?= getStatusBadgeClassOd($status) ?>"><?= translate_status_od($status) ?></span>
+                            </dd>
 
-            <dt>Địa chỉ:</dt>
-            <dd><?= nl2br(htmlspecialchars($order['customer_address'])) ?></dd>
+                            <dt class="col-5 text-sm-end pt-2">Ghi chú:</dt>
+                            <dd class="col-7 pt-2"><?= htmlspecialchars($order['notes'] ?? '(Không có)') ?></dd>
+                        </dl>
+                    </div>
+                </div>
 
-            <dt>Điện thoại:</dt>
-            <dd><?= htmlspecialchars($order['customer_phone']) ?></dd>
+                <div class="card shadow-sm">
+                    <div class="card-header"><h2 class="h5 mb-0">Thông tin Giao hàng</h2></div>
+                    <div class="card-body">
+                        <dl class="row mb-0 small">
+                            <dt class="col-5 text-sm-end">Người nhận:</dt>
+                            <dd class="col-7"><?= htmlspecialchars($order['customer_name']) ?></dd>
 
-            <dt>Email:</dt>
-            <dd><?= htmlspecialchars($order['customer_email'] ?? '(Không có)') ?></dd>
-        </dl>
-    </div>
+                            <dt class="col-5 text-sm-end pt-2">Địa chỉ:</dt>
+                            <dd class="col-7 pt-2"><?= nl2br(htmlspecialchars($order['customer_address'])) ?></dd>
 
-    <div class="items-info">
-        <h2>Sản phẩm trong Đơn hàng</h2>
-        <?php if (!empty($orderItems)): ?>
-            <table>
-                <thead>
-                <tr>
-                    <th colspan="2">Sản phẩm</th>
-                    <th>Giá</th>
-                    <th>Số lượng</th>
-                    <th class="text-right">Thành tiền</th>
-                </tr>
-                </thead>
-                <tbody>
-                <?php foreach ($orderItems as $item): ?>
-                    <tr>
-                        <td style="width: 60px;">
-                            <img src="/public/img/<?= htmlspecialchars($item['product_image'] ?? 'default.jpg') ?>" alt="<?= htmlspecialchars($item['product_name']) ?>">
-                        </td>
-                        <td><?= htmlspecialchars($item['product_name']) ?></td>
-                        <td><?= number_format($item['item_price'], 0, ',', '.') ?>₫</td>
-                        <td><?= htmlspecialchars($item['quantity']) ?></td>
-                        <td class="text-right"><?= number_format($item['item_price'] * $item['quantity'], 0, ',', '.') ?>₫</td>
-                    </tr>
-                <?php endforeach; ?>
-                </tbody>
-                <tfoot>
-                <tr class="total-row">
-                    <td colspan="4" class="text-right"><strong>Tổng cộng</strong></td>
-                    <td class="text-right"><strong><?= number_format($order['total'], 0, ',', '.') ?>₫</strong></td>
-                </tr>
-                </tfoot>
-            </table>
-        <?php else: ?>
-            <p>Không có thông tin chi tiết sản phẩm cho đơn hàng này.</p>
-        <?php endif; ?>
-    </div>
+                            <dt class="col-5 text-sm-end">Điện thoại:</dt>
+                            <dd class="col-7"><?= htmlspecialchars($order['customer_phone']) ?></dd>
 
-    <a href="?page=order_history" class="back-link">&laquo; Quay lại Lịch sử đơn hàng</a>
+                            <dt class="col-5 text-sm-end">Email:</dt>
+                            <dd class="col-7"><?= htmlspecialchars($order['customer_email'] ?? '(Không có)') ?></dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
 
-</div>
-</body>
-</html>
+            <?php // Items Info Column ?>
+            <div class="col-lg-7">
+                <div class="card shadow-sm">
+                    <div class="card-header"><h2 class="h5 mb-0">Sản phẩm trong Đơn hàng</h2></div>
+                    <div class="card-body p-0"> <?php // Remove padding for table flush ?>
+                        <?php if (!empty($orderItems)): ?>
+                            <div class="table-responsive">
+                                <table class="table align-middle mb-0">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th scope="col" colspan="2">Sản phẩm</th>
+                                        <th scope="col" class="text-end">Giá</th>
+                                        <th scope="col" class="text-center">Số lượng</th>
+                                        <th scope="col" class="text-end">Thành tiền</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php foreach ($orderItems as $item): ?>
+                                        <tr>
+                                            <td style="width: 70px;">
+                                                <img src="/public/img/<?= htmlspecialchars($item['product_image'] ?? 'default.jpg') ?>" alt="<?= htmlspecialchars($item['product_name']) ?>" class="img-fluid rounded border order-detail-item-img">
+                                            </td>
+                                            <td>
+                                                <a href="?page=product_detail&id=<?= $item['product_id'] ?>" class="text-dark text-decoration-none fw-bold small">
+                                                    <?= htmlspecialchars($item['product_name']) ?>
+                                                </a>
+                                            </td>
+                                            <td class="text-end small"><?= number_format($item['item_price'], 0, ',', '.') ?>₫</td>
+                                            <td class="text-center small"><?= htmlspecialchars($item['quantity']) ?></td>
+                                            <td class="text-end small"><?= number_format($item['item_price'] * $item['quantity'], 0, ',', '.') ?>₫</td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                    <tfoot>
+                                    <tr class="table-light">
+                                        <td colspan="4" class="text-end fw-bold">Tổng cộng:</td>
+                                        <td class="text-end fw-bold text-danger"><?= number_format($order['total'], 0, ',', '.') ?>₫</td>
+                                    </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <p class="text-muted p-3">Không có thông tin chi tiết sản phẩm cho đơn hàng này.</p>
+                        <?php endif; ?>
+                    </div> <?php // end card-body ?>
+                </div> <?php // end card ?>
+                <div class="mt-3 text-end">
+                    <a href="?page=reorder&id=<?= $order['id'] ?>" class="btn btn-success"><i class="fas fa-redo-alt me-2"></i>Đặt lại đơn hàng</a>
+                </div>
+            </div>
+        </div> <?php // end row ?>
+    </div> <?php // end container ?>
+
+<?php include_once __DIR__ . '/../layout/footer.php'; ?>

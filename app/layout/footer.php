@@ -1,49 +1,92 @@
-<?php
-// Web/app/Views/layout/footer.php
-?>
+<?php // Web/app/Views/layout/footer.php ?>
 
 </main> <?php // Đóng thẻ main từ header.php ?>
 
-<footer class="site-footer" style="background-color: #343a40; color: #f8f9fa; padding: 40px 0; margin-top: 40px;">
+<?php // --- Footer Section --- ?>
+<footer class="site-footer mt-auto bg-dark text-white pt-5 pb-4"> <?php // Use bg-dark, text-white, more padding ?>
     <div class="container">
-        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
-            <div>
-                <h4>Về MyShop</h4>
-                <p style="max-width: 300px; color: #adb5bd;">MyShop là cửa hàng cung cấp các sản phẩm công nghệ chính hãng với giá tốt nhất.</p>
+        <div class="row gy-4"> <?php // Bootstrap grid row with vertical gutter ?>
+
+            <?php // Column 1: About ?>
+            <div class="col-lg-3 col-md-6">
+                <h5 class="mb-3 fw-semibold">Về MyShop</h5> <?php // Increased heading size slightly, added bottom margin ?>
+                <p class="small text-white-50"> <?php // Use text-white-50 for better contrast than text-muted ?>
+                    MyShop là cửa hàng cung cấp các sản phẩm công nghệ chính hãng với giá tốt nhất, đảm bảo chất lượng và dịch vụ hậu mãi chu đáo.
+                </p>
             </div>
-            <div>
-                <h4>Liên kết nhanh</h4>
-                <ul style="list-style: none; padding: 0;">
-                    <li style="margin-bottom: 8px;"><a href="?page=home" style="color: #adb5bd;">Trang chủ</a></li>
-                    <li style="margin-bottom: 8px;"><a href="?page=shop_grid" style="color: #adb5bd;">Cửa hàng</a></li>
-                    <li style="margin-bottom: 8px;"><a href="#" style="color: #adb5bd;">Giới thiệu</a></li>
-                    <li style="margin-bottom: 8px;"><a href="?page=contact" style="color: #adb5bd;">Liên hệ</a></li>
+
+            <?php // Column 2: Quick Links ?>
+            <div class="col-lg-3 col-md-6">
+                <h5 class="mb-3 fw-semibold">Liên kết nhanh</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <a href="?page=home" class="link-light text-decoration-none">Trang chủ</a> <?php // Use link-light for white links, remove underline ?>
+                    </li>
+                    <li class="mb-2">
+                        <a href="?page=shop_grid" class="link-light text-decoration-none">Cửa hàng</a>
+                    </li>
+                    <li class="mb-2">
+                        <a href="#" class="link-light text-decoration-none">Giới thiệu</a>
+                    </li>
+                    <li class="mb-2">
+                        <a href="?page=contact" class="link-light text-decoration-none">Liên hệ</a>
+                    </li>
                 </ul>
             </div>
-            <div>
-                <h4>Hỗ trợ khách hàng</h4>
-                <ul style="list-style: none; padding: 0;">
-                    <li style="margin-bottom: 8px;"><a href="#" style="color: #adb5bd;">Chính sách đổi trả</a></li>
-                    <li style="margin-bottom: 8px;"><a href="#" style="color: #adb5bd;">Chính sách bảo mật</a></li>
-                    <li style="margin-bottom: 8px;"><a href="#" style="color: #adb5bd;">Điều khoản dịch vụ</a></li>
+
+            <?php // Column 3: Customer Support ?>
+            <div class="col-lg-3 col-md-6">
+                <h5 class="mb-3 fw-semibold">Hỗ trợ khách hàng</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <a href="#" class="link-light text-decoration-none">Chính sách đổi trả</a>
+                    </li>
+                    <li class="mb-2">
+                        <a href="#" class="link-light text-decoration-none">Chính sách bảo mật</a>
+                    </li>
+                    <li class="mb-2">
+                        <a href="#" class="link-light text-decoration-none">Điều khoản dịch vụ</a>
+                    </li>
                 </ul>
             </div>
-            <div>
-                <h4>Liên hệ</h4>
-                <p style="color: #adb5bd;">Địa chỉ: 123 Đường ABC, Quận XYZ, TP.HCM</p>
-                <p style="color: #adb5bd;">Điện thoại: 0987 654 321</p>
-                <p style="color: #adb5bd;">Email: contact@myshop.com</p>
+
+            <?php // Column 4: Contact Info ?>
+            <div class="col-lg-3 col-md-6">
+                <h5 class="mb-3 fw-semibold">Liên hệ</h5>
+                <ul class="list-unstyled">
+                    <?php // Improved contact item structure and styling ?>
+                    <li class="mb-2 d-flex">
+                        <i class="fas fa-map-marker-alt mt-1 me-2 text-secondary" style="width: 15px;"></i> <?php // Added fixed width for alignment ?>
+                        <span class="small text-white-50">123 Đường ABC, Q. XYZ, TP.HCM</span>
+                    </li>
+                    <li class="mb-2 d-flex">
+                        <i class="fas fa-phone-alt mt-1 me-2 text-secondary" style="width: 15px;"></i>
+                        <a href="tel:0987654321" class="link-light text-decoration-none small">0987 654 321</a>
+                    </li>
+                    <li class="mb-2 d-flex">
+                        <i class="fas fa-envelope mt-1 me-2 text-secondary" style="width: 15px;"></i>
+                        <a href="mailto:contact@myshop.com" class="link-light text-decoration-none small">contact@myshop.com</a>
+                    </li>
+                </ul>
             </div>
-        </div>
-        <hr style="border-color: #495057; margin: 30px 0;">
-        <div style="text-align: center; color: #adb5bd; font-size: 0.9em;">
+        </div> <?php // End row ?>
+
+        <hr class="my-4" style="border-color: rgba(255, 255, 255, 0.15);"> <?php // Lighter horizontal rule ?>
+
+        <div class="text-center text-white-50 small"> <?php // Use text-white-50 and small ?>
             &copy; <?= date('Y') ?> MyShop. All Rights Reserved.
         </div>
-    </div>
+    </div> <?php // End container ?>
 </footer>
+<?php // --- END Footer Section --- ?>
 
-<?php // Thêm các link JS cần thiết ở đây (nếu có) ?>
-<?php /* <script src="/public/js/main.js"></script> */ ?>
+
+<?php // --- JavaScript Includes --- ?>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Your custom scripts (if any)
+</script>
+<?php // --------------------------- ?>
 
 </body>
 </html>

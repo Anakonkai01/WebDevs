@@ -2,97 +2,152 @@
 // Web/app/Controllers/WishlistController.php
 
 require_once BASE_PATH . '/app/Controllers/BaseController.php';
-require_once BASE_PATH . '/app/Models/Wishlist.php'; // Model vừa tạo
+require_once BASE_PATH . '/app/Models/Wishlist.php';
 
 class WishlistController extends BaseController {
 
+    // Hàm __construct
     public function __construct() {
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
-        // Tất cả các chức năng wishlist đều yêu cầu đăng nhập
         if (!isset($_SESSION['user_id'])) {
-            // Lưu lại trang người dùng muốn truy cập (nếu có thể)
+            // --- START: AJAX Login Check ---
+            // *** SỬA: Dùng $_REQUEST cho $isAjax ***
+            if (isset($_REQUEST['ajax']) && $_REQUEST['ajax'] == 1) {
+                header('Content-Type: application/json; charset=utf-8');
+                ob_clean();
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Vui lòng đăng nhập để sử dụng danh sách yêu thích.',
+                    'login_required' => true
+                ]);
+                exit;
+            }
+            // --- END: AJAX Login Check ---
+
+            // Logic redirect cũ cho request thường
             $intendedPage = $_SERVER['REQUEST_URI'] ?? '?page=home';
             if (strpos($intendedPage, 'wishlist_add') !== false || strpos($intendedPage, 'wishlist_remove') !== false) {
-                // Nếu đang cố add/remove, lưu trang trước đó thay vì trang add/remove
                 $intendedPage = $_SERVER['HTTP_REFERER'] ?? '?page=home';
             }
             $_SESSION['redirect_after_login'] = $intendedPage;
-
             $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Vui lòng đăng nhập để sử dụng danh sách yêu thích.'];
             $this->redirect('?page=login');
-            exit; // Ngăn không cho chạy tiếp
+            exit;
         }
     }
 
-    /**
-     * Hiển thị trang danh sách yêu thích của người dùng hiện tại
-     */
+    // Hàm index() giữ nguyên
     public function index() {
         $userId = $_SESSION['user_id'];
-        // Gọi model để lấy danh sách sản phẩm kèm thông tin
         $wishlistItems = Wishlist::getByUser($userId);
-
         $flashMessage = $_SESSION['flash_message'] ?? null;
         if ($flashMessage) unset($_SESSION['flash_message']);
-
         $this->render('wishlist', [
             'wishlistItems' => $wishlistItems,
-            'flashMessage' => $flashMessage
+            'flashMessage' => $flashMessage,
+            'pageTitle' => 'Danh sách yêu thích'
         ]);
     }
 
     /**
-     * Xử lý việc thêm sản phẩm vào danh sách yêu thích (thường từ link GET)
+     * Xử lý việc thêm sản phẩm vào danh sách yêu thích (hỗ trợ AJAX)
      */
     public function add() {
-        $productId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        // *** SỬA: Dùng $_REQUEST và filter_var ***
+        $productIdInput = $_REQUEST['id'] ?? null;
+        $productId = filter_var($productIdInput, FILTER_VALIDATE_INT);
         $userId = $_SESSION['user_id'];
-        // Lấy URL trang trước đó để quay lại
+        // *** SỬA: Dùng $_REQUEST cho $isAjax ***
+        $isAjax = isset($_REQUEST['ajax']) && $_REQUEST['ajax'] == 1;
         $redirectUrl = $_SERVER['HTTP_REFERER'] ?? '?page=shop_grid';
 
-        if (!$productId) {
-            $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'ID sản phẩm không hợp lệ.'];
-        } else {
-            // Gọi model để thêm
+        $response = ['success' => false, 'message' => 'ID sản phẩm không hợp lệ.'];
+
+        // Kiểm tra $productId sau khi lọc
+        if ($productId !== false && $productId > 0) { // filter_var trả về false nếu không hợp lệ
             $success = Wishlist::add($userId, $productId);
             if ($success) {
-                $_SESSION['flash_message'] = ['type' => 'success', 'message' => 'Đã thêm vào danh sách yêu thích!'];
+                $response = ['success' => true, 'message' => 'Đã thêm vào danh sách yêu thích!'];
             } else {
-                // Kiểm tra xem có phải đã tồn tại không
                 if (Wishlist::isWishlisted($userId, $productId)) {
-                    $_SESSION['flash_message'] = ['type' => 'info', 'message' => 'Sản phẩm này đã ở trong danh sách yêu thích.'];
+                    $response = ['success' => false, 'message' => 'Sản phẩm này đã ở trong danh sách yêu thích.', 'already_added' => true];
                 } else {
-                    $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Lỗi khi thêm sản phẩm yêu thích.'];
+                    $response = ['success' => false, 'message' => 'Lỗi khi thêm sản phẩm yêu thích.'];
                 }
             }
+        } else {
+            $response['message'] = 'ID sản phẩm không hợp lệ hoặc bị thiếu.'; // Cập nhật thông báo lỗi nếu cần
         }
-        // Chuyển hướng về trang trước đó (trang sản phẩm hoặc trang shop)
-        $this->redirect($redirectUrl);
+
+        // Lấy số lượng wishlist hiện tại để trả về cho AJAX
+        if ($isAjax) {
+            $wishlistIds = Wishlist::getWishlistedProductIds($userId);
+            $response['wishlistItemCount'] = count($wishlistIds);
+        }
+
+        // --- Trả về kết quả ---
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=utf-8');
+            ob_clean();
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            exit;
+        } else {
+            $_SESSION['flash_message'] = ['type' => $response['success'] ? 'success' : 'error', 'message' => $response['message']];
+            // *** SỬA: Dùng $_REQUEST cho redirect check ***
+            if (!isset($_REQUEST['redirect']) || $_REQUEST['redirect'] !== 'no') {
+                $this->redirect($redirectUrl);
+            }
+            exit;
+        }
     }
 
     /**
-     * Xử lý việc xóa sản phẩm khỏi danh sách yêu thích (thường từ link GET)
+     * Xử lý việc xóa sản phẩm khỏi danh sách yêu thích (hỗ trợ AJAX)
      */
     public function remove() {
-        $productId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        // *** SỬA: Dùng $_REQUEST và filter_var ***
+        $productIdInput = $_REQUEST['id'] ?? null; // <-- Dòng 105 (hoặc gần đó)
+        $productId = filter_var($productIdInput, FILTER_VALIDATE_INT);
         $userId = $_SESSION['user_id'];
-        // Lấy URL trang trước đó
-        $redirectUrl = $_SERVER['HTTP_REFERER'] ?? '?page=wishlist'; // Nếu xóa từ trang wishlist thì quay lại wishlist
+        // *** SỬA: Dùng $_REQUEST cho $isAjax ***
+        $isAjax = isset($_REQUEST['ajax']) && $_REQUEST['ajax'] == 1;
+        $redirectUrl = $_SERVER['HTTP_REFERER'] ?? '?page=wishlist';
 
-        if (!$productId) {
-            $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'ID sản phẩm không hợp lệ.'];
-        } else {
-            // Gọi model để xóa
+        $response = ['success' => false, 'message' => 'ID sản phẩm không hợp lệ.'];
+
+        // Kiểm tra $productId sau khi lọc
+        if ($productId !== false && $productId > 0) {
             $success = Wishlist::remove($userId, $productId);
             if ($success) {
-                $_SESSION['flash_message'] = ['type' => 'success', 'message' => 'Đã xóa khỏi danh sách yêu thích.'];
+                $response = ['success' => true, 'message' => 'Đã xóa khỏi danh sách yêu thích.'];
             } else {
-                $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Lỗi khi xóa hoặc sản phẩm không có trong danh sách.'];
+                $response = ['success' => false, 'message' => 'Lỗi khi xóa hoặc sản phẩm không có trong danh sách.'];
             }
+        } else {
+            $response['message'] = 'ID sản phẩm không hợp lệ hoặc bị thiếu.'; // Cập nhật thông báo lỗi nếu cần
         }
-        // Chuyển hướng về trang trước đó
-        $this->redirect($redirectUrl);
+
+        // Lấy số lượng wishlist hiện tại để trả về cho AJAX
+        if ($isAjax) {
+            $wishlistIds = Wishlist::getWishlistedProductIds($userId);
+            $response['wishlistItemCount'] = count($wishlistIds);
+        }
+
+        // --- Trả về kết quả ---
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=utf-8');
+            ob_clean();
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            exit;
+        } else {
+            $_SESSION['flash_message'] = ['type' => $response['success'] ? 'success' : 'error', 'message' => $response['message']];
+            // *** SỬA: Dùng $_REQUEST cho redirect check ***
+            if (!isset($_REQUEST['redirect']) || $_REQUEST['redirect'] !== 'no') {
+                $this->redirect($redirectUrl);
+            }
+            exit;
+        }
     }
 }

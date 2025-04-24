@@ -1,74 +1,80 @@
 <?php
 // Web/app/Views/register.php
 $flashMessage = $flashMessage ?? null;
-$errors = $errors ?? []; // Lỗi validation
-$old = $old ?? []; // Dữ liệu form cũ
+$errors = $errors ?? [];
+$old = $old ?? [];
 
-function display_error($field, $errors) {
+function display_error_bs($field, $errors) {
     if (isset($errors[$field])) {
-        echo '<span style="color: red; font-size: 0.9em;">' . htmlspecialchars($errors[$field]) . '</span>';
+        echo '<div class="invalid-feedback">' . htmlspecialchars($errors[$field]) . '</div>';
     }
+}
+function error_class_bs($field, $errors) {
+    return isset($errors[$field]) ? 'is-invalid' : '';
 }
 ?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng ký tài khoản</title>
-    <style>/* Copy style từ login.php và chỉnh sửa nếu cần */
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 90vh; background-color: #f4f4f4; }
-        .register-container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 400px; }
-        h1 { text-align: center; margin-bottom: 20px; color: #333; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        input[type="text"], input[type="email"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; }
-        button:hover { background-color: #218838; }
-        .flash-message { padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center;}
-        .flash-message.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .flash-message.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .login-link { text-align: center; margin-top: 15px; }
-        .login-link a { color: #007bff; text-decoration: none; }
-        .login-link a:hover { text-decoration: underline; }
+    <link href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background-color: #f8f9fa; }
+        .register-container { max-width: 450px; width: 100%; }
+        .form-floating > .form-control:not(:placeholder-shown) ~ label { /* Adjust floating label */
+            opacity: .65; transform: scale(.85) translateY(-.5rem) translateX(.15rem);
+        }
+        .form-floating > .form-control.is-invalid ~ label { color: #dc3545; }
     </style>
 </head>
 <body>
-<div class="register-container">
-    <h1>Tạo tài khoản mới</h1>
+<div class="register-container p-4">
+    <div class="card shadow-sm">
+        <div class="card-body p-4 p-lg-5">
+            <div class="text-center mb-4">
+                <a href="?page=home" class="navbar-brand fw-bold fs-4 mb-3 d-inline-block">MyShop</a>
+                <h1 class="h3 mb-3 fw-normal">Tạo tài khoản mới</h1>
+            </div>
 
-    <?php if ($flashMessage): ?>
-        <div class="flash-message <?= htmlspecialchars($flashMessage['type']) ?>">
-            <?= htmlspecialchars($flashMessage['message']) ?>
-        </div>
-    <?php endif; ?>
+            <?php // Flash message display is handled by header.php if included, or use Bootstrap alert here if standalone ?>
+            <?php if ($flashMessage && is_array($flashMessage) && $flashMessage['type'] !== 'success'): // Show non-success messages here ?>
+                <div class="alert alert-<?= htmlspecialchars($flashMessage['type'] ?? 'info') ?> small" role="alert">
+                    <?= htmlspecialchars($flashMessage['message'] ?? '') ?>
+                </div>
+            <?php endif; ?>
 
-    <form action="?page=handle_register" method="POST">
-        <div class="form-group">
-            <label for="username">Tên đăng nhập:</label>
-            <input type="text" id="username" name="username" value="<?= htmlspecialchars($old['username'] ?? '') ?>" required>
-            <?php display_error('username', $errors); ?>
-        </div>
-        <div class="form-group">
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" value="<?= htmlspecialchars($old['email'] ?? '') ?>" required>
-            <?php display_error('email', $errors); ?>
-        </div>
-        <div class="form-group">
-            <label for="password">Mật khẩu (ít nhất 6 ký tự):</label>
-            <input type="password" id="password" name="password" required>
-            <?php display_error('password', $errors); ?>
-        </div>
-        <div class="form-group">
-            <label for="password_confirm">Xác nhận mật khẩu:</label>
-            <input type="password" id="password_confirm" name="password_confirm" required>
-            <?php display_error('password_confirm', $errors); ?>
-        </div>
-        <button type="submit">Đăng ký</button>
-    </form>
+            <form action="?page=handle_register" method="POST">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control <?= error_class_bs('username', $errors) ?>" id="username" name="username" placeholder="Tên đăng nhập" value="<?= htmlspecialchars($old['username'] ?? '') ?>" required>
+                    <label for="username">Tên đăng nhập</label>
+                    <?php display_error_bs('username', $errors); ?>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="email" class="form-control <?= error_class_bs('email', $errors) ?>" id="email" name="email" placeholder="name@example.com" value="<?= htmlspecialchars($old['email'] ?? '') ?>" required>
+                    <label for="email">Email</label>
+                    <?php display_error_bs('email', $errors); ?>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="password" class="form-control <?= error_class_bs('password', $errors) ?>" id="password" name="password" placeholder="Mật khẩu" required>
+                    <label for="password">Mật khẩu (ít nhất 6 ký tự)</label>
+                    <?php display_error_bs('password', $errors); ?>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="password" class="form-control <?= error_class_bs('password_confirm', $errors) ?>" id="password_confirm" name="password_confirm" placeholder="Xác nhận mật khẩu" required>
+                    <label for="password_confirm">Xác nhận mật khẩu</label>
+                    <?php display_error_bs('password_confirm', $errors); ?>
+                </div>
+                <button class="w-100 btn btn-lg btn-primary" type="submit">Đăng ký</button>
+            </form>
 
-    <div class="login-link">
-        Đã có tài khoản? <a href="?page=login">Đăng nhập</a>
+            <div class="text-center mt-4">
+                <small class="text-muted">Đã có tài khoản? <a href="?page=login" class="text-decoration-none">Đăng nhập</a></small>
+            </div>
+        </div>
     </div>
 </div>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

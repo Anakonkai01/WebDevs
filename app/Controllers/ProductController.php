@@ -1,204 +1,189 @@
 <?php
+// Web/app/Controllers/ProductController.php
+
+// Ensure necessary models and base controller are loaded
 require_once BASE_PATH . '/app/Models/Product.php';
 require_once BASE_PATH . '/app/Controllers/BaseController.php';
 require_once BASE_PATH . '/app/Models/Review.php';
-require_once BASE_PATH . '/app/Models/Wishlist.php'; // *** THÊM DÒNG NÀY ***
+require_once BASE_PATH . '/app/Models/Wishlist.php'; // Make sure this line exists
 
-class ProductController extends BaseController{
+class ProductController extends BaseController {
 
-    // Hàm index cũ có thể giữ lại hoặc bỏ đi nếu không dùng
-    public function index()
-    {
-        // $products = Product::all(); // Lấy tất cả có thể nặng nếu nhiều SP
-        // $this->render('products_list_all', ['products' => $products]);
-        // Thay vào đó, chuyển hướng đến trang shop grid mới
+    /**
+     * Constructor - Initialize session if needed.
+     * (Optional: Can be removed if session is always started in index.php)
+     */
+    public function __construct() {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+    }
+
+    /**
+     * Redirects the old index action to the shop grid page.
+     */
+    public function index() {
         $this->redirect('?page=shop_grid');
     }
 
     /**
-     * Hiển thị trang chi tiết sản phẩm
-     * @param int $id ID của sản phẩm
+     * Displays the product detail page.
+     * @param int $id ID of the product.
      */
-    public function detail($id){
-        // --- Xác thực ID ---
-        // Đảm bảo ID là một số nguyên dương
+    public function detail($id) {
+        // --- Validate ID ---
         $productId = filter_var($id, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]);
-
         if ($productId === false) {
-            // ID không hợp lệ (không phải số nguyên dương)
-            http_response_code(400); // Bad Request
-            // Bạn có thể tạo một view lỗi chung errors/400.php
-            // $this->render('errors/400', ['message' => 'ID sản phẩm không hợp lệ.']);
-            echo "<h2>400 - ID sản phẩm không hợp lệ</h2>"; // Hoặc hiển thị thông báo đơn giản
+            http_response_code(400);
+            $this->render('errors/400', ['message' => 'ID sản phẩm không hợp lệ.']); // Assuming you have an error view
+            // Or echo "<h2>400 - ID sản phẩm không hợp lệ</h2>";
             return;
         }
 
-        // --- Lấy dữ liệu Sản phẩm ---
+        // --- Get Product Data ---
         $product = Product::find($productId);
 
-        // --- Kiểm tra Sản phẩm tồn tại ---
+        // --- Check if Product Exists ---
         if (!$product) {
-            // Không tìm thấy sản phẩm
-            http_response_code(404); // Not Found
-            // Bạn có thể tạo một view lỗi chung errors/404.php
-            // $this->render('errors/404', ['message' => 'Không tìm thấy sản phẩm.']);
-            echo "<h2>404 - Không tìm thấy sản phẩm</h2>"; // Hoặc hiển thị thông báo đơn giản
+            http_response_code(404);
+            $this->render('errors/404', ['message' => 'Không tìm thấy sản phẩm.']); // Assuming you have an error view
+            // Or echo "<h2>404 - Không tìm thấy sản phẩm</h2>";
             return;
         }
 
-        // --- Lấy dữ liệu Đánh giá ---
-        // Giả sử Review model đã được require_once ở đầu file
+        // --- Get Reviews ---
         $reviews = Review::getByProduct($productId);
 
-
-        // *** BỔ SUNG LẤY THÔNG TIN WISHLIST ***
-        $isLoggedIn = isset($_SESSION['user_id']); // Kiểm tra đăng nhập
-        $wishlistedIds = []; // Mảng chứa ID các SP đã thích
+        // --- Get Wishlist Status ---
+        $isLoggedIn = isset($_SESSION['user_id']);
+        $wishlistedIds = [];
         if ($isLoggedIn) {
-            // Nếu đăng nhập, lấy danh sách ID từ Wishlist Model
-            $wishlistedIds = Wishlist::getWishlistedProductIds($_SESSION['user_id']);
+            $wishlistedIds = Wishlist::getWishlistedProductIds((int)$_SESSION['user_id']); // Ensure user ID is int
+            if (!is_array($wishlistedIds)) { // Add safety check
+                error_log("Warning: Wishlist::getWishlistedProductIds did not return an array for user ID: " . $_SESSION['user_id']);
+                $wishlistedIds = [];
+            }
         }
-        // *** KẾT THÚC BỔ SUNG ***
 
-
-
-
-        // --- LẤY SẢN PHẨM LIÊN QUAN --- (Ví dụ: Cùng hãng, tối đa 4 SP, trừ SP hiện tại)
+        // --- Get Related Products (Example: Same Brand) ---
         $relatedProducts = [];
         if ($product && !empty($product['brand'])) {
-            // Giả sử Product Model có hàm getByBrand($brand, $limit, $excludeId)
-            // Nếu chưa có, bạn cần thêm hàm này vào Product.php
             try {
-                // Tạm dùng hàm searchByName hoặc getLatest nếu chưa có getByBrand phức tạp
-                // $relatedProducts = Product::getByBrand($product['brand'], 4, $productId);
-                // Thay thế bằng cách lấy 4 sản phẩm mới nhất cùng hãng (đơn giản hơn)
-                $allRelated = Product::getByBrand($product['brand']); // Lấy hết SP cùng hãng
+                // Assuming Product::getByBrand fetches products by brand name
+                $allRelated = Product::getByBrand($product['brand']);
                 $count = 0;
-                foreach($allRelated as $relP) {
-                    if ($relP['id'] != $productId && $count < 4) { // Loại trừ SP hiện tại và giới hạn 4
+                foreach ($allRelated as $relP) {
+                    // Ensure related product ID is different and limit to 4
+                    if ((int)$relP['id'] !== $productId && $count < 4) {
                         $relatedProducts[] = $relP;
                         $count++;
                     }
+                    if ($count >= 4) break; // Stop once limit is reached
                 }
-
             } catch (Exception $e) {
-                // Xử lý nếu hàm getByBrand chưa có hoặc lỗi
                 error_log("Error fetching related products: " . $e->getMessage());
-                $relatedProducts = []; // Đặt lại mảng rỗng
+                $relatedProducts = []; // Reset on error
             }
         }
-        // --- KẾT THÚC LẤY SẢN PHẨM LIÊN QUAN ---
 
-
-        // --- Chuẩn bị dữ liệu cho View ---
-        // Chuẩn bị dữ liệu cho View
+        // --- Prepare Data for View ---
         $data = [
             'product' => $product,
             'reviews' => $reviews,
-            'isLoggedIn' => $isLoggedIn,         // <-- Truyền trạng thái đăng nhập
-            'wishlistedIds' => $wishlistedIds,     // <-- Truyền danh sách ID đã thích
-            'relatedProducts' => $relatedProducts, // <-- Truyền sản phẩm liên quan
-            'pageTitle' => $product ? $product['name'] : 'Chi tiết sản phẩm' // <-- Đặt tiêu đề trang
+            'isLoggedIn' => $isLoggedIn,         // Pass login status
+            'wishlistedIds' => $wishlistedIds,     // Pass wishlist IDs array
+            'relatedProducts' => $relatedProducts, // Pass related products
+            'pageTitle' => $product['name'] ?? 'Chi tiết sản phẩm' // Set page title
         ];
 
-        // --- Render View chi tiết sản phẩm ---
-        // Đổi tên view thành 'product_detail' để rõ ràng hơn
+        // --- Render Product Detail View ---
         $this->render('product_detail', $data);
     }
 
     /**
-     * Xử lý trang Shop Grid với lọc, sắp xếp, phân trang
+     * Displays the Shop Grid page with filtering, sorting, and pagination.
      */
     public function shopGrid() {
-        // --- Cấu hình ---
-        $itemsPerPage = 9;
+        // --- Configuration ---
+        $itemsPerPage = 9; // Products per page
 
-        // --- Định nghĩa các khoảng giá ---
+        // --- Define Price Ranges ---
         $priceRangesMap = [
-            // Key => [label, min, max] (null nghĩa là không giới hạn)
-            '0-1'   => ['label' => 'Dưới 1 triệu', 'min' => null, 'max' => 1000000],
-            '1-5'   => ['label' => '1 - 5 triệu', 'min' => 1000000, 'max' => 5000000],
-            '5-10'  => ['label' => '5 - 10 triệu', 'min' => 5000001, 'max' => 10000000],
-            '10-15' => ['label' => '10 - 15 triệu','min' => 10000001,'max' => 15000000],
-            '15-20' => ['label' => '15 - 20 triệu','min' => 15000001,'max' => 20000000],
-            '20-25' => ['label' => '20 - 25 triệu','min' => 20000001,'max' => 25000000],
-            '25-30' => ['label' => '25 - 30 triệu','min' => 25000001,'max' => 30000000],
+            '0-1'     => ['label' => 'Dưới 1 triệu',  'min' => null, 'max' => 1000000],
+            '1-5'     => ['label' => '1 - 5 triệu',   'min' => 1000000, 'max' => 5000000],
+            '5-10'    => ['label' => '5 - 10 triệu',  'min' => 5000001, 'max' => 10000000],
+            '10-15'   => ['label' => '10 - 15 triệu', 'min' => 10000001,'max' => 15000000],
+            '15-20'   => ['label' => '15 - 20 triệu', 'min' => 15000001,'max' => 20000000],
+            '20-25'   => ['label' => '20 - 25 triệu', 'min' => 20000001,'max' => 25000000],
+            '25-30'   => ['label' => '25 - 30 triệu', 'min' => 25000001,'max' => 30000000],
             '30-plus' => ['label' => 'Trên 30 triệu','min' => 30000001,'max' => null],
         ];
 
-        // --- Lấy tham số từ GET ---
+        // --- Get Parameters from GET Request ---
         $currentPage = isset($_GET['pg']) ? max(1, (int)$_GET['pg']) : 1;
         $offset = ($currentPage - 1) * $itemsPerPage;
 
-        // Lấy các filter hiện tại
-        $currentPriceRangeKey = $_GET['price_range'] ?? 'all'; // 'all' là giá trị mặc định khi không lọc giá
-        $currentFilters = [
-            'search' => $_GET['search'] ?? '',
-            'brand' => $_GET['brand'] ?? 'All',
-            'price_range' => $currentPriceRangeKey, // Lưu key của khoảng giá đang chọn
-            // Thêm color, size ở đây nếu DB có hỗ trợ
-        ];
+        // Get current filters
+        $currentSearch = trim($_GET['search'] ?? '');
+        $currentBrand = $_GET['brand'] ?? 'All';
+        $currentPriceRangeKey = $_GET['price_range'] ?? 'all';
 
-        // Mảng chứa các bộ lọc sạch để truyền vào Model
+        // Prepare filters array for the model query
         $filters = [];
-        if (!empty($currentFilters['search'])) {
-            $filters['search'] = trim($currentFilters['search']);
+        if (!empty($currentSearch)) {
+            $filters['search'] = $currentSearch;
         }
-        if (!empty($currentFilters['brand']) && $currentFilters['brand'] !== 'All') {
-            $filters['brand'] = $currentFilters['brand'];
+        if (!empty($currentBrand) && $currentBrand !== 'All') {
+            $filters['brand'] = $currentBrand;
         }
-
-        // Xử lý khoảng giá được chọn
         if ($currentPriceRangeKey !== 'all' && isset($priceRangesMap[$currentPriceRangeKey])) {
             $range = $priceRangesMap[$currentPriceRangeKey];
-            if ($range['min'] !== null) {
-                $filters['min_price'] = $range['min'];
-            }
-            if ($range['max'] !== null) {
-                $filters['max_price'] = $range['max'];
-            }
+            if ($range['min'] !== null) $filters['min_price'] = $range['min'];
+            if ($range['max'] !== null) $filters['max_price'] = $range['max'];
         }
-        // Thêm xử lý color, size nếu có
+        // Add other filters (color, size) here if needed
 
-
-        // Lấy tùy chọn sắp xếp
+        // Get sorting option
         $sortOptions = ['created_at_desc', 'price_asc', 'price_desc', 'name_asc', 'name_desc', 'rating_desc'];
         $currentSort = $_GET['sort'] ?? 'created_at_desc';
         if (!in_array($currentSort, $sortOptions)) {
-            $currentSort = 'created_at_desc';
+            $currentSort = 'created_at_desc'; // Default sort
         }
 
-
-        // *** BỔ SUNG LẤY THÔNG TIN WISHLIST ***
+        // --- Get Wishlist Status for products on this page ---
         $isLoggedIn = isset($_SESSION['user_id']);
-        $wishlistedIds = [];
+        $wishlistedIds = []; // Default to empty
         if ($isLoggedIn) {
-            $wishlistedIds = Wishlist::getWishlistedProductIds($_SESSION['user_id']);
+            $wishlistedIds = Wishlist::getWishlistedProductIds((int)$_SESSION['user_id']); // Ensure user ID is int
+            if (!is_array($wishlistedIds)) { // Safety check
+                error_log("Warning: Wishlist::getWishlistedProductIds did not return an array for user ID: " . $_SESSION['user_id']);
+                $wishlistedIds = [];
+            }
         }
-        // *** KẾT THÚC BỔ SUNG ***
 
+        // --- Fetch Data from Models ---
+        $availableBrands = Product::getDistinctBrands(); // Get unique brand names
+        $products = Product::getFilteredProducts($filters, $currentSort, $itemsPerPage, $offset); // Get products for the current page
+        $totalProducts = (int)Product::countFilteredProducts($filters); // Get total count matching filters, ensure integer
 
-        // --- Gọi Model ---
-        $availableBrands = Product::getDistinctBrands();
-        // $priceRange = Product::getMinMaxPrice(); // Không cần lấy min/max tổng nữa
-        $products = Product::getFilteredProducts($filters, $currentSort, $itemsPerPage, $offset);
-        $totalProducts = Product::countFilteredProducts($filters);
+        // --- Calculate Pagination ---
+        $totalPages = ($itemsPerPage > 0 && $totalProducts > 0) ? ceil($totalProducts / $itemsPerPage) : 1; // Ensure totalPages >= 1
 
-        // --- Tính toán Phân trang ---
-        $totalPages = ceil($totalProducts / $itemsPerPage);
-
-        // --- Chuẩn bị dữ liệu cho View ---
+        // --- Prepare Data Array for the View ---
         $data = [
             'products' => $products,
-            'totalProducts' => $totalProducts,
-            'currentPage' => $currentPage,
-            'totalPages' => $totalPages,
-            'itemsPerPage' => $itemsPerPage,
+            'totalProducts' => $totalProducts, // Integer
+            'currentPage' => $currentPage, // Integer
+            'totalPages' => $totalPages,   // Integer
+            'itemsPerPage' => $itemsPerPage, // Integer
             'availableBrands' => $availableBrands,
-            // 'priceRange' => $priceRange, // Bỏ dòng này
-            'currentFilters' => $currentFilters,
+            'currentFilters' => [ // Pass current filter values back to view
+                'search' => $currentSearch,
+                'brand' => $currentBrand,
+                'price_range' => $currentPriceRangeKey,
+            ],
             'currentSort' => $currentSort,
-            'sortOptionsMap' => [ // Đổi tên để rõ ràng hơn là map key=>label
+            'sortOptionsMap' => [ // Map for sorting dropdown labels
                 'created_at_desc'=> 'Mặc định (Mới nhất)',
                 'price_asc'      => 'Giá: Thấp đến Cao',
                 'price_desc'     => 'Giá: Cao đến Thấp',
@@ -206,16 +191,14 @@ class ProductController extends BaseController{
                 'name_desc'      => 'Tên: Z-A',
                 'rating_desc'    => 'Đánh giá cao nhất'
             ],
-            'priceRangesMap' => $priceRangesMap, // Truyền map khoảng giá sang view
-            'currentPriceRangeKey' => $currentPriceRangeKey, // Truyền key khoảng giá đang chọn
-            // Thêm availableColors, availableSizes nếu có
-            // *** Truyền biến wishlist sang view ***
+            'priceRangesMap' => $priceRangesMap, // Pass price range definitions
+            'currentPriceRangeKey' => $currentPriceRangeKey, // Pass current selected price key
+            // Pass wishlist data
             'isLoggedIn' => $isLoggedIn,
-            'wishlistedIds' => $wishlistedIds
+            'wishlistedIds' => $wishlistedIds // Pass the array (even if empty)
         ];
 
-
-        // --- Render View ---
+        // --- Render the Shop Grid View ---
         $this->render('shop_grid', $data);
     }
 }
