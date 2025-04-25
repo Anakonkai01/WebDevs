@@ -1,22 +1,22 @@
 <?php
-// Web/app/Controllers/ProductController.php
-
 namespace App\Controllers;
 
 use App\Models\Product;
-use App\Models\Review;
-// use App\Models\Wishlist; // Bỏ use nếu không dùng Wishlist ở đâu khác ngoài header
-use Exception; // <-- Cần cho try...catch trong getRelatedProducts
+use App\Models\Review; // Giữ lại nếu dùng sort 'rating_desc'
+use App\Models\Wishlist; // Cần cho BaseController lấy wishlistedIds
+use Exception;
 
 class ProductController extends BaseController {
 
-    // Hằng số cấu hình (có thể đặt ở config file nếu muốn)
+    // --- Hằng số cấu hình ---
     private const ITEMS_PER_PAGE = 9;
     private const DEFAULT_SORT = 'created_at_desc';
     private const ALLOWED_SORT_OPTIONS = [
         'created_at_desc', 'price_asc', 'price_desc',
         'name_asc', 'name_desc', 'rating_desc'
     ];
+    // --- Danh sách các cột spec được phép lọc ---
+    private const ALLOWED_SPEC_FILTERS = ['ram', 'cpu', 'screen_size', 'storage', 'os', 'battery_capacity', 'screen_tech'];
     private const PRICE_RANGES_MAP = [
         '0-1'     => ['label' => 'Dưới 1 triệu',  'min' => null, 'max' => 1000000],
         '1-5'     => ['label' => '1 - 5 triệu',   'min' => 1000000, 'max' => 5000000],
@@ -36,141 +36,155 @@ class ProductController extends BaseController {
         'rating_desc'    => 'Đánh giá cao nhất'
     ];
 
-
-    /**
-     * Constructor - Initialize session if needed.
-     */
     public function __construct() {
-        // Không cần gọi session_start() ở đây vì BaseController::getGlobalViewData đã làm
-        // if (session_status() == PHP_SESSION_NONE) {
-        //     session_start();
-        // }
+        // Constructor của BaseController đã xử lý session
     }
 
-    /**
-     * Redirects the old index action to the shop grid page.
-     */
     public function index() {
         $this->redirect('?page=shop_grid');
     }
 
-    /**
-     * Displays the product detail page.
-     * @param int $id ID of the product.
-     */
     public function detail($id) {
-        // --- Validate ID ---
-        $productId = filter_var($id, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]);
-        if ($productId === false) {
-            http_response_code(400);
-            $this->render('errors/404', ['message' => 'ID sản phẩm không hợp lệ.', 'pageTitle' => 'Lỗi 400']);
-            return;
-        }
+       $productId = filter_var($id, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]);
+       if ($productId === false) { $this->showNotFoundPage('ID sản phẩm không hợp lệ.'); return; }
+       $product = Product::find($productId);
+       if (!$product) { $this->showNotFoundPage('Không tìm thấy sản phẩm.'); return; }
+       $reviews = Review::getByProduct($productId);
+       $relatedProducts = $this->getRelatedProducts($product);
 
-        // --- Get Product Data ---
-        $product = Product::find($productId);
+       // Lấy dữ liệu global (bao gồm wishlist) từ BaseController
+       $globalData = $this->getGlobalViewData(); // Gọi hàm kế thừa từ BaseController
 
-        // --- Check if Product Exists ---
-        if (!$product) {
-            http_response_code(404);
-            $this->render('errors/404', ['message' => 'Không tìm thấy sản phẩm bạn yêu cầu.', 'pageTitle' => '404 - Không tìm thấy']);
-            return;
-        }
+       $data = array_merge($globalData, [
+           'product' => $product,
+           'reviews' => $reviews,
+           'relatedProducts' => $relatedProducts,
+           'pageTitle' => $product['name'] ?? 'Chi tiết sản phẩm'
+       ]);
+       $this->render('product_detail', $data);
+   }
 
-        // --- Get Reviews ---
-        $reviews = Review::getByProduct($productId);
 
-        // --- Get Related Products ---
-        $relatedProducts = $this->getRelatedProducts($product);
-
-        // --- Prepare Data for View (isLoggedIn, wishlistedIds, etc. được thêm tự động bởi BaseController) ---
-        $data = [
-            'product' => $product,
-            'reviews' => $reviews,
-            'relatedProducts' => $relatedProducts,
-            'pageTitle' => $product['name'] ?? 'Chi tiết sản phẩm'
-        ];
-
-        $this->render('product_detail', $data);
-    }
-
-    // ======================================================
-    // HÀM shopGrid ĐÃ ĐƯỢC REFACTOR
-    // ======================================================
+    /**
+     * === HÀM shopGrid ĐÃ CẬP NHẬT CHO AJAX ===
+     */
     public function shopGrid() {
-        // 1. Lấy các tham số đã xử lý từ các hàm helper
-        $paginationParams = $this->processShopPagination(self::ITEMS_PER_PAGE);
-        $filterParams = $this->processShopFilters(self::PRICE_RANGES_MAP);
-        $sortOption = $this->processShopSorting(self::DEFAULT_SORT, self::ALLOWED_SORT_OPTIONS);
-        // Wishlist data sẽ được BaseController tự động thêm vào $finalData trong hàm render
+        // --- Kiểm tra nếu là AJAX request ---
+        // Cách 1: Kiểm tra header (phổ biến hơn)
+        $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        // Cách 2: Dùng tham số GET (nếu muốn test dễ hơn qua URL)
+        // $isAjax = isset($_GET['ajax']) && $_GET['ajax'] == 1;
 
-        // 2. Fetch Data từ Models
-        $availableBrands = Product::getDistinctBrands();
+        // 1. Lấy các tham số (luôn cần, dù AJAX hay không)
+        $paginationParams = $this->processShopPagination(self::ITEMS_PER_PAGE);
+        $filterParams = $this->processShopFilters(self::PRICE_RANGES_MAP, self::ALLOWED_SPEC_FILTERS);
+        $sortOption = $this->processShopSorting(self::DEFAULT_SORT, self::ALLOWED_SORT_OPTIONS);
+
+        // 2. Fetch Data từ Models (luôn cần)
         $products = Product::getFilteredProducts(
-            $filterParams['modelFilters'], // Chỉ các filter cho model
+            $filterParams['modelFilters'],
             $sortOption,
             $paginationParams['limit'],
             $paginationParams['offset']
         );
         $totalProducts = (int)Product::countFilteredProducts($filterParams['modelFilters']);
 
-        // 3. Tính toán phân trang
-        $totalPages = ($paginationParams['limit'] > 0 && $totalProducts > 0)
-            ? ceil($totalProducts / $paginationParams['limit'])
-            : 1;
+        // 3. Tính toán phân trang (luôn cần)
+        $totalPages = ($paginationParams['limit'] > 0 && $totalProducts > 0) ? ceil($totalProducts / $paginationParams['limit']) : 1;
+        // Lấy trang hiện tại từ paginationParams để đảm bảo nó hợp lệ (>= 1)
+        $currentPage = max(1, min($paginationParams['currentPage'], $totalPages));
 
-        // 4. Chuẩn bị dữ liệu đầy đủ cho View
-        // isLoggedIn, wishlistedIds, wishlistItemCount, cartItemCount sẽ được tự động thêm
-        $data = [
-            'products' => $products,
-            'totalProducts' => $totalProducts,
-            'currentPage' => $paginationParams['currentPage'],
-            'totalPages' => $totalPages,
-            'itemsPerPage' => $paginationParams['limit'], // Lấy từ paginationParams
-            'availableBrands' => $availableBrands,
-            'currentFilters' => $filterParams['currentFilters'], // Filters cho view
-            'currentSort' => $sortOption,
-            'sortOptionsMap' => self::SORT_OPTIONS_MAP, // Lấy từ hằng số
-            'priceRangesMap' => self::PRICE_RANGES_MAP, // Lấy từ hằng số
-            'currentPriceRangeKey' => $filterParams['currentFilters']['price_range'], // Lấy từ filterParams
-            // 'isLoggedIn' và 'wishlistedIds' không cần truyền ở đây nữa
-        ];
 
-        // 5. Render View
-        $this->render('shop_grid', $data);
+        // Tính toán số item hiển thị
+        $startItemNum = $totalProducts > 0 ? (($currentPage - 1) * $paginationParams['limit']) + 1 : 0;
+        $endItemNum = $totalProducts > 0 ? min($startItemNum + count($products) - 1, $totalProducts) : 0;
+
+
+        // --- Xử lý trả về dựa trên loại request ---
+        if ($isAjax) {
+             // Lấy dữ liệu chung cần cho partial views (ví dụ: wishlist)
+             $globalData = $this->getGlobalViewData();
+             $isLoggedIn = $globalData['isLoggedIn'] ?? false;
+             $wishlistedIds = $globalData['wishlistedIds'] ?? [];
+
+             // **Tạo HTML cho Product Grid và Pagination**
+             ob_start();
+              // Truyền biến vào partial view
+             extract(['products' => $products, 'isLoggedIn' => $isLoggedIn, 'wishlistedIds' => $wishlistedIds]);
+             include BASE_PATH . '/app/Views/partials/product_grid_items.php';
+             $productHtml = ob_get_clean();
+
+             ob_start();
+             // Truyền biến vào partial view
+             extract(['currentPage' => $currentPage, 'totalPages' => $totalPages]);
+             include BASE_PATH . '/app/Views/partials/pagination.php';
+             $paginationHtml = ob_get_clean();
+
+            // **Tạo chuỗi hiển thị số lượng sản phẩm**
+            $countText = ($totalProducts > 0)
+                ? "Hiển thị {$startItemNum}–{$endItemNum} / {$totalProducts} sản phẩm"
+                : "Không tìm thấy sản phẩm nào khớp với bộ lọc.";
+
+             // **Trả về JSON**
+             header('Content-Type: application/json; charset=utf-8');
+             // ob_clean(); // Quan trọng: Xóa mọi output rác có thể có trước khi echo JSON
+             echo json_encode([
+                 'success' => true,
+                 'productHtml' => $productHtml,
+                 'paginationHtml' => $paginationHtml,
+                 'countText' => $countText,
+                 'totalProducts' => $totalProducts,
+             ]);
+             exit; // Dừng thực thi sau khi gửi JSON
+
+        } else {
+            // --- Render trang đầy đủ như bình thường ---
+             $availableBrands = Product::getDistinctBrands();
+             $availableSpecs = [];
+             foreach (self::ALLOWED_SPEC_FILTERS as $spec) {
+                 $availableSpecs[$spec] = Product::getDistinctValuesForSpec($spec);
+             }
+
+             // Lấy dữ liệu global (bao gồm wishlist) để truyền vào view đầy đủ
+             $globalData = $this->getGlobalViewData();
+
+             $data = array_merge($globalData, [ // Merge dữ liệu global vào data cho view
+                 'products' => $products, // Dữ liệu sản phẩm ban đầu
+                 'totalProducts' => $totalProducts,
+                 'currentPage' => $currentPage,
+                 'totalPages' => $totalPages,
+                 'itemsPerPage' => $paginationParams['limit'],
+                 'availableBrands' => $availableBrands,
+                 'availableSpecs' => $availableSpecs,
+                 'currentFilters' => $filterParams['currentFilters'],
+                 'currentSort' => $sortOption,
+                 'sortOptionsMap' => self::SORT_OPTIONS_MAP,
+                 'priceRangesMap' => self::PRICE_RANGES_MAP,
+                 'currentPriceRangeKey' => $filterParams['currentFilters']['price_range'],
+                 // Các biến khác nếu cần cho view đầy đủ
+             ]);
+             $this->render('shop_grid', $data);
+        }
     }
 
-    // ======================================================
-    // CÁC PHƯƠNG THỨC PRIVATE HELPER CHO shopGrid (Giữ nguyên trừ getWishlistDataForShop)
-    // ======================================================
-
-    /**
-     * Xử lý và trả về các tham số phân trang.
-     * @param int $itemsPerPage Số item mỗi trang.
-     * @return array ['limit', 'offset', 'currentPage']
-     */
+    // --- Các hàm helper processShopPagination, processShopFilters, processShopSorting, getRelatedProducts ---
+    // Đảm bảo chúng giữ nguyên hoặc được cập nhật như trong các bước trước
     private function processShopPagination(int $itemsPerPage): array {
         $currentPage = isset($_GET['pg']) ? max(1, (int)$_GET['pg']) : 1;
         $offset = ($currentPage - 1) * $itemsPerPage;
-        return [
-            'limit' => $itemsPerPage,
-            'offset' => $offset,
-            'currentPage' => $currentPage
-        ];
+        return [ 'limit' => $itemsPerPage, 'offset' => $offset, 'currentPage' => $currentPage ];
     }
 
-    /**
-     * Xử lý và trả về các tham số bộ lọc từ GET request.
-     * @param array $priceRangesMap Map định nghĩa các khoảng giá.
-     * @return array Chứa ['modelFilters' => [], 'currentFilters' => []]
-     */
-    private function processShopFilters(array $priceRangesMap): array {
-        $modelFilters = []; // Filters để truyền vào Product Model
-        $currentFilters = [ // Filters để truyền về View (hiển thị trạng thái hiện tại)
+    private function processShopFilters(array $priceRangesMap, array $allowedSpecFilters): array {
+        $modelFilters = [];
+        $currentFilters = [
             'search' => trim($_GET['search'] ?? ''),
             'brand' => $_GET['brand'] ?? 'All',
             'price_range' => $_GET['price_range'] ?? 'all',
         ];
+        foreach ($allowedSpecFilters as $spec) {
+            $currentFilters[$spec] = $_GET[$spec] ?? 'all';
+        }
 
         if (!empty($currentFilters['search'])) { $modelFilters['search'] = $currentFilters['search']; }
         if (!empty($currentFilters['brand']) && $currentFilters['brand'] !== 'All') { $modelFilters['brand'] = $currentFilters['brand']; }
@@ -181,28 +195,20 @@ class ProductController extends BaseController {
             if ($range['max'] !== null) $modelFilters['max_price'] = $range['max'];
         }
 
+        foreach ($allowedSpecFilters as $spec) {
+            if (!empty($currentFilters[$spec]) && $currentFilters[$spec] !== 'all') {
+                $modelFilters[$spec] = $currentFilters[$spec];
+            }
+        }
         return [ 'modelFilters' => $modelFilters, 'currentFilters' => $currentFilters ];
     }
 
-    /**
-     * Xử lý và trả về tùy chọn sắp xếp hợp lệ.
-     * @param string $defaultSort Giá trị mặc định.
-     * @param array $allowedSorts Mảng các giá trị sắp xếp hợp lệ.
-     * @return string Tùy chọn sắp xếp hợp lệ.
-     */
     private function processShopSorting(string $defaultSort, array $allowedSorts): string {
         $currentSort = $_GET['sort'] ?? $defaultSort;
         if (!in_array($currentSort, $allowedSorts)) { $currentSort = $defaultSort; }
         return $currentSort;
     }
 
-    /* ---- BỎ HÀM getWishlistDataForShop() ---- */
-
-    /**
-     * Lấy danh sách sản phẩm liên quan (ví dụ: cùng brand). Helper cho hàm detail().
-     * @param array $product Sản phẩm chính.
-     * @return array Danh sách sản phẩm liên quan.
-     */
     private function getRelatedProducts(array $product): array {
         $relatedProducts = [];
         if (!empty($product['brand'])) {
@@ -210,7 +216,8 @@ class ProductController extends BaseController {
                 $allRelated = Product::getByBrand($product['brand']);
                 $count = 0;
                 foreach ($allRelated as $relP) {
-                    if ((int)($relP['id'] ?? 0) !== (int)$product['id'] && $count < 4) {
+                    // Đảm bảo relP có ID và khác ID sản phẩm chính
+                    if (isset($relP['id']) && (int)$relP['id'] !== (int)$product['id'] && $count < 4) {
                         $relatedProducts[] = $relP;
                         $count++;
                     }

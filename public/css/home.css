@@ -224,6 +224,22 @@ h1, h2, h3 {
     background-color: #d14521;
 }
 
+
+.product-card .actions .btn-wishlist {
+    color: #6c757d; /* Màu xám mặc định */
+    border: none;
+    /* Các thuộc tính khác nếu cần */
+}
+
+.product-card .actions .btn-wishlist.active {
+    color: #dc3545; /* Màu đỏ khi được yêu thích */
+}
+
+.product-card .actions .btn-wishlist.disabled {
+    opacity: 0.5; /* Kiểu mờ khi bị vô hiệu hóa */
+    /* Không cần pointer-events: none vì JS đã xử lý */
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     /* ... styles inside this block only apply when the screen is 768px wide or narrower ... */

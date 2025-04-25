@@ -1,249 +1,181 @@
 <?php
 // Web/app/Views/shop_grid.php
 $pageTitle = 'Cửa hàng';
-include_once __DIR__ . '/../layout/header.php'; // Header includes Bootstrap
+include_once __DIR__ . '/../layout/header.php';
 
-// Helper function
-function build_query_string_sg(array $params): string {
-    $currentParams = $_GET;
-    foreach ($params as $key => $value) {
-        // Remove parameter if it's null, empty, or default
-        if ($value === null || $value === '' ||
-            ($key === 'price_range' && $value === 'all') ||
-            ($key === 'brand' && $value === 'All') ||
-            ($key === 'sort' && $value === 'created_at_desc')) {
-            unset($currentParams[$key]);
-        } else {
-            $currentParams[$key] = $value;
-        }
-
-    }
-    $currentParams['page'] = 'shop_grid'; // Ensure page parameter is correct
-    // Remove page number if it's 1 or less
-    if (isset($currentParams['pg']) && (int)$currentParams['pg'] <= 1) {
-        unset($currentParams['pg']);
-    }
-    // Remove internal price filters from query string
-    unset($currentParams['min_price']); unset($currentParams['max_price']);
-    return http_build_query($currentParams);
-}
-
-// --- Get Data from Controller ---
-$products = $products ?? [];
-
+// --- Lấy Data từ Controller (bao gồm availableSpecs, currentFilters, etc.) ---
+$products = $products ?? []; // Dữ liệu sản phẩm ban đầu
 $totalProducts = $totalProducts ?? 0;
 $itemsPerPage = $itemsPerPage ?? 9;
 $availableBrands = $availableBrands ?? [];
-$currentFilters = $currentFilters ?? ['search' => '', 'brand' => 'All', 'price_range' => 'all'];
+$availableSpecs = $availableSpecs ?? [];
+$currentFilters = $currentFilters ?? [];
+// Đảm bảo currentFilters có giá trị mặc định cho specs
+$defaultSpecFilters = ['ram' => 'all', 'cpu' => 'all', 'screen_size' => 'all', 'storage' => 'all', 'os' => 'all', 'battery_capacity' => 'all', 'screen_tech' => 'all'];
+$currentFilters = array_merge($defaultSpecFilters, $currentFilters);
+
 $currentSort = $currentSort ?? 'created_at_desc';
 $sortOptionsMap = $sortOptionsMap ?? ['created_at_desc' => 'Mặc định'];
 $priceRangesMap = $priceRangesMap ?? [];
-$currentPriceRangeKey = $currentPriceRangeKey ?? 'all';
-$isLoggedIn = $isLoggedIn ?? false;
-$wishlistedIds = $wishlistedIds ?? [];
+$currentPriceRangeKey = $currentFilters['price_range'] ?? 'all';
 
+// Dữ liệu cho partial views ban đầu
+$isLoggedIn = $isLoggedIn ?? false; // Lấy từ BaseController qua $this->render
+$wishlistedIds = $wishlistedIds ?? []; // Lấy từ BaseController qua $this->render
+
+$currentPage = $currentPage ?? 1;
+$totalPages = $totalPages ?? 1;
+
+// Tính toán số item hiển thị ban đầu
+$currentPage = (int)$currentPage;
+$itemsPerPage = (int)$itemsPerPage;
+$totalProducts = (int)$totalProducts;
+$startItemNum = $totalProducts > 0 ? (($currentPage - 1) * $itemsPerPage) + 1 : 0;
+$endItemNum = $totalProducts > 0 ? min($startItemNum + count($products) - 1, $totalProducts) : 0;
+
+// --- Hàm trợ giúp để hiển thị tên bộ lọc thân thiện ---
+function getSpecFilterLabel(string $specKey): string {
+    $labels = [ 'ram' => 'RAM', 'cpu' => 'CPU', 'screen_size' => 'Kích thước màn hình', 'storage' => 'Bộ nhớ trong', 'os' => 'Hệ điều hành', 'battery_capacity' => 'Dung lượng pin', 'screen_tech' => 'Công nghệ màn hình'];
+    return $labels[$specKey] ?? ucfirst(str_replace('_', ' ', $specKey));
+}
+
+// --- Hàm build query string cũ (có thể không cần nữa nếu JS xử lý hết) ---
+// function build_query_string_sg(...) { ... } // Giữ lại nếu có link nào đó vẫn cần
 ?>
 <link rel="stylesheet" href="/webfinal/public/css/shop_grid.css">
-<?php
-    $currentPage = $currentPage ?? 1;
-    $totalPages = $totalPages ?? 1;
-// --- Ensure Numeric Types for Calculations ---
 
-        $currentPage = (int)$currentPage;
-        $itemsPerPage = (int)$itemsPerPage;
-        $totalProducts = (int)$totalProducts; 
-    // --- Calculation for Item Count Display ---
-    $startItemNum = $totalProducts > 0 ? (($currentPage - 1) * $itemsPerPage) + 1 : 0;
-    $endItemNum = $totalProducts > 0 ? min($startItemNum + count($products) - 1, $totalProducts) : 0;
-    ?>
+<div class="row g-4"> <?php // Main row ?>
 
-    <div class="row g-4"> <?php // Main row ?>
+    <?php // ----- Sidebar ----- ?>
+    <aside class="col-lg-3" id="shop-sidebar"> <?php // Thêm ID cho sidebar ?>
+        <h3 class="mb-3">Lọc & Sắp xếp</h3>
 
-        <?php // ----- Sidebar ----- ?>
-        <aside class="col-lg-3">
-            <h3 class="mb-3">Lọc & Sắp xếp</h3>
-
-            <?php // Search Filter - RESTORED ?>
-            <div class="card shadow-sm mb-4 filter-widget">
-                <div class="card-header"><h5 class="mb-0">Tìm kiếm</h5></div>
-                <div class="card-body">
-                    <form method="GET" action="">
-                        <input type="hidden" name="page" value="shop_grid">
-                        <?php // Giữ lại các bộ lọc khác khi tìm kiếm ?>
-                        <input type="hidden" name="brand" value="<?= htmlspecialchars($currentFilters['brand'] ?? 'All') ?>">
-                        <input type="hidden" name="price_range" value="<?= htmlspecialchars($currentPriceRangeKey) ?>">
-                        <input type="hidden" name="sort" value="<?= htmlspecialchars($currentSort) ?>">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="search_input" name="search" placeholder="Tìm sản phẩm..." value="<?= htmlspecialchars($currentFilters['search'] ?? '') ?>" aria-label="Tìm sản phẩm">
-                            <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
-                        </div>
-                    </form>
-                </div>
+        <?php // Search Filter ?>
+        <div class="card shadow-sm mb-4 filter-widget">
+            <div class="card-header"><h5 class="mb-0">Tìm kiếm</h5></div>
+            <div class="card-body">
+                <?php // Form này sẽ được JS xử lý submit ?>
+                <form id="search-form">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="search" id="search_input" placeholder="Tìm sản phẩm..." value="<?= htmlspecialchars($currentFilters['search']) ?>" aria-label="Tìm sản phẩm">
+                        <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
+                    </div>
+                </form>
             </div>
+        </div>
 
-            <?php // Brand Filter - RESTORED ?>
-            <div class="card shadow-sm mb-4 filter-widget">
-                <div class="card-header bg-light py-2">
-                    <h5 class="mb-0 fs-6 fw-semibold"><i class="fas fa-tags me-1 text-primary"></i> Hãng sản xuất</h5>
-                </div>
-                <div class="list-group list-group-flush">
-                    <a href="?<?= build_query_string_sg(['brand' => 'All', 'pg' => null]) ?>"
-                       class="list-group-item list-group-item-action py-2 <?= ($currentFilters['brand'] == 'All' || empty($currentFilters['brand'])) ? 'active' : '' ?>">
-                        Tất cả các hãng
-                    </a>
-                    <?php foreach ($availableBrands as $b): ?>
-                        <a href="?<?= build_query_string_sg(['brand' => $b, 'pg' => null]) ?>"
-                           class="list-group-item list-group-item-action py-2 <?= ($currentFilters['brand'] == $b) ? 'active' : '' ?>">
-                            <?= htmlspecialchars($b) ?>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
+        <?php // Brand Filter ?>
+         <div class="card shadow-sm mb-4 filter-widget">
+            <div class="card-header bg-light py-2"><h5 class="mb-0 fs-6 fw-semibold"><i class="fas fa-tags me-1 text-primary"></i> Hãng</h5></div>
+             <div class="list-group list-group-flush filter-options" data-filter-key="brand"> <?php // Thêm data-filter-key ?>
+                <a href="#" data-value="All" class="list-group-item list-group-item-action py-2 filter-link <?= ($currentFilters['brand'] == 'All') ? 'active' : '' ?>">Tất cả</a>
+                <?php foreach ($availableBrands as $b): ?>
+                    <a href="#" data-value="<?= htmlspecialchars($b) ?>" class="list-group-item list-group-item-action py-2 filter-link <?= ($currentFilters['brand'] == $b) ? 'active' : '' ?>"><?= htmlspecialchars($b) ?></a>
+                <?php endforeach; ?>
             </div>
+        </div>
 
-            <?php // Price Range Filter - RESTORED ?>
-            <div class="card shadow-sm mb-4 filter-widget">
-                <div class="card-header"><h5 class="mb-0">Khoảng giá</h5></div>
-                <ul class="list-group list-group-flush"> <?php // Can also use div here ?>
-                    <a href="?<?= build_query_string_sg(['price_range' => 'all', 'pg' => null]) ?>"
-                       class="list-group-item list-group-item-action py-2 <?= ($currentPriceRangeKey == 'all') ? 'active' : '' ?>">
-                        Tất cả mức giá
-                    </a>
-                    <?php foreach ($priceRangesMap as $key => $rangeInfo): ?>
-                        <a href="?<?= build_query_string_sg(['price_range' => $key, 'pg' => null]) ?>"
-                           class="list-group-item list-group-item-action py-2 <?= ($currentPriceRangeKey == $key) ? 'active' : '' ?>">
-                            <?= htmlspecialchars($rangeInfo['label'] ?? '') ?>
-                        </a>
-                    <?php endforeach; ?>
-                </ul>
+        <?php // Price Range Filter ?>
+         <div class="card shadow-sm mb-4 filter-widget">
+            <div class="card-header"><h5 class="mb-0">Khoảng giá</h5></div>
+            <div class="list-group list-group-flush filter-options" data-filter-key="price_range"> <?php // Thêm data-filter-key ?>
+                <a href="#" data-value="all" class="list-group-item list-group-item-action py-2 filter-link <?= ($currentPriceRangeKey == 'all') ? 'active' : '' ?>">Tất cả</a>
+                <?php foreach ($priceRangesMap as $key => $rangeInfo): ?>
+                    <a href="#" data-value="<?= htmlspecialchars($key) ?>" class="list-group-item list-group-item-action py-2 filter-link <?= ($currentPriceRangeKey == $key) ? 'active' : '' ?>"><?= htmlspecialchars($rangeInfo['label'] ?? '') ?></a>
+                <?php endforeach; ?>
             </div>
+        </div>
 
-            <?php // Sorting - RESTORED ?>
-            <div class="card shadow-sm mb-4 filter-widget">
-                <div class="card-header"><h5 class="mb-0">Sắp xếp theo</h5></div>
-                <div class="card-body">
-                    <form method="GET" action="" id="sortForm">
-                        <input type="hidden" name="page" value="shop_grid">
-                        <input type="hidden" name="search" value="<?= htmlspecialchars($currentFilters['search'] ?? '') ?>">
-                        <input type="hidden" name="brand" value="<?= htmlspecialchars($currentFilters['brand'] ?? 'All') ?>">
-                        <input type="hidden" name="price_range" value="<?= htmlspecialchars($currentPriceRangeKey) ?>">
-                        <input type="hidden" name="pg" value="1"> <?php // Go to page 1 on sort change ?>
-
-                        <select name="sort" id="sort_select" class="form-select" onchange="document.getElementById('sortForm').submit()" aria-label="Sắp xếp sản phẩm">
-                            <?php foreach ($sortOptionsMap as $key => $value): ?>
-                                <option value="<?= $key ?>" <?= ($currentSort == $key) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($value) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <noscript><button type="submit" class="btn btn-sm btn-secondary mt-2">Sắp xếp</button></noscript>
-                    </form>
-                </div>
-            </div>
-
-        </aside> <?php // End Sidebar ?>
-
-        <?php // ----- Main Content ----- ?>
-        <div class="col-lg-9">
-
-            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-            <span class="text-muted">
-                <?php if ($totalProducts > 0): ?>
-                    Hiển thị <?= $startItemNum ?>–<?= $endItemNum ?> trên tổng số <?= $totalProducts ?> sản phẩm
-                <?php else: ?>
-                    Không tìm thấy sản phẩm nào
-                <?php endif; ?>
-            </span>
-            </div>
-
-            <?php if (!empty($products)): ?>
-                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4"> <?php // Responsive Grid ?>
-                    <?php foreach ($products as $p): ?>
-                        <?php
-                        $pId = (int)($p['id'] ?? 0);
-                        $stock = (int)($p['stock'] ?? 0);
-                        // *** WISHLIST CHECK ***
-                        $isProductWishlisted = false; // Default
-                        if ($isLoggedIn && is_array($wishlistedIds) && !empty($wishlistedIds)) {
-                            $isProductWishlisted = in_array($pId, $wishlistedIds);
-                        }
-                        ?>
-                        <div class="col">
-                            <div class="card h-100 shadow-sm product-card">
-                                <?php // --- Product Link (Only covers image) --- ?>
-                                <a href="?page=product_detail&id=<?= $pId ?>" class="text-center">
-                                    <img src="/webfinal/public/img/<?= htmlspecialchars($p['image'] ?? 'default.jpg') ?>" class="card-img-top" alt="<?= htmlspecialchars($p['name'] ?? '') ?>" loading="lazy">
-                                </a>
-                                <?php // --- END Product Link --- ?>
-
-                                <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title">
-                                        <?php // --- Product Title Link --- ?>
-                                        <a href="?page=product_detail&id=<?= $pId ?>" class="text-dark text-decoration-none">
-                                            <?= htmlspecialchars($p['name'] ?? 'N/A') ?>
-                                        </a>
-                                        <?php // --- END Product Title Link --- ?>
-                                    </h5>
-                                    <p class="card-text text-muted small mb-2"><?= htmlspecialchars($p['brand'] ?? 'N/A') ?> | <?= htmlspecialchars(number_format($p['rating'] ?? 0, 1)) ?> ★</p>
-                                    <p class="card-text price fw-bold fs-5 mt-auto"><?= number_format($p['price'] ?? 0, 0, ',', '.') ?>₫</p>
-                                </div>
-                                <div class="card-footer bg-transparent border-top-0 pb-3">
-                                    <?php // --- Actions are OUTSIDE the main links --- ?>
-                                    <div class="actions d-flex justify-content-between align-items-center">
-
-                                        <?php // Wishlist Button - BỎ ONCLICK ?>
-                                        <button type="button"
-                                                class="btn btn-link btn-wishlist p-0 <?= $isProductWishlisted ? 'active' : '' ?> <?= !$isLoggedIn ? 'disabled' : '' ?>"
-                                                data-product-id="<?= $pId ?>"
-                                                data-is-wishlisted="<?= $isProductWishlisted ? '1' : '0' ?>"
-                                                title="<?= !$isLoggedIn ? 'Đăng nhập để yêu thích' : ($isProductWishlisted ? 'Xóa khỏi Yêu thích' : 'Thêm vào Yêu thích') ?>"
-                                        >
-                                            <i class="fas fa-heart fs-4"></i> <?php // Correct Heart Icon ?>
-                                        </button>
-
-                                        <?php // Cart Link (formerly button, points to product detail) ?>
-                                        <a href="?page=product_detail&id=<?= $pId ?>"
-                                           class="btn btn-link btn-cart p-0 <?= $stock <= 0 ? 'disabled' : '' ?>" <?php // Keep 'disabled' class for styling ?>
-                                           title="<?= $stock > 0 ? 'Xem chi tiết sản phẩm' : 'Hết hàng' ?>"
-                                            <?php if($stock <= 0): ?> onclick="event.preventDefault(); alert('Sản phẩm này hiện đã hết hàng.');" <?php endif; ?> <?php // Prevent click if disabled ?>
-                                        >
-                                            <i class="fas fa-cart-plus fs-4"></i> <?php // Cart Icon ?>
-                                        </a>
-
-                                    </div>
-                                </div>
+        <?php // ----- Specs Filters (Accordion) ----- ?>
+        <div class="accordion shadow-sm mb-4 filter-widget" id="specsAccordion">
+            <?php $specIndex = 0; ?>
+            <?php foreach ($availableSpecs as $specKey => $options): ?>
+                <?php if (!empty($options)): ?>
+                    <?php
+                    $specIndex++;
+                    $isCurrentlyFiltered = isset($currentFilters[$specKey]) && $currentFilters[$specKey] !== 'all';
+                    ?>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading<?= $specIndex ?>">
+                            <button class="accordion-button <?= !$isCurrentlyFiltered ? 'collapsed' : '' ?> py-2 fs-6 fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?= $specIndex ?>" aria-expanded="<?= $isCurrentlyFiltered ? 'true' : 'false' ?>" aria-controls="collapse<?= $specIndex ?>">
+                                <?= getSpecFilterLabel($specKey) ?> <?= $isCurrentlyFiltered ? '<span class="badge bg-primary ms-2 rounded-pill small">Lọc</span>' : '' ?>
+                            </button>
+                        </h2>
+                        <div id="collapse<?= $specIndex ?>" class="accordion-collapse collapse <?= $isCurrentlyFiltered ? 'show' : '' ?>" aria-labelledby="heading<?= $specIndex ?>" data-bs-parent="#specsAccordion">
+                            <div class="list-group list-group-flush filter-options" data-filter-key="<?= $specKey ?>">
+                                 <a href="#" data-value="all" class="list-group-item list-group-item-action py-2 filter-link <?= ($currentFilters[$specKey] === 'all') ? 'active' : '' ?>">
+                                     Tất cả <?= getSpecFilterLabel($specKey) ?>
+                                 </a>
+                                 <?php foreach ($options as $option): ?>
+                                     <a href="#" data-value="<?= htmlspecialchars($option) ?>" class="list-group-item list-group-item-action py-2 filter-link <?= ($currentFilters[$specKey] == $option) ? 'active' : '' ?>">
+                                         <?= htmlspecialchars($option) ?>
+                                     </a>
+                                 <?php endforeach; ?>
                             </div>
                         </div>
-                    <?php endforeach; ?>
-                </div>
+                    </div>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </div>
+        <?php // ----- KẾT THÚC ACCORDION ----- ?>
 
-                <?php // --- Pagination --- ?>
-                <nav aria-label="Product navigation" class="mt-4">
-                    <ul class="pagination justify-content-center">
-                        <?php if ($totalPages > 1):
-                            $currentPageInt = (int)$currentPage; $totalPagesInt = (int)$totalPages;
-                            $prevDisabled = ($currentPageInt <= 1) ? 'disabled' : '';
-                            $nextDisabled = ($currentPageInt >= $totalPagesInt) ? 'disabled' : '';
-                            ?>
-                            <li class="page-item <?= $prevDisabled ?>"> <a class="page-link" href="?<?= build_query_string_sg(['pg' => $currentPageInt - 1]) ?>">«</a> </li>
-                            <?php
-                            $maxPagesToShow = 5; $halfMax = floor($maxPagesToShow / 2);
-                            $startPage = max(1, $currentPageInt - $halfMax); $endPage = min($totalPagesInt, $startPage + $maxPagesToShow - 1);
-                            if ($endPage - $startPage + 1 < $maxPagesToShow) { $startPage = max(1, $endPage - $maxPagesToShow + 1); }
-                            if ($startPage > 1) { echo '<li class="page-item"><a class="page-link" href="?'.build_query_string_sg(['pg' => 1]).'">1</a></li>'; if ($startPage > 2) { echo '<li class="page-item disabled"><span class="page-link">...</span></li>'; } }
-                            for ($i = $startPage; $i <= $endPage; $i++) { echo '<li class="page-item '.($i == $currentPageInt ? 'active' : '').'"><a class="page-link" href="?'.build_query_string_sg(['pg' => $i]).'">'.$i.'</a></li>'; }
-                            if ($endPage < $totalPagesInt) { if ($endPage < $totalPagesInt - 1) { echo '<li class="page-item disabled"><span class="page-link">...</span></li>'; } echo '<li class="page-item"><a class="page-link" href="?'.build_query_string_sg(['pg' => $totalPagesInt]).'">'.$totalPagesInt.'</a></li>'; }
-                            ?>
-                            <li class="page-item <?= $nextDisabled ?>"> <a class="page-link" href="?<?= build_query_string_sg(['pg' => $currentPageInt + 1]) ?>">»</a> </li>
-                        <?php endif; ?>
-                    </ul>
-                </nav>
+        <?php // Sorting Filter ?>
+        <div class="card shadow-sm mb-4 filter-widget">
+            <div class="card-header"><h5 class="mb-0">Sắp xếp theo</h5></div>
+            <div class="card-body">
+                <select name="sort" id="sort_select" class="form-select form-select-sm"> <?php // Bỏ name nếu JS xử lý ?>
+                     <?php foreach ($sortOptionsMap as $key => $value): ?>
+                         <option value="<?= $key ?>" <?= ($currentSort == $key) ? 'selected' : '' ?>>
+                             <?= htmlspecialchars($value) ?>
+                         </option>
+                     <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
 
-            <?php endif; ?>
+    </aside> <?php // End Sidebar ?>
 
-        </div> <?php // End Main Content Column ?>
+    <?php // ----- Main Content ----- ?>
+    <div class="col-lg-9">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+            <span class="text-muted small" id="product-count-display">
+                <?php if ($totalProducts > 0): ?>
+                    Hiển thị <?= $startItemNum ?>–<?= $endItemNum ?> / <?= $totalProducts ?> sản phẩm
+                <?php else: ?>
+                    Không tìm thấy sản phẩm nào.
+                <?php endif; ?>
+            </span>
+             <div id="loading-indicator" class="spinner-border spinner-border-sm text-primary" role="status" style="display: none;">
+                <span class="visually-hidden">Đang tải...</span>
+            </div>
+        </div>
 
-    </div> <?php // End Main Row ?>
-    <script src="/webfinal/public/js/shop_grid.js"></script>
+        <?php // Container cho Grid Sản phẩm (JS sẽ cập nhật nội dung ở đây) ?>
+        <div id="product-grid-container">
+            <?php
+            // Include partial view cho lần tải đầu tiên
+            extract(['products' => $products, 'isLoggedIn' => $isLoggedIn, 'wishlistedIds' => $wishlistedIds]); // Truyền biến
+            include BASE_PATH . '/app/Views/partials/product_grid_items.php';
+            ?>
+        </div>
+
+        <?php // Container cho Pagination (JS sẽ cập nhật nội dung ở đây) ?>
+        <div id="pagination-container">
+             <?php
+             // Include partial view cho lần tải đầu tiên
+             extract(['currentPage' => $currentPage, 'totalPages' => $totalPages]); // Truyền biến
+             include BASE_PATH . '/app/Views/partials/pagination.php';
+             ?>
+        </div>
+
+    </div> <?php // End Main Content Column ?>
+
+</div> <?php // End Main Row ?>
+
+<?php // Link tới file JS mới ?>
+<script src="/webfinal/public/js/shop_grid_ajax.js"></script>
+
 <?php
-include_once __DIR__ . '/../layout/footer.php'; // Footer sẽ chứa event listener mới
+// Footer vẫn có thể chứa JS cho Wishlist nếu dùng event delegation
+include_once __DIR__ . '/../layout/footer.php';
 ?>

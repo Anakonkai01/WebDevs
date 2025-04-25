@@ -60,3 +60,131 @@
     background-color: #0d6efd;
     border-color: #0d6efd;
 }
+
+
+
+/* Thêm vào webfinal/public/css/shop_grid.css */
+
+--- Styling cho Filter Widgets nói chung --- */
+.filter-widget .card-header {
+    padding: 0.5rem 1rem; /* Giảm padding header card */
+    background-color: #f8f9fa; /* Màu nền nhẹ cho header */
+    border-bottom: 1px solid #dee2e6;
+}
+
+.filter-widget .card-header h5 {
+    font-size: 0.95rem; /* Kích thước chữ nhỏ hơn cho tiêu đề widget */
+    margin-bottom: 0;
+}
+
+.filter-widget .card-body,
+.filter-widget .list-group-flush .list-group-item {
+    padding: 0.75rem 1rem; /* Đồng nhất padding */
+    font-size: 0.9rem; /* Kích thước chữ nhỏ hơn cho các tùy chọn */
+}
+
+.filter-widget .list-group-item {
+    border-bottom: 1px solid #eee; /* Đường kẻ mỏng hơn giữa các item */
+}
+.filter-widget .list-group-item:last-child {
+    border-bottom: none;
+}
+
+/* --- Styling cho Accordion Filters --- */
+#specsAccordion .accordion-item {
+    border: none; /* Bỏ border mặc định của accordion item */
+    border-bottom: 1px solid #dee2e6; /* Thêm border dưới */
+}
+#specsAccordion .accordion-item:first-of-type {
+    border-top: 1px solid #dee2e6; /* Thêm border trên cho item đầu */
+}
+
+
+
+
+#specsAccordion .accordion-button {
+    padding: 0.75rem 1rem; /* Giảm padding nút accordion */
+    font-size: 0.95rem; /* Cỡ chữ như header card */
+    font-weight: 600; /* In đậm nhẹ */
+    background-color: #f8f9fa; /* Đồng bộ màu nền header */
+    color: #212529;
+    border: none;
+    box-shadow: none !important; /* Loại bỏ box-shadow khi focus */
+}
+
+#specsAccordion .accordion-button:not(.collapsed) {
+    background-color: #e9ecef; /* Màu nền hơi đậm khi mở */
+    color: #0d6efd; /* Màu chữ primary khi mở */
+}
+
+/* Tùy chỉnh icon mũi tên của accordion */
+#specsAccordion .accordion-button::after {
+   /* background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236c757d'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e"); */
+   /* Thay đổi màu hoặc hình ảnh SVG nếu muốn */
+    background-size: 1rem;
+}
+#specsAccordion .accordion-button:not(.collapsed)::after {
+    /* background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%230d6efd'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e"); */
+    transform: rotate(-180deg);
+}
+
+#specsAccordion .accordion-body {
+    padding: 0; /* Bỏ padding mặc định của body */
+}
+
+#specsAccordion .list-group-flush .list-group-item {
+     padding: 0.5rem 1rem 0.5rem 1.5rem; /* Thụt lề các tùy chọn con */
+     font-size: 0.85rem;
+     border-bottom: none; /* Bỏ border trong list-group */
+     cursor: pointer; /* Biến con trỏ thành pointer */
+}
+#specsAccordion .list-group-flush .list-group-item.active {
+    background-color: #e7f1ff; /* Màu nền nhẹ cho item active */
+    color: #0d6efd;
+    font-weight: 500;
+}
+#specsAccordion .list-group-flush .list-group-item:hover:not(.active) {
+    background-color: #f8f9fa;
+}
+
+
+/* --- Styling cho Hiệu ứng tải AJAX --- */
+
+/* Container của grid sản phẩm */
+#product-grid-container {
+    position: relative; /* Cần thiết để định vị overlay */
+    transition: opacity 0.3s ease-in-out; /* Hiệu ứng mờ dần */
+}
+
+/* Lớp phủ (overlay) khi đang tải - tùy chọn */
+/*
+#product-grid-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.7);
+    z-index: 10;
+    display: none; // Sẽ được JS điều khiển nếu bạn muốn dùng overlay
+    transition: opacity 0.3s ease-in-out;
+    opacity: 0;
+}
+#product-grid-container.loading::after {
+    display: block;
+    opacity: 1;
+}
+*/
+
+/* Chỉ báo loading spinner (Bootstrap đã có) */
+#loading-indicator {
+    /* CSS này đã được thêm inline trong HTML: style="display: none;" */
+    /* Có thể thêm margin nếu cần */
+     margin-left: 10px;
+}
+
+/* Làm mờ grid khi tải (JS đã xử lý bằng opacity) */
+/* #product-grid-container.is-loading {
+    opacity: 0.5;
+}
