@@ -4,10 +4,9 @@ $pageTitle = $pageTitle ?? 'Liên hệ';
 include_once __DIR__ . '/../layout/header.php'; // Includes Bootstrap
 ?>
 
-<?php // link to external CSS ?>
-<link rel="stylesheet" href="/webfinal/public/css/contact.css">
-?>
 
+
+    
     <section class="contact-section py-5">
         <div class="container">
             <div class="text-center mb-5">

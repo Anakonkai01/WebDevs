@@ -42,14 +42,16 @@ $currentPriceRangeKey = $currentPriceRangeKey ?? 'all';
 $isLoggedIn = $isLoggedIn ?? false;
 $wishlistedIds = $wishlistedIds ?? [];
 
+?>
+<link rel="stylesheet" href="/webfinal/public/css/shop_grid.css">
+<?php
     $currentPage = $currentPage ?? 1;
     $totalPages = $totalPages ?? 1;
 // --- Ensure Numeric Types for Calculations ---
-    <link rel="stylesheet" href="/webfinal/public/css/shop_grid.css">
-    <?php
+
         $currentPage = (int)$currentPage;
         $itemsPerPage = (int)$itemsPerPage;
-        $totalProducts = (int)$totalProducts;
+        $totalProducts = (int)$totalProducts; 
     // --- Calculation for Item Count Display ---
     $startItemNum = $totalProducts > 0 ? (($currentPage - 1) * $itemsPerPage) + 1 : 0;
     $endItemNum = $totalProducts > 0 ? min($startItemNum + count($products) - 1, $totalProducts) : 0;

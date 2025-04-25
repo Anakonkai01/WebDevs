@@ -32,11 +32,13 @@ function build_query_string_home(array $params): string {
 ?>
 <?php // Hero Section ?>
     <div class="hero-section p-5 mb-4 rounded-3">
-        <div class="container-fluid py-5 text-center">
-            <h1 class="display-5 fw-bold">Chào mừng đến với MyShop!</h1>
-            <p class="fs-4 text-muted">Tìm kiếm sản phẩm công nghệ yêu thích của bạn.</p>
-            <a href="?page=shop_grid" class="btn btn-primary btn-lg mt-3">Khám phá Cửa hàng</a>
+        <div class="hero-overlay"></div>
+        <div class="container-fluid hero-content">
+            <h1 class="display-5 fw-bold">Discover Our New Arrivals</h1>
+            <p class="fs-4 text-muted">Explore the latest products in our store.</p>
+            <a href="?page=shop_grid" class="btn btn-primary btn-lg mt-3">Shop Now</a>
         </div>
+
     </div>
 
     <div class="row g-4">
@@ -71,12 +73,12 @@ function build_query_string_home(array $params): string {
                 <div class="list-group list-group-flush">
                     <?php // Link này chỉ cần đến shop_grid không lọc hãng ?>
                     <a href="?page=shop_grid"
-                       class="list-group-item list-group-item-action py-2 <?= (empty($brand) || $brand == 'All') ? 'active' : '' ?>">
+                       class="list-group-item list-group-item-action py-2 px-3 <?= (empty($brand) || $brand == 'All') ? 'active' : '' ?>">
                         Tất cả Hãng
                     </a>
                     <?php foreach ($brands as $b): ?>
                         <a href="?<?= build_query_string_home(['brand' => $b, 'pg' => null]) ?>"
-                           class="list-group-item list-group-item-action py-2 <?= ($brand == $b) ? 'active' : '' ?>">
+                           class="list-group-item list-group-item-action py-2 px-3 <?= ($brand == $b) ? 'active' : '' ?>">
                             <?= htmlspecialchars($b) ?>
                         </a>
                     <?php endforeach; ?>
