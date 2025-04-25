@@ -5,11 +5,25 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="523c1c6d-a0d9-4690-a84b-13a281d94970" name="Changes" comment="hoàn thành cơ bản luồng, cần phải custom view cho có responsive with bootstrap, cần tổ chức lại file sql, cần tùy chỉnh lại trang shop_grid.php,">
+      <change afterPath="$PROJECT_DIR$/.idea/sqldialects.xml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/app/Views/edit_profile.php" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/app/Views/errors/404.php" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/app/Views/forgot_password_request.php" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/app/Views/reset_password.php" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/composer.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/composer.lock" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/composer.phar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/autoload.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/ClassLoader.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/InstalledVersions.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/autoload_classmap.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/autoload_namespaces.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/autoload_psr4.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/autoload_real.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/autoload_static.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/installed.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/installed.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/Web.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Web.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/php.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/php.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
@@ -143,7 +157,7 @@
       <workItem from="1745501935425" duration="1994000" />
       <workItem from="1745558397972" duration="10996000" />
       <workItem from="1745569651719" duration="4306000" />
-      <workItem from="1745574223425" duration="1537000" />
+      <workItem from="1745574223425" duration="1978000" />
     </task>
     <task id="LOCAL-00001" summary="hoàn thành cơ bản luồng, cần phải custom view cho có responsive with bootstrap, cần tổ chức lại file sql, cần tùy chỉnh lại trang shop_grid.php,">
       <option name="closed" value="true" />

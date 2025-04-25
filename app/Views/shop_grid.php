@@ -187,7 +187,7 @@ $endItemNum = $totalProducts > 0 ? min($startItemNum + count($products) - 1, $to
                             <div class="card h-100 shadow-sm product-card">
                                 <?php // --- Product Link (Only covers image) --- ?>
                                 <a href="?page=product_detail&id=<?= $pId ?>" class="text-center">
-                                    <img src="/public/img/<?= htmlspecialchars($p['image'] ?? 'default.jpg') ?>" class="card-img-top" alt="<?= htmlspecialchars($p['name'] ?? '') ?>" loading="lazy">
+                                    <img src="/webfinal/public/img/<?= htmlspecialchars($p['image'] ?? 'default.jpg') ?>" class="card-img-top" alt="<?= htmlspecialchars($p['name'] ?? '') ?>" loading="lazy">
                                 </a>
                                 <?php // --- END Product Link --- ?>
 

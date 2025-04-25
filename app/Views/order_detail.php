@@ -101,7 +101,7 @@ include_once __DIR__ . '/../layout/header.php';
                                     <?php foreach ($orderItems as $item): ?>
                                         <tr>
                                             <td style="width: 70px;">
-                                                <img src="/public/img/<?= htmlspecialchars($item['product_image'] ?? 'default.jpg') ?>" alt="<?= htmlspecialchars($item['product_name']) ?>" class="img-fluid rounded border order-detail-item-img">
+                                                <img src="/webfinal/public/img/<?= htmlspecialchars($item['product_image'] ?? 'default.jpg') ?>" alt="<?= htmlspecialchars($item['product_name']) ?>" class="img-fluid rounded border order-detail-item-img">
                                             </td>
                                             <td>
                                                 <a href="?page=product_detail&id=<?= $item['product_id'] ?>" class="text-dark text-decoration-none fw-bold small">

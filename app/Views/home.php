@@ -109,7 +109,7 @@ function build_query_string_home(array $params): string {
                         <?php foreach ($latestProducts as $p): ?>
                             <li class="list-group-item d-flex align-items-center">
                                 <a href="?page=product_detail&id=<?= (int)($p['id'] ?? 0) ?>">
-                                    <img src="/public/img/<?= htmlspecialchars($p['image'] ?? 'default.jpg') ?>" alt="<?= htmlspecialchars($p['name'] ?? '') ?>" loading="lazy" class="border rounded me-2">
+                                    <img src="/webfinal/public/img/<?= htmlspecialchars($p['image'] ?? 'default.jpg') ?>" alt="<?= htmlspecialchars($p['name'] ?? '') ?>" loading="lazy" class="border rounded me-2">
                                 </a>
                                 <div class="info flex-grow-1">
                                     <a href="?page=product_detail&id=<?= (int)($p['id'] ?? 0) ?>" class="name d-block text-truncate small"><?= htmlspecialchars($p['name'] ?? 'N/A') ?></a>
@@ -140,7 +140,7 @@ function build_query_string_home(array $params): string {
                         <div class="col">
                             <div class="card h-100 shadow-sm product-card">
                                 <a href="?page=product_detail&id=<?= $pId ?>" class="text-center">
-                                    <img src="/public/img/<?= htmlspecialchars($p['image'] ?? 'default.jpg') ?>" class="card-img-top" alt="<?= htmlspecialchars($p['name'] ?? '') ?>" loading="lazy">
+                                    <img src="/webfinal/public/img/<?= htmlspecialchars($p['image'] ?? 'default.jpg') ?>" class="card-img-top" alt="<?= htmlspecialchars($p['name'] ?? '') ?>" loading="lazy">
                                 </a>
                                 <div class="card-body d-flex flex-column">
                                     <h5 class="card-title">

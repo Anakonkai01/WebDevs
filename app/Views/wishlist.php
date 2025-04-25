@@ -48,7 +48,7 @@ include_once __DIR__ . '/../layout/header.php'; // Includes Bootstrap
                         <tr>
                             <td>
                                 <a href="?page=product_detail&id=<?= $itemId ?>">
-                                    <img src="/public/img/<?= $itemImage ?>" alt="<?= $itemName ?>" class="img-fluid rounded border wishlist-item-img">
+                                    <img src="/webfinal/public/img/<?= $itemImage ?>" alt="<?= $itemName ?>" class="img-fluid rounded border wishlist-item-img">
                                 </a>
                             </td>
                             <td>

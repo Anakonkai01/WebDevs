@@ -87,7 +87,7 @@ function render_stars_pd(float $rating, $maxStars = 5): string {
         <?php // Product Gallery Column ?>
         <div class="col-lg-5">
             <div class="product-gallery border rounded p-3 text-center shadow-sm">
-                <img src="/public/img/<?= $productImage ?>" alt="<?= $productName ?>" class="img-fluid" loading="lazy">
+                <img src="/webfinal/public/img/<?= $productImage ?>" alt="<?= $productName ?>" class="img-fluid" loading="lazy">
                 <?php // Add thumbnail gallery here if needed ?>
             </div>
         </div>
@@ -195,7 +195,7 @@ function render_stars_pd(float $rating, $maxStars = 5): string {
 
 
 <?php // --- Related Products --- ?>
-<?php if (!empty($relatedProducts)): ?><div class="related-products-section mt-5 pt-4 border-top"><h2 class="text-center mb-4">Sản phẩm liên quan</h2><div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4"><?php foreach ($relatedProducts as $relP): ?><div class="col"><div class="card h-100 shadow-sm"><a href="?page=product_detail&id=<?= $relP['id'] ?>"><img src="/public/img/<?= htmlspecialchars($relP['image'] ?? 'default.jpg') ?>" class="card-img-top" alt="<?= htmlspecialchars($relP['name']) ?>" loading="lazy"></a><div class="card-body d-flex flex-column"><h5 class="card-title small flex-grow-1"><a href="?page=product_detail&id=<?= $relP['id'] ?>" class="text-dark text-decoration-none stretched-link"><?= htmlspecialchars($relP['name']) ?></a></h5><p class="card-text price fw-bold mt-auto"><?= number_format($relP['price'], 0, ',', '.') ?>₫</p></div></div></div><?php endforeach; ?></div></div><?php endif; ?>
+<?php if (!empty($relatedProducts)): ?><div class="related-products-section mt-5 pt-4 border-top"><h2 class="text-center mb-4">Sản phẩm liên quan</h2><div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4"><?php foreach ($relatedProducts as $relP): ?><div class="col"><div class="card h-100 shadow-sm"><a href="?page=product_detail&id=<?= $relP['id'] ?>"><img src="/webfinal/public/img/<?= htmlspecialchars($relP['image'] ?? 'default.jpg') ?>" class="card-img-top" alt="<?= htmlspecialchars($relP['name']) ?>" loading="lazy"></a><div class="card-body d-flex flex-column"><h5 class="card-title small flex-grow-1"><a href="?page=product_detail&id=<?= $relP['id'] ?>" class="text-dark text-decoration-none stretched-link"><?= htmlspecialchars($relP['name']) ?></a></h5><p class="card-text price fw-bold mt-auto"><?= number_format($relP['price'], 0, ',', '.') ?>₫</p></div></div></div><?php endforeach; ?></div></div><?php endif; ?>
 <?php // --- End Related Products --- ?>
 
     <div class="mt-4">

@@ -109,7 +109,7 @@ include_once __DIR__ . '/../layout/header.php'; // Include header
                         ?>
                         <tr id="cart-item-row-<?= $itemId ?>" data-item-id="<?= $itemId ?>" data-item-price="<?= $itemPrice ?>" data-item-quantity="<?= $itemQuantity ?>" data-item-stock="<?= $itemStock ?>">
                             <td class="select-col"><input class="form-check-input cart-item-select cart-select-checkbox" type="checkbox" value="<?= $itemId ?>" checked></td>
-                            <td><a href="?page=product_detail&id=<?= $itemId ?>"><img src="/public/img/<?= $itemImage ?>" alt="<?= $itemName ?>" class="img-fluid rounded border cart-item-img"></a></td>
+                            <td><a href="?page=product_detail&id=<?= $itemId ?>"><img src="/webfinal/public/img/<?= $itemImage ?>" alt="<?= $itemName ?>" class="img-fluid rounded border cart-item-img"></a></td>
                             <td><a href="?page=product_detail&id=<?= $itemId ?>" class="text-decoration-none fw-bold"><?= $itemName ?></a></td>
                             <td class="text-end"><?= number_format($itemPrice, 0, ',', '.') ?>₫</td>
                             <td class="text-center">

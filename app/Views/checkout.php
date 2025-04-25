@@ -114,7 +114,7 @@ include_once __DIR__ . '/../layout/header.php';
                                     <?php foreach ($cartItems as $itemId => $item): ?>
                                         <li class="list-group-item d-flex justify-content-between align-items-center order-summary-item">
                                             <div class="d-flex align-items-center">
-                                                <img src="/public/img/<?= htmlspecialchars($item['image'] ?? 'default.jpg') ?>" alt="" class="border rounded me-2">
+                                                <img src="/webfinal/public/img/<?= htmlspecialchars($item['image'] ?? 'default.jpg') ?>" alt="" class="border rounded me-2">
                                                 <div>
                                                     <span class="d-block small fw-bold"><?= htmlspecialchars($item['name'] ?? 'N/A') ?></span>
                                                     <span class="d-block text-muted small">SL: <?= (int)($item['quantity'] ?? 0) ?></span>
