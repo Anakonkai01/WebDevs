@@ -1,17 +1,13 @@
 <?php
 // Web/app/Views/wishlist.php
 $wishlistItems = $wishlistItems ?? [];
-$flashMessage = $flashMessage ?? null; // Handled by header
+$flashMessage = $flashMessage ?? null;
 $pageTitle = 'Danh sách yêu thích';
-include_once __DIR__ . '/../layout/header.php'; // Includes Bootstrap
+include_once __DIR__ . '/../layout/header.php';
 ?>
-    <style>
-        /* Custom styles for wishlist */
-        .wishlist-item-img { width: 70px; height: 70px; object-fit: contain; }
-        .product-name-link { text-decoration: none; font-weight: 500; color: #212529;}
-        .product-name-link:hover { color: #0d6efd; }
-        .action-links .btn-sm i { margin-right: 0.25rem; } /* Icon spacing in buttons */
-    </style>
+<link rel="stylesheet" href="/webfinal/public/css/wishlist.css">
+
+
 
     <div class="container my-4">
         <h1 class="mb-4">Danh sách yêu thích</h1>

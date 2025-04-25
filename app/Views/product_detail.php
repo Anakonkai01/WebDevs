@@ -45,29 +45,10 @@ function render_stars_pd(float $rating, $maxStars = 5): string {
     $html .= str_repeat('<i class="far fa-star text-warning"></i>', $emptyStars);
     return $html;
 }
-
 ?>
-    <style>
-        /* Custom styles for product detail page */
-        .product-gallery img { max-height: 500px; object-fit: contain; background-color: #fff; }
-        .stock-status.in-stock { color: #198754; }
-        .stock-status.out-of-stock { color: #dc3545; }
-        .product-actions-box { background-color: #f8f9fa; }
-        .product-actions-box .btn-wishlist { font-size: 1.8em; color: #6c757d; border: none; background: none; padding: 0;}
-        .product-actions-box .btn-wishlist.active { color: #dc3545; }
-        .product-actions-box .btn-wishlist.disabled { /* Giữ style disabled */
-            opacity: 0.5;
-            /* KHÔNG CẦN pointer-events: none; */
-        }
-        .nav-tabs .nav-link { color: #495057; }
-        .nav-tabs .nav-link.active { color: #0d6efd; border-color: #dee2e6 #dee2e6 #fff; font-weight: 500; }
-        .tab-content { border: 1px solid #dee2e6; border-top: none; }
-        .review-item { border-bottom: 1px dashed #eee; }
-        .review-item:last-child { border-bottom: none; }
-        #product-specs th { width: 180px; background-color: #f8f9fa; }
-        .related-products-section .card-img-top { height: 180px; object-fit: contain; }
-        #add-to-cart-message { font-size: 0.9em; margin-top: 10px; display: none; /* Hidden by default */ }
-    </style>
+<link rel="stylesheet" href="/webfinal/public/css/product_detail.css">
+
+
 
 <?php // Breadcrumb ?>
     <nav aria-label="breadcrumb">
@@ -202,151 +183,7 @@ function render_stars_pd(float $rating, $maxStars = 5): string {
         <a href="?page=shop_grid" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-2"></i>Quay lại Cửa hàng</a>
     </div>
 
-<?php // --- JavaScript Section --- ?>
-    <script>
-        // --- Wishlist Toggle Function (ĐÃ SỬA - Chỉ chứa logic AJAX) ---
-        async function toggleWishlist(buttonElement, productId) {
-            // Hàm này giờ chỉ chạy khi người dùng ĐÃ ĐĂNG NHẬP (được gọi bởi event listener)
-            console.log("AJAX toggleWishlist called for button:", buttonElement, "productId:", productId);
-
-            const isWishlisted = buttonElement.dataset.isWishlisted === '1';
-            const action = isWishlisted ? 'wishlist_remove' : 'wishlist_add';
-            const icon = buttonElement.querySelector('i');
-
-            buttonElement.disabled = true; // Disable nút tạm thời
-            icon.classList.remove('fa-heart'); // Bỏ icon trái tim
-            icon.classList.add('fa-spinner', 'fa-spin'); // Thêm icon xoay
-
-            try {
-                // Gửi yêu cầu AJAX
-                const response = await fetch(`?page=${action}&id=${productId}&ajax=1&redirect=no`, {
-                    method: 'GET', // Hoặc POST nếu controller nhận POST cho ajax
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                });
-
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-                // Kiểm tra content type trước khi parse JSON
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    const data = await response.json(); // Parse JSON
-                    console.log("Wishlist Response:", data); // Log để debug
-
-                    if (data.success) {
-                        // Cập nhật trạng thái nút
-                        buttonElement.dataset.isWishlisted = isWishlisted ? '0' : '1';
-                        buttonElement.classList.toggle('active');
-                        buttonElement.title = isWishlisted ? 'Thêm vào Yêu thích' : 'Xóa khỏi Yêu thích';
-
-                        // *** CẬP NHẬT HEADER COUNT ***
-                        if (typeof data.wishlistItemCount !== 'undefined') {
-                            const wishlistCountElement = document.getElementById('header-wishlist-count');
-                            if (wishlistCountElement) {
-                                const newCount = parseInt(data.wishlistItemCount);
-                                wishlistCountElement.textContent = newCount;
-                                // Hiện/ẩn badge dựa trên số lượng mới
-                                wishlistCountElement.style.display = newCount > 0 ? 'inline-block' : 'none';
-                            }
-                        }
-                        // *** KẾT THÚC CẬP NHẬT HEADER COUNT ***
-
-                    } else {
-                        // Các lỗi khác từ server (không phải login_required)
-                        alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
-                    }
-                } else {
-                    // Xử lý trường hợp không phải JSON
-                    const textResponse = await response.text();
-                    console.error("Non-JSON Wishlist Response:", textResponse);
-                    throw new Error('Received non-JSON response from server during wishlist toggle.');
-                }
-            } catch (error) {
-                console.error('Error toggling wishlist:', error);
-                alert('Lỗi kết nối hoặc xử lý (Wishlist). Vui lòng thử lại.');
-            } finally {
-                // Khôi phục trạng thái nút
-                buttonElement.disabled = false;
-                icon.classList.remove('fa-spinner', 'fa-spin'); // Bỏ icon xoay
-                icon.classList.add('fa-heart'); // Thêm lại icon trái tim
-            }
-        }
-
-
-        // --- Add to Cart AJAX Function (Giữ nguyên như cũ) ---
-        const addToCartForm = document.getElementById('add-to-cart-form');
-        const addToCartButton = document.getElementById('add-to-cart-btn');
-        const messageDiv = document.getElementById('add-to-cart-message');
-        const buttonText = addToCartButton?.querySelector('.button-text');
-        const buttonSpinner = addToCartButton?.querySelector('.spinner-border');
-
-        if (addToCartForm && addToCartButton) {
-            addToCartForm.addEventListener('submit', async function(event) {
-                event.preventDefault();
-
-                if(buttonText) buttonText.textContent = 'Đang thêm...';
-                if(buttonSpinner) buttonSpinner.classList.remove('d-none');
-                addToCartButton.disabled = true;
-                if(messageDiv) messageDiv.style.display = 'none';
-
-                const formData = new FormData(addToCartForm);
-
-                try {
-                    const response = await fetch(addToCartForm.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                    });
-
-                    if (!response.ok) {
-                        console.error("Add to Cart Fetch Error:", response);
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const contentType = response.headers.get("content-type");
-                    if (contentType && contentType.indexOf("application/json") !== -1) {
-                        const data = await response.json();
-                        console.log("Add to Cart Response:", data);
-
-                        if (messageDiv) {
-                            messageDiv.textContent = data.message || (data.success ? 'Thành công!' : 'Lỗi!');
-                            messageDiv.className = `alert small mt-3 ${data.success ? 'alert-success' : 'alert-danger'}`;
-                            messageDiv.style.display = 'block';
-                        }
-
-                        if (data.success && typeof data.cartItemCount !== 'undefined') {
-                            const cartCountElement = document.getElementById('header-cart-count');
-                            if (cartCountElement) {
-                                cartCountElement.textContent = data.cartItemCount;
-                                cartCountElement.style.display = data.cartItemCount > 0 ? 'inline-block' : 'none';
-                            }
-                        }
-                    } else {
-                        const textResponse = await response.text();
-                        console.error("Add to Cart Non-JSON Response:", textResponse);
-                        throw new Error('Received non-JSON response from server during add to cart.');
-                    }
-
-                } catch (error) {
-                    console.error('Error adding to cart:', error);
-                    if (messageDiv) {
-                        messageDiv.textContent = 'Lỗi kết nối hoặc xử lý (Add Cart). Vui lòng thử lại.';
-                        messageDiv.className = 'alert alert-danger small mt-3';
-                        messageDiv.style.display = 'block';
-                    } else {
-                        alert('Lỗi kết nối hoặc xử lý (Add Cart). Vui lòng thử lại.');
-                    }
-                } finally {
-                    if(buttonText) buttonText.textContent = 'Thêm vào giỏ';
-                    if(buttonSpinner) buttonSpinner.classList.add('d-none');
-                    if(addToCartButton) addToCartButton.disabled = false;
-                }
-            });
-        } else {
-            if (!addToCartForm) console.error("Could not find element with ID 'add-to-cart-form'");
-            if (!addToCartButton) console.error("Could not find element with ID 'add-to-cart-btn'");
-        }
-    </script>
-<?php // --- END JAVASCRIPT --- ?>
+    <script src="/webfinal/public/js/product_detail.js"></script>
 
 <?php
 include_once __DIR__ . '/../layout/footer.php'; // Footer sẽ chứa event listener mới

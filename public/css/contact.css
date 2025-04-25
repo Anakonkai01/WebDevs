@@ -1,0 +1,19 @@
+.contact-map {
+    height: 400px; /* Example height, adjust as needed */
+    width: 100%;
+}
+.contact-info-box {
+    padding: 20px;
+    border: 1px solid #dee2e6; /* Bootstrap's default border color */
+    border-radius: 0.25rem; /* Bootstrap's default border radius */
+}
+.contact-info-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: #f0f0f0; /* Light gray background */
+    margin-right: 10px;
+}

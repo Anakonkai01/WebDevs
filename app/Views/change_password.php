@@ -20,8 +20,8 @@ if ($useLayout) {
     // Minimal standalone HTML head
     ?>
     <!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Thay đổi mật khẩu</title>
-        <link href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-        <style> body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background-color: #f8f9fa; } .change-pw-container { max-width: 450px; width: 100%; } </style>
+        <link rel="stylesheet" href="/webfinal/public/css/change_password.css">
+        
     </head><body>
     <?php
 }
@@ -40,19 +40,28 @@ if ($useLayout) {
                         <?php endif; ?>
 
                         <form action="?page=handle_change_password" method="POST">
-                            <div class="form-floating mb-3">
-                                <input type="password" class="form-control <?= error_class_bs_cpw('current_password', $errors) ?>" id="current_password" name="current_password" placeholder="Mật khẩu hiện tại" required>
+                            <div class="form-floating mb-3 position-relative">
+                                <input type="password" class="form-control <?= error_class_bs_cpw('current_password', $errors) ?>" id="current_password" name="current_password" placeholder="Mật khẩu hiện tại" required >
                                 <label for="current_password">Mật khẩu hiện tại</label>
+                                <span class="password-toggle" onclick="togglePasswordVisibility('current_password', this)">
+                                    <i class="fas fa-eye"></i>
+                                </span>
                                 <?php display_error_bs_cpw('current_password', $errors); ?>
                             </div>
-                            <div class="form-floating mb-3">
+                            <div class="form-floating mb-3 position-relative">
                                 <input type="password" class="form-control <?= error_class_bs_cpw('new_password', $errors) ?>" id="new_password" name="new_password" placeholder="Mật khẩu mới" required>
                                 <label for="new_password">Mật khẩu mới (ít nhất 6 ký tự)</label>
+                                <span class="password-toggle" onclick="togglePasswordVisibility('new_password', this)">
+                                    <i class="fas fa-eye"></i>
+                                </span>
                                 <?php display_error_bs_cpw('new_password', $errors); ?>
                             </div>
-                            <div class="form-floating mb-3">
+                            <div class="form-floating mb-3 position-relative">
                                 <input type="password" class="form-control <?= error_class_bs_cpw('confirm_new_password', $errors) ?>" id="confirm_new_password" name="confirm_new_password" placeholder="Xác nhận mật khẩu mới" required>
                                 <label for="confirm_new_password">Xác nhận mật khẩu mới</label>
+                                <span class="password-toggle" onclick="togglePasswordVisibility('confirm_new_password', this)">
+                                    <i class="fas fa-eye"></i>
+                                </span>
                                 <?php display_error_bs_cpw('confirm_new_password', $errors); ?>
                             </div>
                             <button class="w-100 btn btn-lg btn-primary" type="submit">Đổi mật khẩu</button>
@@ -72,7 +81,8 @@ if ($useLayout) {
 } else {
     // Minimal standalone footer
     ?>
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script></body></html>
+    </body></html>
     <?php
 }
 ?>
+<script src="/webfinal/public/js/change_password.js"></script>

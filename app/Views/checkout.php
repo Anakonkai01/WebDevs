@@ -16,14 +16,12 @@ function error_class($field, $errors) {
     return !empty($errors[$field]) ? 'is-invalid' : '';
 }
 
-// Include header
+
 include_once __DIR__ . '/../layout/header.php';
 ?>
-    <style>
-        /* Custom styles for checkout */
-        .order-summary-card { position: sticky; top: 80px; /* Adjust based on header height */ }
-        .order-summary-item img { width: 50px; height: 50px; object-fit: contain; }
-    </style>
+<link rel="stylesheet" href="/webfinal/public/css/checkout.css">
+<?php
+?>
 
     <div class="container my-4">
         <div class="text-center mb-4">

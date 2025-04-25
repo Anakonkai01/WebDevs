@@ -28,6 +28,10 @@ function error_class_bs_edit($field, $errors) {
 }
 
 include_once __DIR__ . '/../layout/header.php'; // Include header layout
+
+
+    echo '<link rel="stylesheet" href="/webfinal/public/css/edit_profile.css">';
+
 ?>
 
     <div class="container my-4">

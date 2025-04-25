@@ -2,6 +2,7 @@
 // Web/app/Views/forgot_password_request.php
 $pageTitle = $pageTitle ?? 'Quên Mật Khẩu';
 include_once __DIR__ . '/../layout/header.php'; // Hoặc dùng cấu trúc trang riêng
+echo '<link rel="stylesheet" href="/webfinal/public/css/forgot_password_request.css">';
 ?>
 
     <div class="container my-5">

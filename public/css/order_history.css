@@ -1,0 +1,3 @@
+.order-history-table .order-id { font-weight: 500; }
+        .order-history-table td, .order-history-table th { vertical-align: middle; }
+        .order-history-table .order-date { white-space: nowrap; }

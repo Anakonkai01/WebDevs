@@ -1,0 +1,3 @@
+body { background-color: #e9f7ef; /* Light green background */ }
+        .success-container { max-width: 650px; margin-top: 5rem; }
+        .icon { font-size: 4em; color: #198754; /* Bootstrap success green */ }

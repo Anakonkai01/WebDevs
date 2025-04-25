@@ -10,7 +10,7 @@ function error_class_bs_rpw($field, $errors) { return isset($errors[$field]) ? '
 
 include_once __DIR__ . '/../layout/header.php'; // Hoặc dùng cấu trúc trang riêng
 ?>
-
+    
     <div class="container my-5">
         <div class="row justify-content-center">
             <div class="col-lg-5 col-md-7">
@@ -24,14 +24,20 @@ include_once __DIR__ . '/../layout/header.php'; // Hoặc dùng cấu trúc tran
                         <form action="?page=handle_reset_password" method="POST">
                             <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
 
-                            <div class="form-floating mb-3">
+                            <div class="form-floating mb-3 position-relative">
                                 <input type="password" class="form-control <?= error_class_bs_rpw('new_password', $errors) ?>" id="new_password" name="new_password" placeholder="Mật khẩu mới" required>
                                 <label for="new_password">Mật khẩu mới (ít nhất 6 ký tự)</label>
+                                <span class="password-toggle" onclick="togglePasswordVisibility('new_password', this)">
+                                    <i class="fas fa-eye"></i>
+                                </span>
                                 <?php display_error_bs_rpw('new_password', $errors); ?>
                             </div>
-                            <div class="form-floating mb-3">
+                            <div class="form-floating mb-3 position-relative">
                                 <input type="password" class="form-control <?= error_class_bs_rpw('confirm_new_password', $errors) ?>" id="confirm_new_password" name="confirm_new_password" placeholder="Xác nhận mật khẩu mới" required>
                                 <label for="confirm_new_password">Xác nhận mật khẩu mới</label>
+                                <span class="password-toggle" onclick="togglePasswordVisibility('confirm_new_password', this)">
+                                    <i class="fas fa-eye"></i>
+                                </span>
                                 <?php display_error_bs_rpw('confirm_new_password', $errors); ?>
                             </div>
 
@@ -45,5 +51,7 @@ include_once __DIR__ . '/../layout/header.php'; // Hoặc dùng cấu trúc tran
             </div>
         </div>
     </div>
+
+    <script src="/webfinal/public/js/reset_password.js"></script>
 
 <?php include_once __DIR__ . '/../layout/footer.php'; // Hoặc dùng cấu trúc trang riêng ?>

@@ -12,11 +12,8 @@ $pageTitle = 'Đăng nhập';
     <title><?= htmlspecialchars($pageTitle) ?></title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background-color: #f8f9fa; }
-        .login-container { max-width: 400px; width: 100%; }
-        .password-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6c757d; z-index: 5; }
-    </style>
+    <link rel="stylesheet" href="/webfinal/public/css/login.css">
+
 </head>
 <body>
 <div class="login-container p-4">

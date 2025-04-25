@@ -3,26 +3,10 @@
 $pageTitle = $pageTitle ?? 'Liên hệ';
 include_once __DIR__ . '/../layout/header.php'; // Includes Bootstrap
 ?>
-    <style>
-        .map-container iframe {
-            border: 0;
-            border-radius: 0.375rem; /* Match Bootstrap's rounded */
-            width: 100%; /* Đảm bảo iframe chiếm đủ chiều rộng */
-            height: 400px; /* Đặt chiều cao cố định hoặc theo tỷ lệ */
-        }
-        .contact-info-item i {
-            width: 25px; /* Tăng nhẹ chiều rộng icon */
-            text-align: center;
-            font-size: 1.1rem; /* Tăng nhẹ kích thước icon */
-            margin-top: 0.1rem; /* Căn chỉnh icon với text */
-        }
-        .contact-info-item div {
-            line-height: 1.6;
-        }
-        .contact-form-card {
-            border-top: 3px solid var(--bs-primary); /* Thêm viền màu nhấn nhá */
-        }
-    </style>
+
+<?php // link to external CSS ?>
+<link rel="stylesheet" href="/webfinal/public/css/contact.css">
+?>
 
     <section class="contact-section py-5">
         <div class="container">

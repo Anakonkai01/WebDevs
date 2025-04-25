@@ -9,13 +9,9 @@ $orderId = $orderId ?? null;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đặt hàng thành công</title>
-    <link href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/webfinal/public/css/order_success.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        body { background-color: #e9f7ef; /* Light green background */ }
-        .success-container { max-width: 650px; margin-top: 5rem; }
-        .icon { font-size: 4em; color: #198754; /* Bootstrap success green */ }
-    </style>
+
 </head>
 <body class="d-flex align-items-center justify-content-center">
 <div class="success-container text-center">
@@ -39,6 +35,5 @@ $orderId = $orderId ?? null;
         </div>
     </div>
 </div>
-<script src="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

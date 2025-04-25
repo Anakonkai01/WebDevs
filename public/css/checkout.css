@@ -1,0 +1,12 @@
+/* Web/app/Views/checkout.php */
+        .checkout-form-wrapper {
+            max-width: 800px;
+            margin: auto;
+        }
+        .form-control-plaintext {
+            background-color: #f8f9fa;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+        .cart-summary-box { background-color: #f8f9fa; border: 1px solid #dee2e6; position: sticky; top: 80px; }
+        .cart-item-img { width: 80px; height: 80px; object-fit: contain; }

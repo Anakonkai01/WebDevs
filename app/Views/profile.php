@@ -9,15 +9,13 @@ if (!isset($_SESSION['user_id']) || !isset($user) || !$user) {
     exit;
 }
 
+$pageTitle = "Hồ sơ của bạn";
 $username = htmlspecialchars($user['username'] ?? 'N/A');
 $email = htmlspecialchars($user['email'] ?? 'N/A');
 $createdAt = isset($user['created_at']) ? date('d/m/Y H:i', strtotime($user['created_at'])) : 'N/A';
-$flashMessage = $flashMessage ?? null; // Flash message is handled by header
+include_once __DIR__ . '/../layout/header.php';
 ?>
-    <style>
-        /* Optional: Custom profile styles */
-        .profile-actions .list-group-item i { width: 20px; text-align: center; }
-    </style>
+<link rel="stylesheet" href="/webfinal/public/css/profile.css">
 
     <div class="container my-4">
         <div class="row justify-content-center">

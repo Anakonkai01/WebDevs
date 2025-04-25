@@ -31,11 +31,10 @@ function getStatusBadgeClass($status) {
 
 $pageTitle = 'Lịch sử đơn hàng';
 include_once __DIR__ . '/../layout/header.php'; // Includes Bootstrap
+
 ?>
-    <style>
-        .status-badge { font-size: 0.85em; }
-        .order-actions a, .order-actions button { white-space: nowrap; }
-    </style>
+    <link rel="stylesheet" href="/webfinal/public/css/order_history.css">
+
 
     <div class="container my-4">
         <h1 class="mb-4">Lịch sử đơn hàng</h1>

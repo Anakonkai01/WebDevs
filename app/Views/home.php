@@ -27,25 +27,9 @@ function build_query_string_home(array $params): string {
 }
 
 ?>
-    <style>
-        /* Minimal custom styles */
-        .hero-section { background-color: #e9ecef; }
-        .filter-widget .list-group-item-action.active { z-index: 2; color: #fff; background-color: #0d6efd; border-color: #0d6efd;}
-        .product-card .card-img-top { height: 200px; object-fit: contain; background-color: #fff; padding: 0.5rem; }
-        .product-card .card-title { min-height: 3em; }
-        .product-card .price { color: #dc3545; }
-        .product-card .actions .btn-wishlist { color: #6c757d; border: none;}
-        .product-card .actions .btn-wishlist.active { color: #dc3545; }
-        .product-card .actions .btn-cart { color: #198754; border: none; }
-        .product-card .actions .btn-wishlist.disabled,
-        .product-card .actions .btn-cart.disabled { opacity: 0.5; }
-        .product-list-widget img { width: 50px; height: 50px; object-fit: contain; }
-        .product-list-widget .info .name { font-weight: 500; text-decoration: none; color: #212529;}
-        .product-list-widget .info .name:hover { color: #0d6efd; }
-        .product-list-widget .info .price { color: #dc3545; }
-        .product-list-widget .info .reviews { color: #6c757d; font-size: 0.85em; }
-    </style>
-
+<link rel="stylesheet" href="/webfinal/public/css/home.css">
+<?php
+?>
 <?php // Hero Section ?>
     <div class="hero-section p-5 mb-4 rounded-3">
         <div class="container-fluid py-5 text-center">
@@ -185,65 +169,7 @@ function build_query_string_home(array $params): string {
         </section>
 
     </div>
-
-<?php // JavaScript for Wishlist Toggle (Giữ nguyên) ?>
-    <script>
-        // --- Wishlist Toggle Function (Chỉ chứa logic AJAX) ---
-        async function toggleWishlist(buttonElement, productId) {
-            // ... (code toggleWishlist giữ nguyên như trước) ...
-            console.log("AJAX toggleWishlist called for button:", buttonElement, "productId:", productId);
-
-            const isWishlisted = buttonElement.dataset.isWishlisted === '1';
-            const action = isWishlisted ? 'wishlist_remove' : 'wishlist_add';
-            const icon = buttonElement.querySelector('i');
-
-            buttonElement.disabled = true;
-            if(icon) { icon.classList.remove('fa-heart'); icon.classList.add('fa-spinner', 'fa-spin'); }
-
-            try {
-                const response = await fetch(`?page=${action}&id=${productId}&ajax=1&redirect=no`, {
-                    method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    const data = await response.json();
-                    console.log("Wishlist Response:", data);
-                    if (data.success) {
-                        buttonElement.dataset.isWishlisted = isWishlisted ? '0' : '1';
-                        buttonElement.classList.toggle('active');
-                        buttonElement.title = isWishlisted ? 'Thêm vào Yêu thích' : 'Xóa khỏi Yêu thích';
-                        if (typeof data.wishlistItemCount !== 'undefined') {
-                            const wishlistCountElement = document.getElementById('header-wishlist-count');
-                            if (wishlistCountElement) {
-                                const newCount = parseInt(data.wishlistItemCount);
-                                wishlistCountElement.textContent = newCount;
-                                wishlistCountElement.style.display = newCount > 0 ? 'inline-block' : 'none';
-                            }
-                        }
-                    } else {
-                        if (data.login_required) { // Xử lý nếu Controller trả về yêu cầu đăng nhập
-                            const currentUrl = encodeURIComponent(window.location.href || '?page=home');
-                            window.location.href = `?page=login&redirect=${currentUrl}`;
-                            return; // Dừng xử lý tiếp
-                        }
-                        alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
-                    }
-                } else {
-                    const textResponse = await response.text();
-                    console.error("Non-JSON Wishlist Response:", textResponse);
-                    throw new Error('Received non-JSON response from server during wishlist toggle.');
-                }
-            } catch (error) {
-                console.error('Error toggling wishlist:', error);
-                alert('Lỗi kết nối hoặc xử lý (Wishlist). Vui lòng thử lại.');
-            } finally {
-                buttonElement.disabled = false;
-                if(icon) { icon.classList.remove('fa-spinner', 'fa-spin'); icon.classList.add('fa-heart'); }
-            }
-        }
-    </script>
-
+    <script src="/webfinal/public/js/home.js"></script>
 <?php
 include_once __DIR__ . '/../layout/footer.php'; // Footer chứa event listener cho wishlist
 ?>

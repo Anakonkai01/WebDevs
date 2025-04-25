@@ -1,0 +1,61 @@
+/* Minimal custom CSS */
+.filter-widget .list-group-item-action.active {
+    z-index: 2;
+    color: #fff;
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.product-card .card-img-top {
+    height: 200px;
+    object-fit: contain;
+    background-color: #fff;
+    padding: 0.5rem;
+}
+
+.product-card .card-title {
+    min-height: 3em; /* Ensure title area has consistent height */
+}
+
+.product-card .price {
+    color: #dc3545;
+}
+
+.product-card .actions .btn-wishlist {
+    color: #6c757d;
+    border: none;
+}
+
+.product-card .actions .btn-wishlist.active {
+    color: #dc3545;
+}
+
+.product-card .actions .btn-cart {
+    color: #198754;
+    border: none;
+}
+
+.product-card .actions .btn-wishlist.disabled,
+.product-card .actions .btn-cart.disabled {
+    opacity: 0.5;
+    /* KHÔNG CẦN pointer-events: none; nữa nếu dùng Event Delegation */
+}
+
+.pagination .page-link {
+    min-width: 40px;
+    text-align: center;
+}
+
+.pagination .page-item.disabled .page-link {
+    pointer-events: none;
+    color: #6c757d;
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+.pagination .page-item.active .page-link {
+    z-index: 3;
+    color: #fff;
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}

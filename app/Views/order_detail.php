@@ -21,10 +21,11 @@ function translate_status_od(string $status): string { /* ... function code ... 
 
 $pageTitle = 'Chi tiết Đơn hàng #' . htmlspecialchars($order['id']);
 include_once __DIR__ . '/../layout/header.php';
+$cssPath = '/webfinal/public/css/order_detail.css';
 ?>
-    <style>
-        .order-detail-item-img { width: 60px; height: 60px; object-fit: contain; }
-    </style>
+<head>
+    <link rel="stylesheet" href="<?= htmlspecialchars($cssPath) ?>">
+</head>
 
     <div class="container my-4">
         <div class="d-flex justify-content-between align-items-center mb-4">

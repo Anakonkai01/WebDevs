@@ -1,0 +1,3 @@
+/* Custom styles for order detail */
+        .order-details-table td, .order-details-table th { vertical-align: middle; }
+        .order-details-table .product-img { width: 80px; height: 80px; object-fit: contain; }

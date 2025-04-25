@@ -17,7 +17,8 @@ function error_class_bs($field, $errors) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi">   
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,25 +26,8 @@ function error_class_bs($field, $errors) {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background-color: #f8f9fa; }
-        .register-container { max-width: 450px; width: 100%; }
-        .password-toggle {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: #6c757d;
-            z-index: 5; /* Đảm bảo icon nằm trên input */
-        }
-        /* Fix label màu đỏ khi input không hợp lệ và không focus */
-        .form-floating > .form-control:not(:placeholder-shown):not(:focus).is-invalid ~ label {
-            color: var(--bs-danger);
-        }
-        .form-floating > .form-control.is-invalid {
-            border-color: var(--bs-danger); /* Thêm viền đỏ cho input */
-        }
     </style>
+    <link rel="stylesheet" href="public/css/register.css">
 </head>
 <body>
 <div class="register-container p-4">
@@ -99,23 +83,8 @@ function error_class_bs($field, $errors) {
     </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-<script>
-    // Hàm ẩn/hiện mật khẩu
-    function togglePasswordVisibility(inputId, iconElement) {
-        const input = document.getElementById(inputId);
-        const icon = iconElement.querySelector('i');
-        if (!input || !icon) return; // Thêm kiểm tra tồn tại
+<script src="public/js/register.js"></script>
 
-        if (input.type === "password") {
-            input.type = "text";
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
-        } else {
-            input.type = "password";
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
-        }
-    }
-</script>
+
 </body>
 </html>
