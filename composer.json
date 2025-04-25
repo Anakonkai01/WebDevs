@@ -1,0 +1,23 @@
+{
+  "name": "your-vendor-name/shopping-cart",
+  "description": "A simple PHP shopping cart application.",
+  "type": "project",
+  "require": {
+  },
+  "license": "proprietary",
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Nhan",
+      "email": "nguyentranhoangnhan18@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
+
+

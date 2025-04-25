@@ -1,110 +1,139 @@
 <?php
+namespace App\Models;
 
-require_once 'BaseModel.php';
-
+use App\Core\Database;
+use Exception; // Giữ lại Exception nếu dùng ở đâu đó
 
 class User extends BaseModel{
     protected static string $table = 'users';
 
-    // dang ky nguoi dung moi
-    public static function create(string $username, string $email, string $password): bool
+    /**
+     * Tạo người dùng mới (mặc định đã kích hoạt).
+     * @param string $username
+     * @param string $email
+     * @param string $password
+     * @return int|false ID user nếu thành công, false nếu lỗi.
+     */
+    public static function createAndGetId(string $username, string $email, string $password): int|false
     {
         $hash = password_hash($password, PASSWORD_DEFAULT);
-        $sql = "INSERT INTO users (username, email, password) VALUES (?,?,?)";
+        // is_email_verified đã bị xóa khỏi bảng
+        $sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
         $stmt = Database::prepare($sql,"sss",[$username, $email, $hash]);
-        return $stmt->execute();
+        if ($stmt && $stmt->execute()) {
+            $lastId = $stmt->insert_id;
+            $stmt->close();
+            return ($lastId > 0) ? $lastId : false; // Kiểm tra ID hợp lệ
+        }
+        if ($stmt) $stmt->close();
+        error_log("Lỗi SQL khi tạo user: " . ($stmt ? $stmt->error : Database::conn()->error)); // Ghi log lỗi DB
+        return false;
     }
 
-
-    // find by id
+    // --- Các hàm tìm kiếm và kiểm tra tồn tại (Giữ nguyên) ---
     public static function find(int $id): ?array {
         return parent::find($id);
     }
-
-    // find by username
-    public static function findByUsername(string $username): ?array
-    {
+    public static function findByUsername(string $username): ?array {
         $sql = "SELECT * FROM users WHERE username = ?";
         $stmt = Database::prepare($sql,"s",[$username]);
-        $stmt->execute();
-        return $stmt->get_result()->fetch_assoc()? :null;
+        if ($stmt && $stmt->execute()) { $result = $stmt->get_result(); $user = $result ? $result->fetch_assoc() : null; $stmt->close(); return $user; }
+        if ($stmt) $stmt->close(); return null;
     }
-
-
-    // check login
-    public static function login(string $username, string $password): bool {
-        $user = self::findByUsername($username);
-        if ($user && password_verify($password, $user['password'])) {
-            return true;
-        }
-        return false;
+    public static function findByEmail(string $email): ?array {
+        $sql = "SELECT * FROM users WHERE email = ?";
+        $stmt = Database::prepare($sql,"s",[$email]);
+        if ($stmt && $stmt->execute()) { $result = $stmt->get_result(); $user = $result ? $result->fetch_assoc() : null; $stmt->close(); return $user; }
+        if ($stmt) $stmt->close(); return null;
     }
-
-
-    // kiem tra email da ton tai
     public static function isEmailExist(string $email): bool {
         $sql = "SELECT id FROM users WHERE email = ?";
         $stmt = Database::prepare($sql,"s",[$email]);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        return $result->num_rows >0;
+        if ($stmt && $stmt->execute()) { $stmt->store_result(); $numRows = $stmt->num_rows; $stmt->close(); return $numRows > 0; }
+        if ($stmt) $stmt->close(); return false;
     }
-
-    // kiem tra username da ton tai
     public static function isUsernameExist(string $username): bool {
         $sql = "SELECT id FROM users WHERE username = ?";
         $stmt = Database::prepare($sql,"s",[$username]);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        return $result->num_rows >0;
+        if ($stmt && $stmt->execute()) { $stmt->store_result(); $numRows = $stmt->num_rows; $stmt->close(); return $numRows > 0; }
+        if ($stmt) $stmt->close(); return false;
     }
 
-    // update email
-    public static function updateEmail(int $id, string $newEmail): bool {
-        $sql = "UPDATE users SET email = ? WHERE id = ?";
-        $stmt = Database::prepare($sql,"si",[$newEmail, $id]);
-        return $stmt->execute();
-    }
-
-    // update username
-    public static function updateUsername(int $id, string $newUsername): bool {
-        $sql = "UPDATE users SET username = ? WHERE id = ?";
-        $stmt = Database::prepare($sql,"si",[$newUsername, $id]);
-        return $stmt->execute();
-    }
-
-    // doi mat khau
-    public static function updatePassword(int $id, string $newPassword): bool {
-        $hash = password_hash($newPassword, PASSWORD_DEFAULT);
-        $sql = "UPDATE users SET password = ? WHERE id = ?";
-        $stmt = Database::prepare($sql,"si",[$hash, $id]);
-        return $stmt->execute();
-    }
-
-
-    // delete account
-    public static function delete(int $id): bool {
-        $sql = "DELETE FROM users WHERE id = ?";
-        $stmt = Database::prepare($sql,"i",[$id]);
-        return $stmt->execute();
-    }
-
-
+    // --- Các hàm cập nhật (Giữ nguyên hoặc cải thiện kiểm tra lỗi) ---
     /**
-     * Kiểm tra mật khẩu hiện tại của người dùng có đúng không.
-     * @param int $id ID người dùng
-     * @param string $password Mật khẩu cần kiểm tra
-     * @return bool True nếu mật khẩu đúng, False nếu sai hoặc không tìm thấy user
+     * Cập nhật username và/hoặc email.
+     * @param int $userId
+     * @param array $updates Mảng dạng ['username' => 'new_user', 'email' => 'new@email.com']
+     * @return bool
      */
-    public static function verifyPassword(int $id, string $password): bool {
-        $user = self::find($id); // Dùng lại hàm find đã có trong BaseModel/User
-        if ($user && isset($user['password'])) {
-            // So sánh password người dùng nhập với hash trong DB
-            return password_verify($password, $user['password']);
+    public static function updateProfile(int $userId, array $updates): bool {
+        if (empty($updates)) return true; // Không có gì để cập nhật
+        $setClauses = []; $params = []; $types = "";
+        foreach ($updates as $column => $value) {
+            // Chỉ cho phép cập nhật username và email
+            if (in_array($column, ['username', 'email'])) {
+                $setClauses[] = "`" . $column . "` = ?";
+                $params[] = $value;
+                $types .= "s";
+            } else {
+                // Ghi log hoặc bỏ qua nếu cố gắng cập nhật cột không hợp lệ
+                error_log("Cố gắng cập nhật cột không hợp lệ trong User::updateProfile (simplified): " . $column);
+                // return false; // Hoặc trả về false nếu muốn chặt chẽ hơn
+            }
         }
-        // Trả về false nếu không tìm thấy user hoặc không có cột password
+
+        // Nếu không có cột hợp lệ nào được chọn để cập nhật
+        if (empty($setClauses)) {
+            return false; // Hoặc true nếu coi như thành công vì không có gì sai
+        }
+
+        $sql = "UPDATE users SET " . implode(', ', $setClauses) . " WHERE id = ?";
+        $params[] = $userId; $types .= "i";
+        $stmt = Database::prepare($sql, $types, $params);
+        if ($stmt && $stmt->execute()) {
+            $success = $stmt->affected_rows >= 0; // Chấp nhận 0 nếu không có thay đổi thực sự
+            $stmt->close();
+            return $success;
+        }
+        if ($stmt) { error_log("Lỗi SQL updateProfile (simplified) ID $userId: " . $stmt->error); $stmt->close(); }
+        else { error_log("Lỗi prepare SQL updateProfile (simplified) ID $userId: " . Database::conn()->error); }
         return false;
     }
 
+
+    public static function updatePassword(int $id, string $newPassword): bool {
+        $hash = password_hash($newPassword, PASSWORD_DEFAULT);
+        // Không cần xóa token reset mật khẩu nữa
+        $sql = "UPDATE users SET password = ? WHERE id = ?";
+        $stmt = Database::prepare($sql,"si",[$hash, $id]);
+        if ($stmt && $stmt->execute()) {
+            // Password có thể giống hệt password cũ, affected_rows có thể là 0
+            // Nên coi là thành công nếu execute được
+            $success = true; //$stmt->affected_rows >= 0; // Chấp nhận 0 hoặc 1
+            $stmt->close();
+            return $success;
+        }
+        if ($stmt) $stmt->close();
+        error_log("Lỗi SQL khi cập nhật mật khẩu user ID $id: " . ($stmt ? $stmt->error : Database::conn()->error));
+        return false;
+    }
+
+    public static function delete(int $id): bool {
+        $sql = "DELETE FROM users WHERE id = ?";
+        $stmt = Database::prepare($sql,"i",[$id]);
+        if ($stmt && $stmt->execute()) { $success = $stmt->affected_rows > 0; $stmt->close(); return $success; }
+        if ($stmt) $stmt->close(); error_log("Lỗi SQL khi xóa user ID $id: " . ($stmt ? $stmt->error : Database::conn()->error)); return false;
+    }
+
+    public static function verifyPassword(int $id, string $password): bool {
+        $user = self::find($id);
+        // Đảm bảo $user là mảng và có key 'password'
+        if (is_array($user) && isset($user['password'])) {
+            return password_verify($password, $user['password']);
+        }
+        return false;
+    }
+
+    // --- CÁC HÀM LIÊN QUAN ĐẾN TOKEN EMAIL/RESET ĐÃ BỊ XÓA ---
 
 }

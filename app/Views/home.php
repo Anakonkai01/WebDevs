@@ -4,25 +4,24 @@ $pageTitle = 'Trang chủ';
 include_once __DIR__ . '/../layout/header.php'; // Header includes Bootstrap CSS/JS
 
 // Get data from controller
-$search = $search ?? '';
-$brand = $brand ?? ''; // Selected brand (if any) - Note: Home page might not use this directly
+// $search = $search ?? ''; // Không cần search ở home nữa
+$brand = $brand ?? ''; // Selected brand (if any)
 $brands = $brands ?? []; // List of all brands
 $products = $products ?? []; // Main product list (featured/latest)
 $latestProducts = $latestProducts ?? [];
 $topRated = $topRated ?? [];
 $mostReviewed = $mostReviewed ?? [];
-$isLoggedIn = $isLoggedIn ?? false; // Make sure this is passed from HomeController
-$wishlistedIds = $wishlistedIds ?? []; // Make sure this is passed from HomeController
+$isLoggedIn = $isLoggedIn ?? false;
+$wishlistedIds = $wishlistedIds ?? [];
 
-// Helper function needed for sidebar links (can be defined here or included)
+// Helper function needed for sidebar links (keep as is)
 function build_query_string_home(array $params): string {
     $currentParams = $_GET;
     foreach ($params as $key => $value) {
         if ($value === null || $value === '') { unset($currentParams[$key]); }
         else { $currentParams[$key] = $value; }
     }
-    // Links from home sidebar should generally go to shop_grid
-    $currentParams['page'] = 'shop_grid';
+    $currentParams['page'] = 'shop_grid'; // Chuyển đến shop_grid
     if (isset($currentParams['pg']) && (int)$currentParams['pg'] <= 1) { unset($currentParams['pg']); }
     return http_build_query($currentParams);
 }
@@ -39,44 +38,60 @@ function build_query_string_home(array $params): string {
         .product-card .actions .btn-wishlist.active { color: #dc3545; }
         .product-card .actions .btn-cart { color: #198754; border: none; }
         .product-card .actions .btn-wishlist.disabled,
-        .product-card .actions .btn-cart.disabled {
-            opacity: 0.5; pointer-events: none;
-        }
-        /* Sidebar product list */
+        .product-card .actions .btn-cart.disabled { opacity: 0.5; }
         .product-list-widget img { width: 50px; height: 50px; object-fit: contain; }
         .product-list-widget .info .name { font-weight: 500; text-decoration: none; color: #212529;}
         .product-list-widget .info .name:hover { color: #0d6efd; }
         .product-list-widget .info .price { color: #dc3545; }
         .product-list-widget .info .reviews { color: #6c757d; font-size: 0.85em; }
-
     </style>
 
 <?php // Hero Section ?>
     <div class="hero-section p-5 mb-4 rounded-3">
-        <div class="container-fluid py-5 text-center"> <?php // Centered text ?>
+        <div class="container-fluid py-5 text-center">
             <h1 class="display-5 fw-bold">Chào mừng đến với MyShop!</h1>
-            <p class="fs-4 text-muted">Tìm kiếm sản phẩm công nghệ yêu thích của bạn.</p> <?php // Adjusted text ?>
-            <a href="?page=shop_grid" class="btn btn-primary btn-lg mt-3">Khám phá Cửa hàng</a> <?php // Added button ?>
+            <p class="fs-4 text-muted">Tìm kiếm sản phẩm công nghệ yêu thích của bạn.</p>
+            <a href="?page=shop_grid" class="btn btn-primary btn-lg mt-3">Khám phá Cửa hàng</a>
         </div>
     </div>
 
-    <div class="row g-4"> <?php // Bootstrap row with gutters ?>
+    <div class="row g-4">
 
         <?php // ----- Sidebar Column ----- ?>
         <aside class="col-lg-3">
 
-            <?php // ----- Brand Filter (Using improved style) ----- ?>
+            <?php // ----- Search Filter (Form tìm kiếm MỚI cho Home) ----- ?>
+            <div class="card shadow-sm mb-4 filter-widget">
+                <div class="card-header"><h5 class="mb-0">Tìm kiếm Sản phẩm</h5></div>
+                <div class="card-body">
+                    <?php // FORM NÀY SẼ SUBMIT ĐẾN ?page=shop_grid ?>
+                    <form method="GET" action="?">
+                        <?php // Input ẩn để đảm bảo submit đến trang shop_grid ?>
+                        <input type="hidden" name="page" value="shop_grid">
+                        <?php // Không cần giữ lại các bộ lọc khác ở đây ?>
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="search" placeholder="Nhập tên sản phẩm..." aria-label="Tìm sản phẩm">
+                            <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <?php // ----- KẾT THÚC FORM TÌM KIẾM MỚI ----- ?>
+
+
+            <?php // ----- Brand Filter (Giữ nguyên) ----- ?>
             <div class="card shadow-sm mb-4 filter-widget">
                 <div class="card-header bg-light py-2">
                     <h5 class="mb-0 fs-6 fw-semibold"><i class="fas fa-tags me-1 text-primary"></i> Hãng sản xuất</h5>
                 </div>
                 <div class="list-group list-group-flush">
-                    <a href="?page=shop_grid" <?php // Link to shop_grid (no filter) ?>
-                       class="list-group-item list-group-item-action py-2 <?= (empty($brand)) ? 'active' : '' ?>"> <?php // Note: $brand might not be set on home, adjust active state if needed ?>
+                    <?php // Link này chỉ cần đến shop_grid không lọc hãng ?>
+                    <a href="?page=shop_grid"
+                       class="list-group-item list-group-item-action py-2 <?= (empty($brand) || $brand == 'All') ? 'active' : '' ?>">
                         Tất cả Hãng
                     </a>
                     <?php foreach ($brands as $b): ?>
-                        <a href="?<?= build_query_string_home(['brand' => $b, 'pg' => null]) ?>" <?php // Link to shop_grid WITH brand filter, use correct helper ?>
+                        <a href="?<?= build_query_string_home(['brand' => $b, 'pg' => null]) ?>"
                            class="list-group-item list-group-item-action py-2 <?= ($brand == $b) ? 'active' : '' ?>">
                             <?= htmlspecialchars($b) ?>
                         </a>
@@ -84,7 +99,7 @@ function build_query_string_home(array $params): string {
                 </div>
             </div>
 
-            <?php // ----- Latest Products Widget ----- ?>
+            <?php // ----- Latest Products Widget (Giữ nguyên)----- ?>
             <div class="card shadow-sm mb-4">
                 <div class="card-header"><h5 class="mb-0 fs-6 fw-semibold"><i class="fas fa-star me-2 text-warning"></i>Sản phẩm mới</h5></div>
                 <ul class="list-group list-group-flush product-list-widget">
@@ -105,37 +120,30 @@ function build_query_string_home(array $params): string {
                     <?php endif; ?>
                 </ul>
             </div>
-            <?php // --- You can add Top Rated/Most Reviewed widgets here similarly --- ?>
 
         </aside>
 
-        <?php // ----- Main Content Column ----- ?>
+        <?php // ----- Main Content Column (Giữ nguyên phần hiển thị sản phẩm nổi bật) ----- ?>
         <section class="col-lg-9">
-
-            <?php // ----- Main Product Grid (Featured/Latest) ----- ?>
             <h2 class="mb-3">Sản phẩm nổi bật</h2>
             <?php if (!empty($products)): ?>
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4"> <?php // Responsive grid ?>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
                     <?php foreach ($products as $p): ?>
                         <?php
                         $pId = (int)($p['id'] ?? 0);
                         $stock = (int)($p['stock'] ?? 0);
-                        // Wishlist check (same as shop_grid)
                         $isProductWishlisted = false;
                         if ($isLoggedIn && is_array($wishlistedIds) && !empty($wishlistedIds)) {
                             $isProductWishlisted = in_array($pId, $wishlistedIds);
                         }
-                        // DEBUG: error_log("Home - PID: $pId, LoggedIn: $isLoggedIn, IsWishlisted: $isProductWishlisted, WishlistIDs: " . print_r($wishlistedIds, true));
                         ?>
                         <div class="col">
                             <div class="card h-100 shadow-sm product-card">
-                                <?php // Link only wraps image ?>
                                 <a href="?page=product_detail&id=<?= $pId ?>" class="text-center">
                                     <img src="/public/img/<?= htmlspecialchars($p['image'] ?? 'default.jpg') ?>" class="card-img-top" alt="<?= htmlspecialchars($p['name'] ?? '') ?>" loading="lazy">
                                 </a>
                                 <div class="card-body d-flex flex-column">
                                     <h5 class="card-title">
-                                        <?php // Link only wraps title ?>
                                         <a href="?page=product_detail&id=<?= $pId ?>" class="text-dark text-decoration-none">
                                             <?= htmlspecialchars($p['name'] ?? 'N/A') ?>
                                         </a>
@@ -143,19 +151,15 @@ function build_query_string_home(array $params): string {
                                     <p class="card-text price fw-bold fs-5 mt-auto"><?= number_format($p['price'] ?? 0,0,',','.') ?>₫</p>
                                 </div>
                                 <div class="card-footer bg-transparent border-top-0 pb-3">
-                                    <?php // Actions OUTSIDE the main links ?>
                                     <div class="actions d-flex justify-content-between align-items-center">
-                                        <?php // Wishlist Button ?>
-                                        <button type="button" <?php // Add type="button" ?>
+                                        <button type="button"
                                                 class="btn btn-link btn-wishlist p-0 <?= $isProductWishlisted ? 'active' : '' ?> <?= !$isLoggedIn ? 'disabled' : '' ?>"
-                                                onclick="toggleWishlist(this, <?= $pId ?>)"
                                                 data-product-id="<?= $pId ?>"
                                                 data-is-wishlisted="<?= $isProductWishlisted ? '1' : '0' ?>"
                                                 title="<?= !$isLoggedIn ? 'Đăng nhập để yêu thích' : ($isProductWishlisted ? 'Xóa khỏi Yêu thích' : 'Thêm vào Yêu thích') ?>"
                                         >
                                             <i class="fas fa-heart fs-4"></i>
                                         </button>
-                                        <?php // Cart Link ?>
                                         <a href="?page=product_detail&id=<?= $pId ?>"
                                            class="btn btn-link btn-cart p-0 <?= $stock <= 0 ? 'disabled' : '' ?>"
                                            title="<?= $stock > 0 ? 'Xem chi tiết sản phẩm' : 'Hết hàng' ?>"
@@ -178,77 +182,54 @@ function build_query_string_home(array $params): string {
                 </div>
             <?php endif; ?>
 
-        </section> <?php // End Main Content Column ?>
+        </section>
 
-    </div> <?php // End row ?>
+    </div>
 
-<?php // JavaScript for Wishlist Toggle (Same as shop_grid.php) ?>
+<?php // JavaScript for Wishlist Toggle (Giữ nguyên) ?>
     <script>
-        // --- Wishlist Toggle Function (Ensure this is identical across relevant views) ---
+        // --- Wishlist Toggle Function (Chỉ chứa logic AJAX) ---
         async function toggleWishlist(buttonElement, productId) {
-            // Determine the correct redirect URL for login attempts on this specific page
-            const loginRedirectUrl = encodeURIComponent(window.location.href || '?page=home'); // Default to home if current URL fails
-
-            // Kiểm tra nút có bị disable không (trường hợp chưa đăng nhập)
-            if (buttonElement.classList.contains('disabled')) {
-                alert('Vui lòng đăng nhập để sử dụng chức năng này.');
-                window.location.href = `?page=login&redirect=${loginRedirectUrl}`; // Use dynamic redirect
-                return;
-            }
+            // ... (code toggleWishlist giữ nguyên như trước) ...
+            console.log("AJAX toggleWishlist called for button:", buttonElement, "productId:", productId);
 
             const isWishlisted = buttonElement.dataset.isWishlisted === '1';
             const action = isWishlisted ? 'wishlist_remove' : 'wishlist_add';
             const icon = buttonElement.querySelector('i');
 
-            buttonElement.disabled = true; // Disable nút tạm thời
-            icon.classList.remove('fa-heart'); // Bỏ icon trái tim
-            icon.classList.add('fa-spinner', 'fa-spin'); // Thêm icon xoay
+            buttonElement.disabled = true;
+            if(icon) { icon.classList.remove('fa-heart'); icon.classList.add('fa-spinner', 'fa-spin'); }
 
             try {
-                // Gửi yêu cầu AJAX
                 const response = await fetch(`?page=${action}&id=${productId}&ajax=1&redirect=no`, {
-                    method: 'GET', // Hoặc POST nếu controller nhận POST cho ajax
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
-
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-                // Kiểm tra content type trước khi parse JSON
                 const contentType = response.headers.get("content-type");
                 if (contentType && contentType.indexOf("application/json") !== -1) {
-                    const data = await response.json(); // Parse JSON
-                    console.log("Wishlist Response:", data); // Log để debug
-
+                    const data = await response.json();
+                    console.log("Wishlist Response:", data);
                     if (data.success) {
-                        // Cập nhật trạng thái nút
                         buttonElement.dataset.isWishlisted = isWishlisted ? '0' : '1';
                         buttonElement.classList.toggle('active');
                         buttonElement.title = isWishlisted ? 'Thêm vào Yêu thích' : 'Xóa khỏi Yêu thích';
-
-                        // *** CẬP NHẬT HEADER COUNT ***
                         if (typeof data.wishlistItemCount !== 'undefined') {
                             const wishlistCountElement = document.getElementById('header-wishlist-count');
                             if (wishlistCountElement) {
                                 const newCount = parseInt(data.wishlistItemCount);
                                 wishlistCountElement.textContent = newCount;
-                                // Hiện/ẩn badge dựa trên số lượng mới
                                 wishlistCountElement.style.display = newCount > 0 ? 'inline-block' : 'none';
                             }
                         }
-                        // *** KẾT THÚC CẬP NHẬT HEADER COUNT ***
-
                     } else {
-                        // Xử lý login_required nếu controller trả về
-                        if (data.login_required) {
-                            alert(data.message || 'Vui lòng đăng nhập để sử dụng chức năng này.');
-                            window.location.href = `?page=login&redirect=${loginRedirectUrl}`; // Chuyển hướng đăng nhập
-                        } else {
-                            // Các lỗi khác từ server
-                            alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+                        if (data.login_required) { // Xử lý nếu Controller trả về yêu cầu đăng nhập
+                            const currentUrl = encodeURIComponent(window.location.href || '?page=home');
+                            window.location.href = `?page=login&redirect=${currentUrl}`;
+                            return; // Dừng xử lý tiếp
                         }
+                        alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
                     }
                 } else {
-                    // Xử lý trường hợp không phải JSON (ví dụ: lỗi server, trang HTML lỗi)
                     const textResponse = await response.text();
                     console.error("Non-JSON Wishlist Response:", textResponse);
                     throw new Error('Received non-JSON response from server during wishlist toggle.');
@@ -257,17 +238,12 @@ function build_query_string_home(array $params): string {
                 console.error('Error toggling wishlist:', error);
                 alert('Lỗi kết nối hoặc xử lý (Wishlist). Vui lòng thử lại.');
             } finally {
-                // Khôi phục trạng thái nút
                 buttonElement.disabled = false;
-                icon.classList.remove('fa-spinner', 'fa-spin'); // Bỏ icon xoay
-                icon.classList.add('fa-heart'); // Thêm lại icon trái tim
+                if(icon) { icon.classList.remove('fa-spinner', 'fa-spin'); icon.classList.add('fa-heart'); }
             }
         }
-
-        // (Nếu home.php có chức năng Add to Cart AJAX thì cần hàm đó ở đây nữa)
     </script>
 
 <?php
-include_once __DIR__ . '/../layout/footer.php';
+include_once __DIR__ . '/../layout/footer.php'; // Footer chứa event listener cho wishlist
 ?>
-

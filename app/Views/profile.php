@@ -46,7 +46,7 @@ $flashMessage = $flashMessage ?? null; // Flash message is handled by header
                                     <dt class="col-sm-4 text-sm-end">Ngày tham gia:</dt>
                                     <dd class="col-sm-8"><?= $createdAt ?></dd>
                                 </dl>
-                                <?php // Optional Edit Button:
+                                <?php // Optional Edit Button (Alternative placement):
                                 /*
                                 <div class="text-end mt-3">
                                    <a href="?page=edit_profile" class="btn btn-sm btn-outline-secondary">
@@ -64,6 +64,9 @@ $flashMessage = $flashMessage ?? null; // Flash message is handled by header
                         <div class="card shadow-sm h-100 profile-actions">
                             <div class="card-header"><h2 class="h5 mb-0">Quản lý & Hoạt động</h2></div>
                             <div class="list-group list-group-flush">
+                                <a href="?page=edit_profile" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-user-edit me-2 text-warning"></i>Chỉnh sửa Hồ sơ (Username/Email)
+                                </a>
                                 <a href="?page=change_password" class="list-group-item list-group-item-action">
                                     <i class="fas fa-key me-2 text-primary"></i>Thay đổi mật khẩu
                                 </a>

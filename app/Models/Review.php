@@ -1,5 +1,8 @@
 <?php
-require_once __DIR__ . '/BaseModel.php';
+namespace App\Models;
+
+use App\Core\Database;
+// BaseModel cùng namespace
 
 class Review extends BaseModel
 {
@@ -105,32 +108,32 @@ class Review extends BaseModel
      * @param int $productId
      * @return bool
      */
-    // public static function updateProductAverageRating(int $productId): bool
-    // {
-    //     // Tính rating trung bình từ bảng reviews (chỉ tính các review có rating)
-    //     $sqlAvg = "SELECT AVG(rating) as avg_rating FROM reviews WHERE product_id = ? AND rating IS NOT NULL";
-    //     $stmtAvg = Database::prepare($sqlAvg, "i", [$productId]);
-    //     $avgRating = 0;
-    //     if ($stmtAvg && $stmtAvg->execute()) {
-    //         $result = $stmtAvg->get_result();
-    //         $row = $result ? $result->fetch_assoc() : null;
-    //         if ($row && $row['avg_rating'] !== null) {
-    //             $avgRating = round((float)$row['avg_rating'], 1); // Làm tròn 1 chữ số thập phân
-    //         }
-    //         $stmtAvg->close();
-    //     } else {
-    //          if ($stmtAvg) $stmtAvg->close();
-    //         return false; // Lỗi khi tính trung bình
-    //     }
+     public static function updateProductAverageRating(int $productId): bool
+     {
+         // Tính rating trung bình từ bảng reviews (chỉ tính các review có rating)
+         $sqlAvg = "SELECT AVG(rating) as avg_rating FROM reviews WHERE product_id = ? AND rating IS NOT NULL";
+         $stmtAvg = Database::prepare($sqlAvg, "i", [$productId]);
+         $avgRating = 0;
+         if ($stmtAvg && $stmtAvg->execute()) {
+             $result = $stmtAvg->get_result();
+             $row = $result ? $result->fetch_assoc() : null;
+             if ($row && $row['avg_rating'] !== null) {
+                 $avgRating = round((float)$row['avg_rating'], 1); // Làm tròn 1 chữ số thập phân
+             }
+             $stmtAvg->close();
+         } else {
+              if ($stmtAvg) $stmtAvg->close();
+             return false; // Lỗi khi tính trung bình
+         }
 
-    //     // Cập nhật vào bảng products
-    //     $sqlUpd = "UPDATE products SET rating = ? WHERE id = ?";
-    //     $stmtUpd = Database::prepare($sqlUpd, "di", [$avgRating, $productId]); // double, integer
-    //      if ($stmtUpd && $stmtUpd->execute()) {
-    //           $stmtUpd->close();
-    //         return true;
-    //     }
-    //      if ($stmtUpd) $stmtUpd->close();
-    //     return false; // Lỗi khi cập nhật product
-    // }
+         // Cập nhật vào bảng products
+         $sqlUpd = "UPDATE products SET rating = ? WHERE id = ?";
+         $stmtUpd = Database::prepare($sqlUpd, "di", [$avgRating, $productId]); // double, integer
+          if ($stmtUpd && $stmtUpd->execute()) {
+               $stmtUpd->close();
+             return true;
+         }
+          if ($stmtUpd) $stmtUpd->close();
+         return false; // Lỗi khi cập nhật product
+     }
 }

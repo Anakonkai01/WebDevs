@@ -1,70 +1,48 @@
 <?php
-require_once BASE_PATH . '/app/controllers/BaseController.php';
-require_once BASE_PATH . '/app/models/Product.php';
-require_once BASE_PATH . '/app/Models/Wishlist.php'; // Cần nếu index() có dùng
+namespace App\Controllers; // <--- Namespace
+
+use App\Models\Product;   // <-- Use Model Product
 
 class HomeController extends BaseController
 {
-    /**
-     * Hiển thị trang chủ với các chức năng:
-     * - Tìm kiếm
-     * - Lọc theo hãng
-     * - Sản phẩm mới nhất
-     * - Sản phẩm đánh giá cao
-     * - Sản phẩm nhiều review nhất
-     */
     public function index()
     {
-        $search = $_GET['search'] ?? '';
-        $brand  = $_GET['brand'] ?? '';
+        // Bỏ phần xử lý search và brand ở đây, chỉ lấy sản phẩm nổi bật/mới nhất
+        // $search = $_GET['search'] ?? ''; // XÓA DÒNG NÀY
+        // $brand  = $_GET['brand'] ?? ''; // XÓA HOẶC GIỮ LẠI NẾU CẦN CHO LOGIC KHÁC
 
-        // Lấy danh sách sản phẩm chính
-        if (!empty($search)) {
-            $products = Product::searchByName($search);
-        } elseif (!empty($brand)) {
-            $products = Product::getByBrand($brand);
-        } else {
-            $products = Product::getLatest(12);
-        }
+        // if (!empty($search)) { // XÓA KHỐI LỆNH NÀY
+        //     $products = Product::searchByName($search);
+        // } elseif (!empty($brand)) { // XÓA KHỐI LỆNH NÀY
+        //     $products = Product::getByBrand($brand);
+        // } else {
+        //     $products = Product::getLatest(12); // Giữ lại hoặc thay đổi logic lấy sản phẩm nổi bật
+        // }
 
+        // Nên có một logic rõ ràng để lấy sản phẩm nổi bật cho trang chủ
+        // Ví dụ: Lấy 12 sản phẩm mới nhất hoặc sản phẩm có rating cao nhất
+        $featuredProducts = Product::getLatest(12); // Ví dụ: lấy 12 sản phẩm mới nhất làm nổi bật
 
-        // *** ADD THIS ***
-        $isLoggedIn = isset($_SESSION['user_id']); // Check login status
-        $wishlistedIds = []; // Initialize empty array
-        if ($isLoggedIn) {
-            // Make sure Wishlist model is included if not autoloaded
-            require_once BASE_PATH . '/app/Models/Wishlist.php';
-            $wishlistedIds = Wishlist::getWishlistedProductIds($_SESSION['user_id']);
-        }
-// *** END ADD ***
+        // Dữ liệu isLoggedIn và wishlistedIds sẽ được BaseController tự động thêm vào
 
-        // Các danh sách phụ cho homepage
-        $latestProducts   = Product::getLatest(6);
+        $latestProducts   = Product::getLatest(6); // Vẫn lấy SP mới cho widget sidebar
         $topRatedProducts = Product::getTopRated(5);
         $mostReviewed     = Product::getMostReviewed(5);
-        $brands           = Product::getDistinctBrands(); // <--- LẤY DANH SÁCH HÃNG
+        $brands           = Product::getDistinctBrands(); // Vẫn lấy danh sách hãng cho sidebar
 
-        // Render view home.php và truyền dữ liệu
         $this->render('home', [
-            'products'       => $products,
+            'products'       => $featuredProducts, // Truyền sản phẩm nổi bật vào view
             'latestProducts' => $latestProducts,
             'topRated'       => $topRatedProducts,
             'mostReviewed'   => $mostReviewed,
-            'search'         => $search,
-            'brand'          => $brand,
-            'brands'         => $brands, // <--- TRUYỀN SANG VIEW
-            'isLoggedIn' => $isLoggedIn,     // <-- Pass login status
-            'wishlistedIds' => $wishlistedIds // <-- Pass wishlist IDs
+            // 'search'         => $search, // BỎ search
+            // 'brand'          => $brand, // BỎ brand nếu không dùng
+            'brands'         => $brands, // Vẫn cần brands cho sidebar
+            // isLoggedIn, wishlistedIds, wishlistItemCount, cartItemCount sẽ được tự động thêm
         ]);
     }
 
-
-    /**
-     * Hiển thị trang liên hệ tĩnh
-     */
     public function contact() {
-        // Đối với trang tĩnh, thường không cần lấy dữ liệu từ Model
-        // Chỉ cần render view và có thể truyền tiêu đề trang
         $this->render('contact', ['pageTitle' => 'Liên hệ']);
     }
 }

@@ -1,294 +1,330 @@
 <?php
 // Web/app/Controllers/UserController.php
 
-require_once BASE_PATH . '/app/Controllers/BaseController.php';
-require_once BASE_PATH . '/app/Models/User.php'; // Cần User model
+namespace App\Controllers; // Đảm bảo namespace đúng
+
+use App\Models\User; // Sử dụng User model
 
 class UserController extends BaseController {
 
-    public function __construct() {
-        // Đảm bảo session đã được khởi động
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
-    }
-
-    /**
-     * Hiển thị form đăng nhập
-     */
+    // --- HIỂN THỊ FORM ---
     public function showLoginForm() {
-        // Lấy thông báo lỗi (nếu có) từ session và xóa nó đi
+        // Đảm bảo session được khởi tạo (thường BaseController đã làm)
+        if (session_status() == PHP_SESSION_NONE) { session_start(); }
+        // Lấy lỗi flash (nếu có) từ lần submit trước
         $errorMessage = $_SESSION['flash_error'] ?? null;
-        if ($errorMessage) {
-            unset($_SESSION['flash_error']);
-        }
+        if ($errorMessage) { unset($_SESSION['flash_error']); } // Xóa lỗi sau khi đọc
+        // Render view, truyền lỗi (nếu có)
         $this->render('login', ['errorMessage' => $errorMessage]);
     }
 
-    /**
-     * Xử lý dữ liệu từ form đăng nhập
-     */
-    public function handleLogin() {
-        $username = $_POST['username'] ?? null;
-        $password = $_POST['password'] ?? null;
-
-        // Validation đơn giản
-        if (empty($username) || empty($password)) {
-            $_SESSION['flash_error'] = 'Vui lòng nhập cả tên đăng nhập và mật khẩu.';
-            $this->redirect('?page=login');
-            return;
-        }
-
-        // Kiểm tra đăng nhập bằng User model
-        if (User::login($username, $password)) {
-            // Đăng nhập thành công
-            $user = User::findByUsername($username); // Lấy thông tin user để lưu vào session
-
-            // Lưu thông tin cần thiết vào session
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            // Có thể lưu thêm email, role,... nếu cần
-
-            // Quan trọng: Tạo lại session ID để tránh tấn công session fixation
-            session_regenerate_id(true);
-
-            // Chuyển hướng đến trang chủ hoặc trang tài khoản
-            $this->redirect('?page=home');
-        } else {
-            // Đăng nhập thất bại
-            $_SESSION['flash_error'] = 'Tên đăng nhập hoặc mật khẩu không chính xác.';
-            $this->redirect('?page=login');
-        }
-    }
-
-    /**
-     * Hiển thị form đăng ký
-     */
     public function showRegisterForm() {
-        // Lấy thông báo lỗi/thành công (nếu có) từ session và xóa nó đi
-        $flashMessage = $_SESSION['flash_message'] ?? null;
+        if (session_status() == PHP_SESSION_NONE) { session_start(); }
+        // Lấy lỗi validation và dữ liệu cũ (nếu có) từ lần submit trước
         $formErrors = $_SESSION['form_errors'] ?? [];
-        $formData = $_SESSION['form_data'] ?? []; // Giữ lại dữ liệu form cũ nếu lỗi
-
-        unset($_SESSION['flash_message']);
-        unset($_SESSION['form_errors']);
-        unset($_SESSION['form_data']);
-
-        $this->render('register', [
-            'flashMessage' => $flashMessage,
-            'errors' => $formErrors,
-            'old' => $formData // Dữ liệu cũ để điền lại form
-        ]);
+        $formData = $_SESSION['form_data'] ?? [];
+        // Xóa khỏi session sau khi đọc
+        unset($_SESSION['form_errors'], $_SESSION['form_data']);
+        // Render view, truyền lỗi và dữ liệu cũ
+        $this->render('register', ['errors' => $formErrors, 'old' => $formData]);
     }
 
-    /**
-     * Xử lý dữ liệu từ form đăng ký
-     */
+    public function showProfile() {
+        if (session_status() == PHP_SESSION_NONE) { session_start(); }
+        // Kiểm tra đăng nhập
+        if (!isset($_SESSION['user_id'])) {
+            $_SESSION['redirect_after_login'] = '?page=profile';
+            $_SESSION['flash_message'] = ['type' => 'info', 'message' => 'Vui lòng đăng nhập để xem hồ sơ.'];
+            $this->redirect('?page=login'); return;
+        }
+        // Lấy thông tin user
+        $userId = $_SESSION['user_id'];
+        $user = User::find($userId);
+        // Kiểm tra user có tồn tại không
+        if (!$user) {
+            // Nếu user không tồn tại trong DB (có thể bị xóa?), hủy session và báo lỗi
+            unset($_SESSION['user_id'], $_SESSION['username']); session_regenerate_id(true);
+            $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Lỗi: Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại.'];
+            $this->redirect('?page=login'); return;
+        }
+        // Render view profile
+        $this->render('profile', ['user' => $user, 'pageTitle' => 'Hồ sơ của bạn' ]);
+    }
+
+    public function showEditProfileForm() {
+        if (session_status() == PHP_SESSION_NONE) { session_start(); }
+        // Kiểm tra đăng nhập
+        if (!isset($_SESSION['user_id'])) {
+            $_SESSION['redirect_after_login'] = '?page=edit_profile';
+            $_SESSION['flash_message'] = ['type' => 'info', 'message' => 'Vui lòng đăng nhập để chỉnh sửa hồ sơ.'];
+            $this->redirect('?page=login'); return;
+        }
+        // Lấy thông tin user
+        $userId = $_SESSION['user_id'];
+        $user = User::find($userId);
+        if (!$user) {
+            $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Lỗi không tìm thấy thông tin tài khoản.'];
+            $this->redirect('?page=profile'); return; // Quay về trang profile
+        }
+        // Lấy lỗi và dữ liệu cũ từ session (nếu có sau lần submit lỗi)
+        $errors = $_SESSION['form_errors'] ?? [];
+        $oldData = $_SESSION['form_data'] ?? [];
+        unset($_SESSION['form_errors'], $_SESSION['form_data']);
+        // Render view edit_profile
+        $this->render('edit_profile', [ 'user' => $user, 'errors' => $errors, 'old' => $oldData, 'pageTitle' => 'Chỉnh sửa Hồ sơ' ]);
+    }
+
+    public function showChangePasswordForm() {
+        if (session_status() == PHP_SESSION_NONE) { session_start(); }
+        // Kiểm tra đăng nhập
+        if (!isset($_SESSION['user_id'])) { $this->redirect('?page=login'); return; }
+        // Lấy lỗi từ session (nếu có sau lần submit lỗi)
+        $errors = $_SESSION['form_errors'] ?? [];
+        if (!empty($errors)) unset($_SESSION['form_errors']); // Xóa lỗi sau khi đọc
+        // Render view change_password
+        $this->render('change_password', ['errors' => $errors, 'pageTitle' => 'Đổi mật khẩu' ]);
+    }
+
+    // --- XỬ LÝ ĐĂNG KÝ ---
     public function handleRegister() {
+        if (session_status() == PHP_SESSION_NONE) { session_start(); }
+        // Lấy dữ liệu từ POST và trim khoảng trắng
         $username = trim($_POST['username'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
-        $passwordConfirm = $_POST['password_confirm'] ?? '';
+        // Validate dữ liệu nhập vào
+        $errors = $this->validateRegistrationInput($_POST);
 
-        $errors = []; // Mảng lưu lỗi validation
-
-        // --- Validation ---
-        if (empty($username)) {
-            $errors['username'] = 'Tên đăng nhập không được để trống.';
-        } elseif (User::isUsernameExist($username)) {
-            $errors['username'] = 'Tên đăng nhập đã tồn tại.';
+        // Nếu không có lỗi validation cơ bản, kiểm tra username/email tồn tại
+        if (empty($errors)) {
+            if (User::isUsernameExist($username)) { $errors['username'] = 'Tên đăng nhập này đã được sử dụng.'; }
+            if (User::isEmailExist($email)) { $errors['email'] = 'Địa chỉ email này đã được sử dụng.'; }
         }
 
-        if (empty($email)) {
-            $errors['email'] = 'Email không được để trống.';
-        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = 'Định dạng email không hợp lệ.';
-        } elseif (User::isEmailExist($email)) {
-            $errors['email'] = 'Email đã được sử dụng.';
-        }
-
-        if (empty($password)) {
-            $errors['password'] = 'Mật khẩu không được để trống.';
-        } elseif (strlen($password) < 6) { // Ví dụ: kiểm tra độ dài tối thiểu
-            $errors['password'] = 'Mật khẩu phải có ít nhất 6 ký tự.';
-        }
-
-        if ($password !== $passwordConfirm) {
-            $errors['password_confirm'] = 'Xác nhận mật khẩu không khớp.';
-        }
-        // --- Kết thúc Validation ---
-
+        // Nếu có bất kỳ lỗi nào
         if (!empty($errors)) {
-            // Có lỗi validation
+            // Lưu lỗi và dữ liệu cũ vào session để hiển thị lại trên form
             $_SESSION['form_errors'] = $errors;
-            $_SESSION['form_data'] = ['username' => $username, 'email' => $email]; // Lưu lại dữ liệu đã nhập (trừ password)
-            $this->redirect('?page=register');
+            $_SESSION['form_data'] = $_POST; // Lưu toàn bộ dữ liệu đã nhập
+            $this->redirect('?page=register'); // Quay lại trang đăng ký
+            exit;
         } else {
-            // Dữ liệu hợp lệ -> Tiến hành đăng ký
-            if (User::create($username, $email, $password)) {
-                // Đăng ký thành công
-                $_SESSION['flash_message'] = ['type' => 'success', 'message' => 'Đăng ký tài khoản thành công! Vui lòng đăng nhập.'];
-                $this->redirect('?page=login'); // Chuyển đến trang đăng nhập
+            // Nếu không có lỗi, tạo người dùng mới
+            $userId = User::createAndGetId($username, $email, $password);
+            // Kiểm tra tạo user thành công
+            if ($userId) {
+                // Tạo thành công, đặt thông báo thành công và chuyển hướng đến login
+                $_SESSION['flash_message'] = ['type' => 'success', 'message' => 'Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.'];
+                $this->redirect('?page=login');
+                exit;
             } else {
-                // Lỗi khi tạo user (ví dụ: lỗi DB)
-                $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Đã có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại.'];
-                $_SESSION['form_data'] = ['username' => $username, 'email' => $email];
+                // Lỗi khi tạo user (ví dụ lỗi DB)
+                error_log("Lỗi tạo user mới với username: $username, email: $email"); // Ghi log lỗi
+                // Đặt thông báo lỗi và quay lại trang đăng ký với dữ liệu cũ
+                $_SESSION['flash_message'] = ['type' => 'danger', 'message' => 'Đã có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại.'];
+                $_SESSION['form_data'] = $_POST;
                 $this->redirect('?page=register');
+                exit;
             }
         }
     }
 
-    /**
-     * Xử lý đăng xuất
-     */
-    public function logout() {
-        // Xóa thông tin user khỏi session
-        unset($_SESSION['user_id']);
-        unset($_SESSION['username']);
-        // unset các session khác liên quan đến user nếu có
+    // --- XỬ LÝ ĐĂNG NHẬP ---
+    public function handleLogin() {
+        if (session_status() == PHP_SESSION_NONE) { session_start(); }
+        // Lấy username/email và password từ POST
+        $loginInput = trim($_POST['username'] ?? '');
+        $password = $_POST['password'] ?? null;
 
-        // Không nên dùng session_destroy() nếu bạn muốn giữ lại giỏ hàng
-        // session_destroy();
-
-        // Có thể tạo lại session ID để tăng bảo mật
-        session_regenerate_id(true);
-
-        // Chuyển hướng về trang chủ
-        $_SESSION['flash_message'] = ['type' => 'success', 'message' => 'Bạn đã đăng xuất thành công.']; // Thông báo tùy chọn
-        $this->redirect('?page=home');
-    }
-
-
-
-    /**
-     * Hiển thị trang thông tin cơ bản của người dùng (Profile)
-     */
-    public function showProfile() {
-        // 1. Kiểm tra xem người dùng đã đăng nhập chưa
-        if (!isset($_SESSION['user_id'])) {
-            // Lưu trang định đến sau khi đăng nhập
-            $_SESSION['redirect_after_login'] = '?page=profile';
-            $_SESSION['flash_message'] = ['type' => 'info', 'message' => 'Vui lòng đăng nhập để xem hồ sơ.'];
-            $this->redirect('?page=login'); // Chuyển hướng đến trang đăng nhập nếu chưa
-            return;
+        // Kiểm tra nhập liệu cơ bản
+        if (empty($loginInput) || empty($password)) {
+            $_SESSION['flash_error'] = 'Vui lòng nhập Tên đăng nhập/Email và Mật khẩu.';
+            $this->redirect('?page=login'); return;
         }
-        $userId = $_SESSION['user_id']; // Lấy user ID
 
-        // 2. Lấy thông tin chi tiết của người dùng từ DB *** THAY ĐỔI Ở ĐÂY ***
-        $user = User::find($userId); // Gọi User Model để lấy thông tin đầy đủ
+        // Tìm người dùng trong DB bằng username hoặc email
+        $user = User::findByUsername($loginInput) ?? User::findByEmail($loginInput);
 
-        // Kiểm tra xem có lấy được thông tin user không
-        if (!$user) {
-            // Xử lý trường hợp không tìm thấy user (dù đã đăng nhập - hiếm khi xảy ra)
-            // Đăng xuất và báo lỗi
-            unset($_SESSION['user_id']);
-            unset($_SESSION['username']);
+        // Nếu tìm thấy user VÀ mật khẩu khớp
+        if ($user && password_verify($password, $user['password'])) {
+            // Tạo session ID mới để bảo mật
             session_regenerate_id(true);
-            $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Lỗi: Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại.'];
-            $this->redirect('?page=login');
+            // Lưu thông tin user vào session
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            // Lấy URL để chuyển hướng sau khi đăng nhập (nếu có) hoặc về trang chủ
+            $redirectUrl = $_SESSION['redirect_after_login'] ?? '?page=home';
+            unset($_SESSION['redirect_after_login']); // Xóa URL redirect khỏi session
+            // Thực hiện chuyển hướng
+            $this->redirect($redirectUrl);
+            exit;
+        } else {
+            // Nếu không tìm thấy user hoặc mật khẩu sai
+            $_SESSION['flash_error'] = 'Tên đăng nhập/Email hoặc Mật khẩu không chính xác.';
+            $this->redirect('?page=login'); // Quay lại trang login
+            exit;
+        }
+    }
+
+    // --- XỬ LÝ ĐĂNG XUẤT ---
+    public function logout() {
+        if (session_status() == PHP_SESSION_NONE) { session_start(); }
+        // Xóa thông tin user khỏi session
+        unset($_SESSION['user_id'], $_SESSION['username']);
+        // Hủy session hiện tại
+        session_destroy();
+        // Bắt đầu session mới để lưu flash message
+        session_start();
+        session_regenerate_id(true); // Tạo ID mới
+        // Đặt thông báo đăng xuất thành công
+        $_SESSION['flash_message'] = ['type' => 'success', 'message' => 'Bạn đã đăng xuất thành công.'];
+        // Chuyển hướng về trang chủ
+        $this->redirect('?page=home');
+        exit;
+    }
+
+    // --- XỬ LÝ CẬP NHẬT HỒ SƠ ---
+    public function handleUpdateProfile() {
+        if (session_status() == PHP_SESSION_NONE) { session_start(); }
+        // Kiểm tra đăng nhập và phương thức POST
+        if (!isset($_SESSION['user_id'])) { $this->redirect('?page=login'); return; }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { $this->redirect('?page=edit_profile'); return; }
+
+        // Lấy dữ liệu
+        $userId = $_SESSION['user_id'];
+        $newUsername = trim($_POST['username'] ?? '');
+        $newEmail = trim($_POST['email'] ?? '');
+        $currentPassword = $_POST['current_password'] ?? '';
+        $currentUser = User::find($userId);
+
+        // Kiểm tra user tồn tại
+        if (!$currentUser) {
+            $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Lỗi không tìm thấy tài khoản.'];
+            $this->redirect('?page=profile'); return;
+        }
+
+        // Xác thực mật khẩu hiện tại
+        if (!User::verifyPassword($userId, $currentPassword)) {
+            // Sử dụng helper để quay lại với lỗi và dữ liệu cũ
+            $this->redirectBackWithErrors(['current_password' => 'Mật khẩu hiện tại không chính xác.'], $_POST, '?page=edit_profile');
             return;
         }
 
-        // 3. Lấy thông báo flash (nếu có, ví dụ sau khi đổi MK thành công)
-        $flashMessage = $_SESSION['flash_message'] ?? null;
-        if ($flashMessage) {
-            unset($_SESSION['flash_message']); // Xóa sau khi lấy
+        // Validate username và email mới
+        $errors = []; $updates = []; // Mảng chứa các thay đổi hợp lệ
+        if ($newUsername !== $currentUser['username']) { // Chỉ validate nếu có thay đổi
+            if (empty($newUsername)) { $errors['username'] = 'Tên đăng nhập không được để trống.'; }
+            elseif (!preg_match('/^[a-zA-Z0-9_]{3,20}$/', $newUsername)) { $errors['username'] = "Tên đăng nhập không hợp lệ (chỉ chữ, số, _, 3-20 ký tự)."; }
+            elseif (User::isUsernameExist($newUsername)) { $errors['username'] = 'Tên đăng nhập này đã được sử dụng.'; }
+            else { $updates['username'] = $newUsername; } // Thêm vào mảng cập nhật
+        }
+        if ($newEmail !== $currentUser['email']) { // Chỉ validate nếu có thay đổi
+            if (empty($newEmail)) { $errors['email'] = 'Email không được để trống.'; }
+            elseif (!filter_var($newEmail, FILTER_VALIDATE_EMAIL)) { $errors['email'] = 'Định dạng email không hợp lệ.'; }
+            elseif (User::isEmailExist($newEmail)) { $errors['email'] = 'Địa chỉ email này đã được sử dụng.'; }
+            else { $updates['email'] = $newEmail; } // Thêm vào mảng cập nhật
         }
 
-        // 4. Render view profile.php và truyền cả $user và $flashMessage *** THAY ĐỔI Ở ĐÂY ***
-        $this->render('profile', [
-            'user' => $user, // Truyền thông tin user đầy đủ sang view
-            'flashMessage' => $flashMessage,
-            'pageTitle' => 'Hồ sơ của bạn' // Đặt tiêu đề trang
-        ]);
-    }
-
-    /**
-     * Hiển thị form để thay đổi mật khẩu
-     */
-    public function showChangePasswordForm() {
-        // 1. Kiểm tra đăng nhập
-        if (!isset($_SESSION['user_id'])) {
-            $this->redirect('?page=login');
+        // Nếu có lỗi validation
+        if (!empty($errors)) {
+            $this->redirectBackWithErrors($errors, $_POST, '?page=edit_profile');
             return;
         }
+        // Nếu không có thông tin nào thay đổi
+        if (empty($updates)) {
+            $_SESSION['flash_message'] = ['type' => 'info', 'message' => 'Không có thông tin nào được thay đổi.'];
+            $this->redirect('?page=profile'); return;
+        }
 
-        // 2. Lấy thông báo và lỗi validation từ session (nếu có)
-        $flashMessage = $_SESSION['flash_message'] ?? null;
-        $errors = $_SESSION['form_errors'] ?? [];
-        // Xóa khỏi session sau khi lấy
-        if ($flashMessage) unset($_SESSION['flash_message']);
-        if (!empty($errors)) unset($_SESSION['form_errors']);
+        // Thực hiện cập nhật vào DB
+        $updateSuccess = User::updateProfile($userId, $updates);
 
-        // 3. Render view change_password.php
-        $this->render('change_password', [
-            'flashMessage' => $flashMessage,
-            'errors' => $errors
-        ]);
+        if ($updateSuccess) {
+            // Cập nhật session nếu username thay đổi
+            if (isset($updates['username'])) { $_SESSION['username'] = $updates['username']; }
+            $_SESSION['flash_message'] = ['type' => 'success', 'message' => 'Hồ sơ đã được cập nhật thành công.'];
+            $this->redirect('?page=profile');
+        } else {
+            // Lỗi DB, quay lại form với thông báo lỗi
+            $this->redirectBackWithErrors(['database' => 'Lỗi cập nhật hồ sơ trong cơ sở dữ liệu.'], $_POST, '?page=edit_profile');
+        }
     }
 
-    /**
-     * Xử lý việc thay đổi mật khẩu từ form POST
-     */
+    // --- XỬ LÝ ĐỔI MẬT KHẨU ---
     public function handleChangePassword() {
-        // 1. Kiểm tra đăng nhập
-        if (!isset($_SESSION['user_id'])) {
-            $this->redirect('?page=login');
-            return;
-        }
-        // Đảm bảo đây là request POST
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect('?page=change_password');
-            return;
-        }
+        if (session_status() == PHP_SESSION_NONE) { session_start(); }
+        // Kiểm tra đăng nhập và phương thức POST
+        if (!isset($_SESSION['user_id'])) { $this->redirect('?page=login'); return; }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { $this->redirect('?page=change_password'); return; }
 
-        // 2. Lấy dữ liệu từ POST
+        // Lấy dữ liệu
         $currentPassword = $_POST['current_password'] ?? '';
         $newPassword = $_POST['new_password'] ?? '';
         $confirmNewPassword = $_POST['confirm_new_password'] ?? '';
-        $userId = $_SESSION['user_id']; // Lấy ID user đang đăng nhập
-
-        // 3. Thực hiện Validation
+        $userId = $_SESSION['user_id'];
         $errors = [];
-        if (empty($currentPassword)) {
-            $errors['current_password'] = "Vui lòng nhập mật khẩu hiện tại.";
-        }
-        if (empty($newPassword)) {
-            $errors['new_password'] = "Vui lòng nhập mật khẩu mới.";
-        } elseif (strlen($newPassword) < 6) { // Kiểm tra độ dài tối thiểu
-            $errors['new_password'] = "Mật khẩu mới phải có ít nhất 6 ký tự.";
-        }
-        if ($newPassword !== $confirmNewPassword) {
-            $errors['confirm_new_password'] = "Xác nhận mật khẩu mới không khớp.";
-        }
 
-        // Nếu không có lỗi nhập liệu cơ bản, kiểm tra mật khẩu hiện tại
+        // --- Validation ---
+        if (empty($currentPassword)) { $errors['current_password'] = "Vui lòng nhập mật khẩu hiện tại."; }
+        if (empty($newPassword)) { $errors['new_password'] = "Vui lòng nhập mật khẩu mới."; }
+        elseif (strlen($newPassword) < 6) { $errors['new_password'] = "Mật khẩu mới phải có ít nhất 6 ký tự."; }
+        if ($newPassword !== $confirmNewPassword) { $errors['confirm_new_password'] = "Xác nhận mật khẩu mới không khớp."; }
+
+        // Nếu validation cơ bản OK, kiểm tra mật khẩu hiện tại và trùng lặp
         if (empty($errors)) {
-            // Gọi hàm verifyPassword vừa thêm trong User Model
-            if (!User::verifyPassword($userId, $currentPassword)) {
+            $currentUser = User::find($userId); // Lấy user để kiểm tra mật khẩu
+            if (!$currentUser || !User::verifyPassword($userId, $currentPassword)) { // Kiểm tra mật khẩu hiện tại
                 $errors['current_password'] = "Mật khẩu hiện tại không chính xác.";
+            } elseif (password_verify($newPassword, $currentUser['password'])) { // Kiểm tra trùng mật khẩu cũ
+                $errors['new_password'] = "Mật khẩu mới không được trùng với mật khẩu hiện tại.";
             }
         }
+        // --- Kết thúc Validation ---
 
-        // 4. Xử lý kết quả validation
+        // Nếu có lỗi
         if (!empty($errors)) {
-            // Nếu có lỗi -> Lưu lỗi vào session và quay lại form đổi mật khẩu
-            $_SESSION['form_errors'] = $errors;
-            $this->redirect('?page=change_password');
+            // Quay lại form với lỗi (không cần dữ liệu cũ cho form này)
+            $this->redirectBackWithErrors($errors, [], '?page=change_password');
             return;
         }
 
-        // 5. Nếu mọi thứ hợp lệ -> Cập nhật mật khẩu mới vào DB
-        $success = User::updatePassword($userId, $newPassword); // Hàm này đã tự hash mật khẩu mới
+        // Nếu không có lỗi, cập nhật mật khẩu mới
+        $success = User::updatePassword($userId, $newPassword);
 
         if ($success) {
-            // Đổi mật khẩu thành công
+            // Thành công, đặt thông báo và về trang profile
             $_SESSION['flash_message'] = ['type' => 'success', 'message' => 'Đổi mật khẩu thành công!'];
-            $this->redirect('?page=profile'); // Chuyển về trang profile
+            $this->redirect('?page=profile');
         } else {
-            // Có lỗi xảy ra khi cập nhật DB
-            $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Đã có lỗi xảy ra khi cập nhật mật khẩu. Vui lòng thử lại.'];
-            $this->redirect('?page=change_password'); // Quay lại form đổi mật khẩu
+            // Lỗi DB, quay lại form với thông báo lỗi
+            $this->redirectBackWithErrors(['database' => 'Đã có lỗi xảy ra khi cập nhật mật khẩu.'], [], '?page=change_password');
         }
     }
-}
+
+    // --- CÁC PHƯƠNG THỨC QUÊN/RESET MẬT KHẨU ĐÃ BỊ XÓA ---
+
+    // --- HÀM HELPER ---
+    // Helper validate dữ liệu đăng ký
+    private function validateRegistrationInput(array $postData): array {
+        $errors = [];
+        if (empty($postData['username'])) { $errors['username'] = "Tên đăng nhập không được để trống."; }
+        elseif (!preg_match('/^[a-zA-Z0-9_]{3,20}$/', $postData['username'])) { $errors['username'] = "Tên đăng nhập chỉ chứa chữ cái, số, dấu gạch dưới và dài 3-20 ký tự."; }
+        if (empty($postData['email'])) { $errors['email'] = "Email không được để trống."; }
+        elseif (!filter_var($postData['email'], FILTER_VALIDATE_EMAIL)) { $errors['email'] = "Định dạng email không hợp lệ."; }
+        if (empty($postData['password'])) { $errors['password'] = "Mật khẩu không được để trống."; }
+        elseif (strlen($postData['password']) < 6) { $errors['password'] = "Mật khẩu phải có ít nhất 6 ký tự."; }
+        if (empty($postData['password_confirm'])) { $errors['password_confirm'] = "Vui lòng xác nhận mật khẩu."; }
+        elseif ($postData['password'] !== $postData['password_confirm']) { $errors['password_confirm'] = "Xác nhận mật khẩu không khớp."; }
+        return $errors;
+    }
+
+    // Helper để redirect quay lại trang trước đó với lỗi và dữ liệu form cũ
+    private function redirectBackWithErrors(array $errors, array $postData, string $targetPage): void {
+        if (session_status() == PHP_SESSION_NONE) { session_start(); }
+        $_SESSION['form_errors'] = $errors; // Lưu mảng lỗi
+        $_SESSION['form_data'] = $postData; // Lưu dữ liệu người dùng đã nhập
+        $this->redirect($targetPage); // Chuyển hướng về trang mục tiêu
+        exit; // Dừng script
+    }
+
+} // End Class UserController

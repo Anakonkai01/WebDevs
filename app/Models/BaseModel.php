@@ -1,25 +1,31 @@
 <?php
-require_once  BASE_PATH . '/app/Core/Database.php';
+namespace App\Models; // <--- Namespace
 
+use App\Core\Database; // <-- Dùng Database từ Core
+use mysqli_result;     // <-- Dùng class global mysqli_result
 
 abstract class BaseModel{
-    // moi class con se khai bao bang tuong ung
+
     protected static string $table;
 
-    // lay toan bo du lieu
     public static function all(): array{
         $sql = "select * from " . static::$table;
         $result = Database::query($sql);
-        return $result->fetch_all(MYSQLI_ASSOC);
+        // Thêm kiểm tra kiểu trả về của query
+        return $result instanceof mysqli_result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 
-
-    // find by id
-    public static function find(int $id):  ?array{
+    public static function find(int $id): ?array{
         $sql = "select * from " . static::$table . " where id = ?";
-        $stmt = Database::prepare($sql, "i",[$id]);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        return $result->fetch_assoc() ?: null; // lay 1 dong duy nhat con ?: toan tu null coalescing
+        $stmt = Database::prepare($sql, "i", [$id]);
+        if ($stmt && $stmt->execute()) { // Kiểm tra execute thành công
+            $result = $stmt->get_result();
+            $data = $result ? $result->fetch_assoc() : null; // fetch_assoc() trả về null nếu không có dòng nào
+            $stmt->close();
+            return $data;
+        }
+        // Đóng stmt nếu có lỗi execute hoặc prepare
+        if ($stmt) $stmt->close();
+        return null;
     }
 }

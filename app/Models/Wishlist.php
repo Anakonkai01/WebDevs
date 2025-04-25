@@ -1,8 +1,10 @@
 <?php
 // Web/app/Models/Wishlist.php
 
-require_once BASE_PATH . '/app/Core/Database.php'; // Sử dụng Database class để truy vấn
-// Không cần kế thừa BaseModel vì cấu trúc bảng và nhu cầu khác biệt
+namespace App\Models;
+
+use App\Core\Database;
+// Wishlist không kế thừa BaseModel
 
 class Wishlist {
 

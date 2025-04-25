@@ -1,10 +1,10 @@
 <?php
 // Web/app/Controllers/ReviewController.php
 
-require_once BASE_PATH . '/app/Controllers/BaseController.php';
-require_once BASE_PATH . '/app/Models/Review.php'; // Model để tạo review
-require_once BASE_PATH . '/app/Models/Product.php'; // Model để kiểm tra SP tồn tại (tùy chọn)
+namespace App\Controllers;
 
+use App\Models\Review;
+// Không cần use Product nếu chỉ dùng ID
 class ReviewController extends BaseController {
 
     public function __construct() {
@@ -78,9 +78,9 @@ class ReviewController extends BaseController {
         if ($success) {
             $_SESSION['flash_message'] = ['type' => 'success', 'message' => 'Cảm ơn bạn đã gửi đánh giá!'];
 
-            // (TÙY CHỌN) Cập nhật rating trung bình của sản phẩm sau khi thêm review thành công
-            // Bỏ comment dòng dưới nếu bạn đã tạo hàm updateProductAverageRating trong Review Model
-            // Review::updateProductAverageRating($productId);
+//             (TÙY CHỌN) Cập nhật rating trung bình của sản phẩm sau khi thêm review thành công
+//             Bỏ comment dòng dưới nếu bạn đã tạo hàm updateProductAverageRating trong Review Model
+             Review::updateProductAverageRating($productId);
 
         } else {
             $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Đã xảy ra lỗi khi lưu đánh giá. Vui lòng thử lại.'];

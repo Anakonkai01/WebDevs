@@ -83,8 +83,43 @@
 
 <?php // --- JavaScript Includes --- ?>
 <script src="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
 <script>
-    // Your custom scripts (if any)
+    document.addEventListener('DOMContentLoaded', function() {
+        document.body.addEventListener('click', function(event) {
+            // Tìm xem phần tử được click hoặc cha gần nhất của nó có phải là nút wishlist không
+            const wishlistButton = event.target.closest('.btn-wishlist');
+
+            if (wishlistButton) {
+                console.log("Wishlist button clicked via delegation."); // Log để debug
+
+                // Kiểm tra trạng thái đăng nhập từ data attribute trên body
+                const isLoggedIn = document.body.dataset.isLoggedIn === 'true';
+                const productId = wishlistButton.dataset.productId;
+
+                if (!isLoggedIn) {
+                    console.log("User not logged in. Redirecting...");
+                    // Người dùng chưa đăng nhập -> Chuyển hướng
+                    const currentUrl = encodeURIComponent(window.location.href || '?page=home');
+                    // alert('Vui lòng đăng nhập để sử dụng chức năng này.'); // Bỏ alert nếu không muốn
+                    window.location.href = `?page=login&redirect=${currentUrl}`;
+                } else {
+                    // Người dùng đã đăng nhập -> Gọi hàm xử lý AJAX
+                    if (productId) {
+                        // Chỉ gọi hàm toggleWishlist nếu đã đăng nhập và có productId
+                        // Đảm bảo hàm toggleWishlist đã được định nghĩa ở đâu đó (ví dụ trong view)
+                        if (typeof toggleWishlist === 'function') {
+                            toggleWishlist(wishlistButton, productId);
+                        } else {
+                            console.error("Hàm toggleWishlist không được định nghĩa.");
+                        }
+                    } else {
+                        console.error("Missing data-product-id on wishlist button:", wishlistButton);
+                    }
+                }
+            }
+        });
+    });
 </script>
 <?php // --------------------------- ?>
 

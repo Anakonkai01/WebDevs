@@ -1,27 +1,21 @@
 <?php
 // Web/app/Views/login.php
 $errorMessage = $errorMessage ?? null;
-// No need for full header/footer for this simple page, but include Bootstrap CSS
+$flashMessage = $flashMessage ?? null;
+$pageTitle = 'Đăng nhập';
 ?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập</title>
-    <link href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <title><?= htmlspecialchars($pageTitle) ?></title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background-color: #f8f9fa; /* Light background */
-        }
-        .login-container {
-            max-width: 400px;
-            width: 100%;
-        }
+        body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background-color: #f8f9fa; }
+        .login-container { max-width: 400px; width: 100%; }
+        .password-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6c757d; z-index: 5; }
     </style>
 </head>
 <body>
@@ -33,21 +27,29 @@ $errorMessage = $errorMessage ?? null;
                 <h1 class="h3 mb-3 fw-normal">Đăng nhập</h1>
             </div>
 
+            <?php if ($flashMessage && is_array($flashMessage)): ?>
+                <div class="alert alert-<?= htmlspecialchars($flashMessage['type'] ?? 'info') ?> alert-dismissible fade show small" role="alert">
+                    <?= htmlspecialchars($flashMessage['message'] ?? '') ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
             <?php if ($errorMessage): ?>
                 <div class="alert alert-danger small" role="alert"><?= htmlspecialchars($errorMessage) ?></div>
             <?php endif; ?>
 
             <form action="?page=handle_login" method="POST">
                 <div class="form-floating mb-3">
-                    <input type="text" class="form-control" id="username" name="username" placeholder="Tên đăng nhập" required>
-                    <label for="username">Tên đăng nhập</label>
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Tên đăng nhập hoặc Email" required autofocus>
+                    <label for="username">Tên đăng nhập hoặc Email</label>
                 </div>
-                <div class="form-floating mb-3">
+                <div class="form-floating mb-3 position-relative">
                     <input type="password" class="form-control" id="password" name="password" placeholder="Mật khẩu" required>
                     <label for="password">Mật khẩu</label>
+                    <span class="password-toggle" onclick="togglePasswordVisibility('password', this)">
+                        <i class="fas fa-eye"></i>
+                    </span>
                 </div>
-                <?php // Optional: Add "Remember me" checkbox ?>
-                <button class="w-100 btn btn-lg btn-primary" type="submit">Đăng nhập</button>
+                <button class="w-100 btn btn-lg btn-primary mt-3" type="submit">Đăng nhập</button>
             </form>
 
             <div class="text-center mt-4">
@@ -56,6 +58,23 @@ $errorMessage = $errorMessage ?? null;
         </div>
     </div>
 </div>
-<script src="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+    function togglePasswordVisibility(inputId, iconElement) {
+        const input = document.getElementById(inputId);
+        const icon = iconElement.querySelector('i');
+        if (!input || !icon) return;
+
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = "password";
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+</script>
 </body>
 </html>

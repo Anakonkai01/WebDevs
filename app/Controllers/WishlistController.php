@@ -1,8 +1,10 @@
 <?php
 // Web/app/Controllers/WishlistController.php
 
-require_once BASE_PATH . '/app/Controllers/BaseController.php';
-require_once BASE_PATH . '/app/Models/Wishlist.php';
+namespace App\Controllers;
+
+use App\Models\Wishlist;
+// Không cần use Product nếu chỉ lấy ID từ Wishlist::getWishlistedProductIds
 
 class WishlistController extends BaseController {
 

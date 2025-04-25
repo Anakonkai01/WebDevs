@@ -1,5 +1,8 @@
 <?php
-require_once 'BaseModel.php';
+namespace App\Models;
+
+use App\Core\Database;
+// BaseModel cùng namespace
 
 class OrderItem extends BaseModel
 {

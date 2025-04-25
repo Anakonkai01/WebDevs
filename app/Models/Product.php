@@ -1,5 +1,9 @@
 <?php
-require_once "BaseModel.php";
+namespace App\Models; // <--- Namespace
+
+use App\Core\Database; // <-- Use Database
+use Exception;          // <-- Use Exception global (nếu có dùng try-catch)
+// BaseModel cùng namespace, không cần use
 
 class Product extends BaseModel
 {

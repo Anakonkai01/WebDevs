@@ -1,7 +1,9 @@
 <?php
 // Web/app/Models/Order.php
-require_once 'BaseModel.php';
+namespace App\Models;
 
+use App\Core\Database;
+// BaseModel cùng namespace
 class Order extends BaseModel
 {
     protected static string $table = 'orders';

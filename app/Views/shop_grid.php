@@ -63,9 +63,10 @@ $endItemNum = $totalProducts > 0 ? min($startItemNum + count($products) - 1, $to
         .product-card .actions .btn-wishlist { color: #6c757d; border: none; }
         .product-card .actions .btn-wishlist.active { color: #dc3545; }
         .product-card .actions .btn-cart { color: #198754; border: none; }
-        .product-card .actions .btn-wishlist.disabled,
+        .product-card .actions .btn-wishlist.disabled, /* Giữ style disabled */
         .product-card .actions .btn-cart.disabled {
-            opacity: 0.5; pointer-events: none; /* Make truly unclickable */
+            opacity: 0.5;
+            /* KHÔNG CẦN pointer-events: none; nữa nếu dùng Event Delegation */
         }
         .pagination .page-link { min-width: 40px; text-align: center;}
         .pagination .page-item.disabled .page-link { pointer-events: none; color: #6c757d; background-color: #e9ecef; border-color: #dee2e6;}
@@ -84,6 +85,7 @@ $endItemNum = $totalProducts > 0 ? min($startItemNum + count($products) - 1, $to
                 <div class="card-body">
                     <form method="GET" action="">
                         <input type="hidden" name="page" value="shop_grid">
+                        <?php // Giữ lại các bộ lọc khác khi tìm kiếm ?>
                         <input type="hidden" name="brand" value="<?= htmlspecialchars($currentFilters['brand'] ?? 'All') ?>">
                         <input type="hidden" name="price_range" value="<?= htmlspecialchars($currentPriceRangeKey) ?>">
                         <input type="hidden" name="sort" value="<?= htmlspecialchars($currentSort) ?>">
@@ -180,7 +182,6 @@ $endItemNum = $totalProducts > 0 ? min($startItemNum + count($products) - 1, $to
                         if ($isLoggedIn && is_array($wishlistedIds) && !empty($wishlistedIds)) {
                             $isProductWishlisted = in_array($pId, $wishlistedIds);
                         }
-                        // DEBUG: error_log("Shop Grid - PID: $pId, LoggedIn: $isLoggedIn, IsWishlisted: $isProductWishlisted, WishlistIDs: " . print_r($wishlistedIds, true));
                         ?>
                         <div class="col">
                             <div class="card h-100 shadow-sm product-card">
@@ -205,10 +206,9 @@ $endItemNum = $totalProducts > 0 ? min($startItemNum + count($products) - 1, $to
                                     <?php // --- Actions are OUTSIDE the main links --- ?>
                                     <div class="actions d-flex justify-content-between align-items-center">
 
-                                        <?php // Wishlist Button (with type="button") ?>
-                                        <button type="button" <?php // Explicitly set type="button" ?>
+                                        <?php // Wishlist Button - BỎ ONCLICK ?>
+                                        <button type="button"
                                                 class="btn btn-link btn-wishlist p-0 <?= $isProductWishlisted ? 'active' : '' ?> <?= !$isLoggedIn ? 'disabled' : '' ?>"
-                                                onclick="toggleWishlist(this, <?= $pId ?>)" <?php // JS function call ?>
                                                 data-product-id="<?= $pId ?>"
                                                 data-is-wishlisted="<?= $isProductWishlisted ? '1' : '0' ?>"
                                                 title="<?= !$isLoggedIn ? 'Đăng nhập để yêu thích' : ($isProductWishlisted ? 'Xóa khỏi Yêu thích' : 'Thêm vào Yêu thích') ?>"
@@ -259,56 +259,77 @@ $endItemNum = $totalProducts > 0 ? min($startItemNum + count($products) - 1, $to
         </div> <?php // End Main Content Column ?>
     </div> <?php // End Main Row ?>
 
-<?php // JavaScript for Wishlist Toggle ?>
+<?php // JavaScript for Wishlist Toggle (ĐÃ SỬA - Chỉ chứa logic AJAX) ?>
     <script>
+        // --- Wishlist Toggle Function (Chỉ chứa logic AJAX) ---
         async function toggleWishlist(buttonElement, productId) {
-            if (buttonElement.disabled) {
-                window.location.href = '?page=login&redirect=<?= urlencode($_SERVER['REQUEST_URI'] ?? '?page=shop_grid') ?>'; // Added default redirect
-                return;
-            }
+            // Hàm này giờ chỉ chạy khi người dùng ĐÃ ĐĂNG NHẬP (được gọi bởi event listener)
+            console.log("AJAX toggleWishlist called for button:", buttonElement, "productId:", productId);
+
             const isWishlisted = buttonElement.dataset.isWishlisted === '1';
             const action = isWishlisted ? 'wishlist_remove' : 'wishlist_add';
             const icon = buttonElement.querySelector('i');
-            buttonElement.disabled = true;
-            // Optional: Add spinner class temporarily
-            // icon.classList.remove('fa-heart'); icon.classList.add('fa-spinner', 'fa-spin');
+
+            buttonElement.disabled = true; // Disable nút tạm thời
+            icon.classList.remove('fa-heart'); // Bỏ icon trái tim
+            icon.classList.add('fa-spinner', 'fa-spin'); // Thêm icon xoay
+
             try {
-                // Ensure correct URL construction for fetch
-                const fetchUrl = `?page=${action}&id=${productId}&ajax=1&redirect=no`;
-                console.log("Fetching:", fetchUrl); // Debug URL
-                const response = await fetch(fetchUrl);
-                if (!response.ok) {
-                    console.error("Fetch Error Response:", response);
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                // Check content type before parsing as JSON
+                // Gửi yêu cầu AJAX
+                const response = await fetch(`?page=${action}&id=${productId}&ajax=1&redirect=no`, {
+                    method: 'GET', // Hoặc POST nếu controller nhận POST cho ajax
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                // Kiểm tra content type trước khi parse JSON
                 const contentType = response.headers.get("content-type");
                 if (contentType && contentType.indexOf("application/json") !== -1) {
-                    const data = await response.json();
-                    console.log("Response Data:", data); // Debug response data
+                    const data = await response.json(); // Parse JSON
+                    console.log("Wishlist Response:", data); // Log để debug
+
                     if (data.success) {
+                        // Cập nhật trạng thái nút
                         buttonElement.dataset.isWishlisted = isWishlisted ? '0' : '1';
                         buttonElement.classList.toggle('active');
                         buttonElement.title = isWishlisted ? 'Thêm vào Yêu thích' : 'Xóa khỏi Yêu thích';
-                    } else { alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại.'); }
+
+                        // *** CẬP NHẬT HEADER COUNT ***
+                        if (typeof data.wishlistItemCount !== 'undefined') {
+                            const wishlistCountElement = document.getElementById('header-wishlist-count');
+                            if (wishlistCountElement) {
+                                const newCount = parseInt(data.wishlistItemCount);
+                                wishlistCountElement.textContent = newCount;
+                                // Hiện/ẩn badge dựa trên số lượng mới
+                                wishlistCountElement.style.display = newCount > 0 ? 'inline-block' : 'none';
+                            }
+                        }
+                        // *** KẾT THÚC CẬP NHẬT HEADER COUNT ***
+
+                    } else {
+                        // Các lỗi khác từ server (không phải login_required)
+                        alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+                    }
                 } else {
+                    // Xử lý trường hợp không phải JSON
                     const textResponse = await response.text();
-                    console.error("Non-JSON Response:", textResponse);
-                    throw new Error('Received non-JSON response from server.');
+                    console.error("Non-JSON Wishlist Response:", textResponse);
+                    throw new Error('Received non-JSON response from server during wishlist toggle.');
                 }
             } catch (error) {
                 console.error('Error toggling wishlist:', error);
-                alert('Lỗi kết nối hoặc xử lý. Vui lòng thử lại.');
-                // Optional: Revert UI changes if needed
+                alert('Lỗi kết nối hoặc xử lý (Wishlist). Vui lòng thử lại.');
             } finally {
+                // Khôi phục trạng thái nút
                 buttonElement.disabled = false;
-                // Restore icon if spinner was used
-                // if (icon) { icon.className = 'fas fa-heart fs-4'; } // Make sure icon exists before setting className
+                icon.classList.remove('fa-spinner', 'fa-spin'); // Bỏ icon xoay
+                icon.classList.add('fa-heart'); // Thêm lại icon trái tim
             }
         }
         // No addToCart JS needed here now
     </script>
 
 <?php
-include_once __DIR__ . '/../layout/footer.php'; // Footer includes Bootstrap JS
+include_once __DIR__ . '/../layout/footer.php'; // Footer sẽ chứa event listener mới
 ?>
