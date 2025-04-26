@@ -1,349 +1,227 @@
+/**
+ * shop_grid_ajax.js
+ * Handles AJAX filtering, sorting, and pagination for the shop grid page.
+ */
 document.addEventListener("DOMContentLoaded", function () {
-  const sidebar = document.getElementById("shop-sidebar"); // ID cho sidebar
-  const productGridContainer = document.getElementById(
-    "product-grid-container"
-  );
+  // --- DOM Elements ---
+  const sidebar = document.getElementById("shop-sidebar");
+  const productGridContainer = document.getElementById("product-grid-container");
   const paginationContainer = document.getElementById("pagination-container");
   const productCountDisplay = document.getElementById("product-count-display");
   const loadingIndicator = document.getElementById("loading-indicator");
-  const searchForm = document.getElementById("search-form"); // ID cho form tìm kiếm
   const sortSelect = document.getElementById("sort_select");
+  const searchInput = document.getElementById("search_input");
+  const filterSortForm = document.getElementById("filter-sort-form"); // The form wrapping filters/sort
 
-  let currentRequestController = null; // Để hủy request cũ nếu có request mới
+  // --- State ---
+  let currentRequestController = null; // To abort pending requests
 
-  // --- Hàm lấy tất cả filter hiện tại ---
-  function getCurrentFilters() {
-    const filters = {};
-    // Lấy từ search input
-    const searchInput = document.getElementById("search_input");
-    if (searchInput && searchInput.value.trim() !== "") {
-      filters.search = searchInput.value.trim();
+  // --- Functions ---
+
+  /**
+   * Gathers all current filter and sort values from the UI.
+   * @returns {object} Object containing filter/sort parameters.
+   */
+  function getCurrentFiltersAndSort() {
+    const params = {};
+    const activeFilters = sidebar?.querySelectorAll(".filter-options .filter-link.active");
+    const currentSortValue = sortSelect?.value || 'created_at_desc';
+    const currentSearchValue = searchInput?.value.trim() || '';
+
+    // Add sort parameter
+    params['sort'] = currentSortValue;
+
+    // Add search parameter if not empty
+    if (currentSearchValue) {
+      params['search'] = currentSearchValue;
     }
 
-    // Lấy từ các link active trong list-group/accordion (Brand, Price, Specs)
-    const activeLinks = sidebar?.querySelectorAll(
-      ".filter-options .list-group-item.active"
-    );
-    activeLinks?.forEach((link) => {
-      const filterGroup = link.closest(".filter-options");
+    // Gather active filter links (brand, price_range, specs)
+    activeFilters?.forEach(link => {
+      const filterGroup = link.closest('.filter-options');
       if (filterGroup) {
         const key = filterGroup.dataset.filterKey;
         const value = link.dataset.value;
-        // Chỉ thêm nếu key tồn tại và value khác 'all' (hoặc giá trị mặc định khác)
-        if (key && value && value.toLowerCase() !== "all") {
-          filters[key] = value;
+        // Only add if not 'All' or 'all'
+        if (key && value && value.toLowerCase() !== 'all') {
+          params[key] = value;
         }
       }
     });
 
-    // Lấy từ sort select
-    if (sortSelect) {
-      // Chỉ thêm sort nếu khác giá trị mặc định (ví dụ: 'created_at_desc')
-      if (sortSelect.value !== "created_at_desc") {
-        filters.sort = sortSelect.value;
-      }
-    }
-
-    // Lấy trang hiện tại (từ data-page của link active trong pagination)
-    const activePageLink = paginationContainer?.querySelector(
-      ".page-item.active .ajax-page-link"
-    );
-    // Nếu không có trang active (lần đầu), hoặc lấy từ URL nếu cần thiết fallback
-    filters.pg = activePageLink ? activePageLink.dataset.page || "1" : "1";
-
-    return filters;
+    return params;
   }
 
-  // --- Hàm thực hiện AJAX request ---
+  /**
+   * Fetches product data via AJAX based on filters/sort/page and updates the UI.
+   * @param {number} [page=1] - The page number to fetch.
+   * @param {boolean} [pushState=true] - Whether to update browser history.
+   */
   async function fetchAndUpdateProducts(page = 1, pushState = true) {
-    if (
-      !productGridContainer ||
-      !paginationContainer ||
-      !productCountDisplay ||
-      !sidebar
-    ) {
-      console.error("Missing essential elements for AJAX update.");
+    if (!productGridContainer || !paginationContainer || !productCountDisplay || !loadingIndicator) {
+      console.error("Essential elements for AJAX update are missing.");
       return;
     }
 
-    // Hủy request trước đó nếu đang chạy
+    // Abort any previous pending request
     if (currentRequestController) {
       currentRequestController.abort();
     }
-    // Tạo AbortController mới cho request này
     currentRequestController = new AbortController();
     const signal = currentRequestController.signal;
 
-    if (loadingIndicator) loadingIndicator.style.display = "inline-block";
-    productGridContainer.style.opacity = "0.5";
+    // Show loading state
+    loadingIndicator.style.display = "inline-block";
+    productGridContainer.style.opacity = "0.5"; // Dim the grid
 
-    const filters = getCurrentFilters();
-    filters.pg = page; // Đặt trang cần lấy
+    const filters = getCurrentFiltersAndSort();
+    const urlParams = new URLSearchParams(filters);
+    urlParams.set('pg', page); // Add page number
+    // Use XHR header to indicate AJAX on the backend
+    // urlParams.set('ajax', '1'); // Backend checks HTTP_X_REQUESTED_WITH instead
 
-    const params = new URLSearchParams();
-    // Quan trọng: Luôn thêm page=shop_grid để routing đúng
-    params.set("page", "shop_grid");
-    // Thêm các filter vào params
-    for (const key in filters) {
-      if (filters[key] && filters[key] !== "all") {
-        // Chỉ thêm các filter có giá trị và khác 'all'
-        params.set(key, filters[key]);
-      }
-    }
-    // Thêm ajax=1 để controller biết
-    // params.set('ajax', '1'); // Không cần nếu dùng header X-Requested-With
-
-    const queryString = params.toString();
-    const ajaxUrl = `?${queryString}`; // URL cho AJAX fetch
-    // URL để pushState (bỏ page=shop_grid nếu muốn URL gọn hơn)
-    const displayUrl = `?${queryString.replace(/^page=shop_grid&?/, "")}`;
+    const url = `?page=shop_grid&${urlParams.toString()}`;
 
     try {
-      const response = await fetch(ajaxUrl, {
-        method: "GET",
-        headers: { "X-Requested-With": "XMLHttpRequest" }, // Header để server nhận biết AJAX
-        signal: signal, // Pass the signal to fetch
+      const response = await fetch(url, {
+          signal, // Pass the abort signal
+          headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              'Accept': 'application/json' // Expect JSON response
+          }
       });
 
-      // Nếu request bị hủy, không làm gì cả
+      // Check if the request was aborted after fetch started but before completion
       if (signal.aborted) {
-        console.log("Fetch aborted");
-        return;
+          console.log("Fetch aborted");
+          return; // Stop processing if aborted
       }
 
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+      }
 
       const data = await response.json();
 
       if (data.success) {
-        // Cập nhật nội dung HTML
-        productGridContainer.innerHTML = data.productHtml;
-        paginationContainer.innerHTML = data.paginationHtml;
-        productCountDisplay.textContent = data.countText;
+        // --- Update UI ---
+        productGridContainer.innerHTML = data.productHtml || '<div class="alert alert-warning">Không có sản phẩm nào.</div>'; // Update grid
+        paginationContainer.innerHTML = data.paginationHtml || ''; // Update pagination
+        productCountDisplay.textContent = data.countText || 'Không có sản phẩm nào.'; // Update count text
 
-        // Cập nhật URL trình duyệt mà không tải lại trang (chỉ khi pushState là true)
+        // --- Update Browser History ---
         if (pushState) {
-          history.pushState(
-            { filters: filters },
-            "",
-            displayUrl || "?page=shop_grid"
-          ); // Lưu state nếu cần
+          const stateUrl = `?${urlParams.toString()}`; // Build URL without page=shop_grid for cleaner history
+           // Add base page parameter for clean URL
+           const historyParams = new URLSearchParams(urlParams);
+           historyParams.set('page', 'shop_grid'); // Add page identifier for direct linking
+          window.history.pushState({ page: page, filters: filters }, '', `?${historyParams.toString()}`);
         }
-
-        // Gắn lại listener cho pagination MỚI
-        attachPaginationListener();
       } else {
-        console.error("AJAX request failed:", data.message || "Unknown error");
-        productGridContainer.innerHTML =
-          '<div class="alert alert-danger">Lỗi tải sản phẩm.</div>'; // Thông báo lỗi
+        // Handle error message from server
+        console.error("AJAX request failed:", data.message || "Unknown server error");
+        productGridContainer.innerHTML = `<div class="alert alert-danger">Lỗi: ${data.message || 'Không thể tải sản phẩm. Vui lòng thử lại.'}</div>`;
+        paginationContainer.innerHTML = ''; // Clear pagination on error
+        productCountDisplay.textContent = 'Đã xảy ra lỗi.';
       }
     } catch (error) {
-      if (error.name === "AbortError") {
-        console.log("Fetch request aborted.");
+      if (error.name === 'AbortError') {
+        console.log('Fetch request was aborted.'); // Don't show error message if aborted by new request
       } else {
-        console.error("Error fetching products:", error);
-        productGridContainer.innerHTML =
-          '<div class="alert alert-danger">Lỗi kết nối. Vui lòng thử lại.</div>';
-        paginationContainer.innerHTML = ""; // Xóa pagination cũ
-        productCountDisplay.textContent = "Lỗi";
+        console.error("Fetch error:", error);
+        productGridContainer.innerHTML = '<div class="alert alert-danger">Lỗi kết nối hoặc xử lý. Vui lòng thử lại.</div>';
+        paginationContainer.innerHTML = '';
+        productCountDisplay.textContent = 'Đã xảy ra lỗi.';
       }
     } finally {
-      if (loadingIndicator) loadingIndicator.style.display = "none";
-      productGridContainer.style.opacity = "1";
-      currentRequestController = null; // Reset controller
+      // Hide loading state regardless of success or failure (unless aborted)
+      if (!signal.aborted) {
+          loadingIndicator.style.display = "none";
+          productGridContainer.style.opacity = "1";
+          currentRequestController = null; // Reset controller
+      }
     }
   }
 
-  // --- Hàm gắn listener cho pagination ---
-  function attachPaginationListener() {
-    paginationContainer?.querySelectorAll(".ajax-page-link").forEach((link) => {
-      // Xóa listener cũ trước khi thêm mới (quan trọng)
-      link.replaceWith(link.cloneNode(true));
-    });
-    // Gắn listener mới cho các link vừa clone
-    paginationContainer?.querySelectorAll(".ajax-page-link").forEach((link) => {
-      link.addEventListener("click", function (e) {
-        e.preventDefault();
-        const pageNum = this.dataset.page;
-        const parentLi = this.closest(".page-item");
-        // Chỉ fetch khi link không bị disabled và không phải trang hiện tại
-        if (
-          pageNum &&
-          parentLi &&
-          !parentLi.classList.contains("disabled") &&
-          !parentLi.classList.contains("active")
-        ) {
-          fetchAndUpdateProducts(pageNum);
-        }
-      });
-    });
-  }
+  // --- Event Listeners ---
 
-  // --- Gắn Event Listeners ban đầu ---
+  // 1. Filter Links (Brand, Price Range, Specs) using Event Delegation
   if (sidebar) {
-    // 1. Listener cho CLICK vào các link lọc (dùng event delegation)
-    sidebar.addEventListener("click", function (e) {
-      // Chỉ xử lý nếu click vào link filter và link đó không đang active
-      if (
-        e.target.classList.contains("filter-link") &&
-        !e.target.classList.contains("active")
-      ) {
-        e.preventDefault();
-        const link = e.target;
-        const filterGroup = link.closest(".filter-options");
-        if (!filterGroup) return;
+    sidebar.addEventListener('click', function(event) {
+      const targetLink = event.target.closest('.filter-link');
+      if (targetLink && !targetLink.classList.contains('active')) { // Only trigger if not already active
+        event.preventDefault();
 
-        // Cập nhật trạng thái active UI NGAY LẬP TỨC
-        filterGroup
-          .querySelectorAll(".filter-link")
-          .forEach((el) => el.classList.remove("active"));
-        link.classList.add("active");
-
-        // Gọi fetch (luôn về trang 1 khi đổi filter)
-        fetchAndUpdateProducts(1);
+        // Handle 'active' class toggle within the same group
+        const filterGroup = targetLink.closest('.filter-options');
+        if (filterGroup) {
+          filterGroup.querySelectorAll('.filter-link.active').forEach(activeLink => {
+            activeLink.classList.remove('active');
+          });
+          targetLink.classList.add('active');
+          fetchAndUpdateProducts(1, true); // Fetch page 1 with new filter
+        }
       }
     });
-
-    // 2. Listener cho SUBMIT form tìm kiếm
-    if (searchForm) {
-      searchForm.addEventListener("submit", function (e) {
-        e.preventDefault();
-        fetchAndUpdateProducts(1);
-      });
-    }
-
-    // 3. Listener cho CHANGE select sắp xếp
-    if (sortSelect) {
-      sortSelect.addEventListener("change", function () {
-        fetchAndUpdateProducts(1);
-      });
-    }
   }
 
-  // 4. Listener cho nút back/forward của trình duyệt
-  window.addEventListener("popstate", function (event) {
-    // Khi người dùng nhấn back/forward, URL thay đổi
-    // Cần đọc lại filter từ URL mới và fetch lại dữ liệu mà KHÔNG pushState
-    // Lưu ý: Cần parse URL để lấy lại các filter
-    // console.log("Popstate event:", window.location.search);
-    // Đây là phần nâng cao, tạm thời chỉ fetch lại trang 1
-    const urlParams = new URLSearchParams(window.location.search);
-    const page = urlParams.get("pg") || 1;
-    // Cập nhật UI của filter dựa trên URL (phần này phức tạp)
-    // ... (code cập nhật UI filter) ...
-    fetchAndUpdateProducts(page, false); // Fetch không pushState
+  // 2. Sort Select Dropdown
+  if (sortSelect) {
+    sortSelect.addEventListener('change', function() {
+      fetchAndUpdateProducts(1, true); // Fetch page 1 with new sort
+    });
+  }
+
+  // 3. Search Form Submission
+  if (filterSortForm) {
+      // Listen for submit on the form itself
+      filterSortForm.addEventListener('submit', function(event) {
+          event.preventDefault(); // Prevent default form submission
+          fetchAndUpdateProducts(1, true); // Fetch page 1 with search term
+      });
+      // Optional: Trigger search on Enter key press within the input
+      searchInput?.addEventListener('keypress', function(event) {
+         if (event.key === 'Enter') {
+              event.preventDefault(); // Prevent default form submission if Enter is pressed
+              fetchAndUpdateProducts(1, true);
+         }
+      });
+  }
+
+
+  // 4. Pagination Links (using Event Delegation on the container)
+  if (paginationContainer) {
+    paginationContainer.addEventListener('click', function(event) {
+      const targetLink = event.target.closest('.ajax-page-link');
+      // Ensure it's a link, not disabled, and not the currently active page
+      if (targetLink && !targetLink.closest('.disabled') && !targetLink.closest('.active')) {
+        event.preventDefault();
+        const page = targetLink.dataset.page;
+        if (page) {
+          fetchAndUpdateProducts(parseInt(page, 10), true);
+        }
+      }
+    });
+  }
+
+  // 5. Browser Back/Forward Navigation (Popstate)
+  window.addEventListener('popstate', function(event) {
+    if (event.state && event.state.page) {
+      // When navigating back/forward, we don't want to push a new state
+      // We need to restore the UI state based on event.state.filters if available
+      // For simplicity here, we just fetch the page from the state
+      // A more complex implementation would update the filter UI elements as well
+      fetchAndUpdateProducts(event.state.page, false); // Don't push state again
+    } else {
+        // Handle initial state or states without page info (e.g., go back to non-shop page)
+        // Maybe reload or fetch default page 1
+        const params = new URLSearchParams(window.location.search);
+        const page = parseInt(params.get('pg') || '1', 10);
+         // Also re-apply filters from URL on popstate to initial load state
+         // This requires updating filter UI elements based on URL params, which is complex.
+         // Simpler approach: Fetch based on current URL params.
+         fetchAndUpdateProducts(page, false);
+    }
   });
 
-  // 5. Listener cho pagination (gắn lần đầu)
-  attachPaginationListener();
-
-  // --- Code xử lý Wishlist AJAX ---
-  // Đảm bảo code này vẫn hoạt động sau khi grid được cập nhật bằng AJAX
-  // Cách tốt nhất là dùng event delegation trên một container cố định bao ngoài grid
-  const mainContentArea = document.querySelector(".col-lg-9"); // Hoặc body
-  if (mainContentArea) {
-    mainContentArea.addEventListener("click", async function (event) {
-      const wishlistButton = event.target.closest(".btn-wishlist");
-      if (wishlistButton) {
-        event.preventDefault(); // Chặn hành vi mặc định của button/link nếu có
-        console.log("Wishlist button clicked via delegation.");
-
-        const isLoggedIn = document.body.dataset.isLoggedIn === "true"; // Lấy từ body
-        const productId = wishlistButton.dataset.productId;
-
-        if (!productId) {
-          console.error("Missing data-product-id on wishlist button.");
-          return;
-        }
-
-        if (!isLoggedIn) {
-          console.log("User not logged in. Redirecting...");
-          const currentUrl = encodeURIComponent(
-            window.location.href || "?page=shop_grid"
-          );
-          window.location.href = `?page=login&redirect=${currentUrl}`;
-        } else {
-          // Gọi hàm AJAX toggleWishlist (đảm bảo hàm này đã được định nghĩa)
-          if (typeof toggleWishlist === "function") {
-            toggleWishlist(wishlistButton, productId);
-          } else {
-            console.error("toggleWishlist function is not defined.");
-            // Sao chép hàm toggleWishlist vào đây hoặc include file chứa nó
-            await toggleWishlistAJAX(wishlistButton, productId); // Ví dụ gọi hàm AJAX trực tiếp
-          }
-        }
-      }
-    });
-  }
-
-  // Hàm toggleWishlist AJAX (có thể đặt ở đây hoặc include từ file khác)
-  async function toggleWishlistAJAX(buttonElement, productId) {
-    const isWishlisted = buttonElement.dataset.isWishlisted === "1";
-    const action = isWishlisted ? "wishlist_remove" : "wishlist_add";
-    const icon = buttonElement.querySelector("i");
-
-    buttonElement.disabled = true;
-    if (icon) {
-      icon.classList.remove("fa-heart", "fa-spin", "fa-spinner");
-      icon.classList.add("fa-spinner", "fa-spin");
-    }
-
-    try {
-      // Thêm ajax=1 vào URL
-      const response = await fetch(
-        `?page=${action}&id=${productId}&ajax=1&redirect=no`,
-        {
-          method: "GET",
-          headers: { "X-Requested-With": "XMLHttpRequest" },
-        }
-      );
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
-
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        const data = await response.json();
-        console.log("Wishlist Response:", data);
-        if (data.success) {
-          buttonElement.dataset.isWishlisted = isWishlisted ? "0" : "1";
-          buttonElement.classList.toggle("active");
-          buttonElement.title = isWishlisted
-            ? "Thêm vào Yêu thích"
-            : "Xóa khỏi Yêu thích";
-          if (typeof data.wishlistItemCount !== "undefined") {
-            const wishlistCountElement = document.getElementById(
-              "header-wishlist-count"
-            );
-            if (wishlistCountElement) {
-              const newCount = parseInt(data.wishlistItemCount);
-              wishlistCountElement.textContent = newCount;
-              wishlistCountElement.style.display =
-                newCount > 0 ? "inline-block" : "none";
-            }
-          }
-        } else {
-          alert(data.message || "Có lỗi xảy ra, vui lòng thử lại.");
-        }
-      } else {
-        const textResponse = await response.text();
-        console.error("Non-JSON Wishlist Response:", textResponse);
-        throw new Error("Received non-JSON response from server.");
-      }
-    } catch (error) {
-      console.error("Error toggling wishlist:", error);
-      alert("Lỗi kết nối hoặc xử lý (Wishlist). Vui lòng thử lại.");
-    } finally {
-      buttonElement.disabled = false;
-      if (icon) {
-        icon.classList.remove("fa-spinner", "fa-spin");
-        icon.classList.add("fa-heart");
-      }
-    }
-  }
-});
-
-// Hàm helper getSpecFilterLabel (nếu cần)
-function getSpecFilterLabel(specKey) {
-  /* ... */
-}
+}); // End DOMContentLoaded

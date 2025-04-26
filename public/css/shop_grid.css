@@ -185,6 +185,6 @@
 }
 
 /* Làm mờ grid khi tải (JS đã xử lý bằng opacity) */
-/* #product-grid-container.is-loading {
+/* #product-grid-container.is-loading { 
     opacity: 0.5;
 }

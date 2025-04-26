@@ -1,33 +1,83 @@
-.cart-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
+/* === Quantity Selector Styling (Cart) === */
+#cart-table .quantity-selector {
+    display: inline-flex; /* Keep controls inline */
+    align-items: center;
+    vertical-align: middle;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem; /* Smaller radius for table */
+    overflow: hidden;
+    max-width: 110px; /* Limit width in table */
 }
 
-.cart-table th, .cart-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
+#cart-table .quantity-selector .btn {
+    border-radius: 0;
+    border: none;
+    background-color: #f8f9fa; /* Lighter background */
+    color: #495057;
+    padding: 0.3rem 0.6rem; /* Smaller padding */
+    font-size: 0.9rem; /* Smaller font */
+    line-height: 1;
+    transition: background-color 0.15s ease-in-out;
 }
 
-.cart-table th {
-    background-color: #f0f0f0;
+#cart-table .quantity-selector .btn:hover {
+    background-color: #e2e6ea;
 }
 
-.cart-item-image {
-    width: 50px;
-    height: 50px;
+#cart-table .quantity-selector .btn:focus {
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25); /* Focus shadow */
+    z-index: 1;
 }
 
-.cart-summary {
-    margin-top: 20px;
+#cart-table .quantity-selector .btn:disabled {
+    background-color: #f8f9fa;
+    color: #adb5bd;
+    cursor: not-allowed;
+    opacity: 0.65;
 }
 
-.cart-summary-item {
-    margin-bottom: 10px;
+#cart-table .quantity-selector .quantity-display {
+    text-align: center;
+    border: none;
+    border-left: 1px solid #dee2e6;
+    border-right: 1px solid #dee2e6;
+    width: 40px; /* Smaller width for table */
+    font-weight: 500;
+    font-size: 0.9rem; /* Match button size */
+    padding: 0.3rem 0.1rem; /* Match button padding */
+    height: auto;
+    box-shadow: none !important;
+    -moz-appearance: textfield;
+    background-color: #fff !important;
 }
 
-.cart-summary-item strong {
-    display: inline-block;
-    width: 150px;
+#cart-table .quantity-selector input[type=number]::-webkit-inner-spin-button,
+#cart-table .quantity-selector input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Style for deselected cart rows */
+#cart-table tbody tr.item-deselected {
+    opacity: 0.6;
+    background-color: #f8f9fa; /* Optional: slightly different background */
+    transition: opacity 0.3s ease, background-color 0.3s ease;
+}
+#cart-table tbody tr {
+    transition: opacity 0.3s ease, background-color 0.3s ease;
+}
+
+/* Cart Summary Alignment */
+.cart-summary-box .d-flex span:first-child {
+    flex-grow: 1; /* Allow label to take space */
+}
+.cart-summary-box .d-flex span:last-child {
+    flex-shrink: 0; /* Prevent price from wrapping */
+    text-align: right;
+}
+
+/* Ensure remove button has consistent size */
+#cart-table .remove-item-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
 }

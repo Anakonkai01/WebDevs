@@ -10,3 +10,20 @@
         }
         .cart-summary-box { background-color: #f8f9fa; border: 1px solid #dee2e6; position: sticky; top: 80px; }
         .cart-item-img { width: 80px; height: 80px; object-fit: contain; }
+
+
+
+
+
+/* === NEW RULE: Giới hạn kích thước ảnh trong tóm tắt đơn hàng === */
+.order-summary-item-img {
+    width: 60px; /* Chiều rộng cố định nhỏ hơn */
+    height: 60px; /* Chiều cao cố định nhỏ hơn */
+    object-fit: contain; /* Đảm bảo ảnh không bị méo, hiển thị toàn bộ trong khung */
+    background-color: #fff; /* Optional: thêm nền trắng nếu ảnh có nền trong suốt */
+}
+/* ============================================================= */
+
+/* Giữ lại các style cũ nếu có */
+.cart-summary-box { background-color: #f8f9fa; border: 1px solid #dee2e6; position: sticky; top: 80px; }
+/* .cart-item-img { width: 80px; height: 80px; object-fit: contain; } */ /* Có thể xóa dòng này nếu không dùng ở đâu khác */

@@ -1,11 +1,94 @@
-body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background-color: #f8f9fa;
-        }
-        .login-container {
-            max-width: 400px;
-            width: 100%;
-        }
+/* public/css/login.css */
+
+.login-page-background {
+    background-color: #eef2f7; /* Màu nền xám xanh nhạt */
+    /* background-image: linear-gradient(to top right, #f8f9fa, #e9ecef); */
+}
+
+/* Container chính để căn giữa card */
+.login-container {
+    /* Các thuộc tính display flex đã được thêm vào HTML */
+}
+
+.login-card {
+    max-width: 450px; /* Chiều rộng tối đa */
+    width: 100%;
+    border: none; /* Bỏ viền mặc định */
+    border-radius: 0.75rem; /* Bo góc nhiều hơn */
+}
+
+.login-card .card-body {
+    padding: 2rem 2.5rem; /* Tăng padding bên trong card */
+}
+
+.login-card .input-group-text {
+    background-color: #f8f9fa; /* Nền nhẹ cho icon */
+    color: #6c757d;
+    width: 45px; /* Chiều rộng cố định cho icon span */
+    justify-content: center; /* Căn giữa icon */
+    border: 1px solid #ced4da; /* Thêm lại border */
+    border-right: none; /* Bỏ viền phải */
+}
+
+.login-card .form-control {
+     /* border-left: none; */ /* Để Bootstrap xử lý mặc định */
+     padding-left: 0.75rem;
+}
+.login-card .form-control:focus {
+     border-color: #86b7fe; /* Màu viền khi focus */
+     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Thêm shadow khi focus */
+     /* z-index: 3; */
+}
+
+
+/* Định dạng cho nút hiện/ẩn mật khẩu */
+.password-input-group .form-control {
+   /* border-right: none; */ /* Để Bootstrap xử lý mặc định */
+}
+
+.password-toggle-btn {
+    /* border-left: none !important; */ /* Để Bootstrap xử lý mặc định */
+    background-color: #fff; /* Nền trắng cho nút */
+    color: #6c757d;
+    cursor: pointer;
+    border: 1px solid #ced4da; /* Thêm lại border */
+    border-left: none; /* Bỏ viền trái */
+}
+.password-toggle-btn:hover,
+.password-toggle-btn:focus {
+    background-color: #f8f9fa; /* Nền nhạt khi hover/focus */
+    box-shadow: none; /* Bỏ shadow khi focus nút này */
+    z-index: 3;
+}
+
+/* Căn chỉnh thông báo lỗi validation (nếu có) */
+.input-group.has-validation .invalid-feedback {
+    width: 100%;
+    margin-top: 0.25rem;
+    display: block;
+    text-align: left;
+}
+
+
+/* Nút đăng nhập */
+.login-card .btn-lg {
+    padding: 0.75rem 1.25rem;
+    font-weight: 500;
+}
+
+/* Link đăng ký */
+.login-card .border-top {
+    border-color: #e9ecef !important; /* Màu viền nhạt hơn */
+}
+.login-card small a {
+    color: #0d6efd; /* Màu link primary */
+}
+.login-card small a:hover {
+    text-decoration: underline !important;
+}
+
+/* Style cho Alert lỗi */
+.alert-danger {
+    display: flex;
+    align-items: center; /* Căn icon và text thẳng hàng */
+}

@@ -1,19 +1,58 @@
-.contact-map {
-    height: 400px; /* Example height, adjust as needed */
+/* public/css/contact.css */
+
+.contact-page-section {
+    /* Thêm padding hoặc background nếu muốn */
+}
+
+.contact-info-card {
+    /* Tùy chỉnh thêm cho card thông tin nếu cần */
+}
+
+.contact-details-list li {
+    padding-bottom: 1rem; /* Khoảng cách giữa các mục thông tin */
+    margin-bottom: 1rem;
+}
+.contact-details-list li:last-child {
+    border-bottom: none; /* Bỏ border cho mục cuối */
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+.contact-details-list i.fa-fw {
+    /* Đảm bảo icon có chiều rộng cố định và căn chỉnh tốt */
+    width: 1.5em;
+}
+
+.map-card {
+    overflow: hidden; /* Đảm bảo iframe không tràn ra ngoài card */
+}
+
+.map-container {
+    position: relative;
     width: 100%;
+    height: 100%; /* Làm cho map chiếm toàn bộ chiều cao card-body */
+    min-height: 450px; /* Chiều cao tối thiểu cho bản đồ */
 }
-.contact-info-box {
-    padding: 20px;
-    border: 1px solid #dee2e6; /* Bootstrap's default border color */
-    border-radius: 0.25rem; /* Bootstrap's default border radius */
+
+.map-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none; /* Bỏ viền mặc định của iframe */
 }
-.contact-info-icon {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background-color: #f0f0f0; /* Light gray background */
-    margin-right: 10px;
+
+/* Loại bỏ các style cũ liên quan đến form nếu có */
+/* Ví dụ:
+.contact-form-card { ... }
+.contact-info-box { ... }
+.contact-info-icon { ... }
+*/
+
+/* Responsive adjustments (Optional) */
+@media (max-width: 991.98px) {
+    .map-container {
+        min-height: 350px; /* Giảm chiều cao map trên tablet */
+    }
 }

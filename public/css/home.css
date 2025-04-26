@@ -4,35 +4,38 @@ body {
     font-family: 'Arial', sans-serif;
     line-height: 1.6;
     color: #333;
-    background-color: #f4f4f4;
+    /* background-color: #f4f4f4; */ /* Nên đặt background chung ở layout/body */
     margin: 0;
     padding: 0;
 }
 
-.container {
+/* Container nên được định nghĩa trong layout hoặc dùng class của Bootstrap */
+/* .container {
     width: 90%;
     margin: auto;
     overflow: hidden;
-}
+} */
 
 h1, h2, h3 {
-    color: #333;
+    /* color: #333; */ /* Nên kế thừa hoặc định nghĩa trong layout */
 }
 
-/* Hero Section */
+/* === Hero Section Styling === */
 .hero-section {
-    background: url('public/img/banner.jpg') no-repeat center/cover; /* Cover the whole section */
-    color: #fff;
-    text-align: center;
-    padding: 100px 20px;
-    display: flex; /* Use flexbox */
-    justify-content: center; /* Center content horizontally */
-    position: relative;
-    display: flex;
+    /* --- QUAN TRỌNG: Đảm bảo đường dẫn ảnh đúng --- */
+    /* Đường dẫn này tính từ vị trí file CSS (public/css) đến file ảnh (public/img) */
+    background: url('../img/banner.jpg') no-repeat center center/cover;
+    /* ---------------------------------------------- */
+    color: #fff; /* Màu chữ mặc định là trắng */
+    padding: 6rem 1rem; /* Tăng padding dọc */
+    position: relative; /* Cần cho overlay */
+    display: flex; /* Sử dụng flex để căn giữa nội dung */
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 500px;
+    min-height: 450px; /* Chiều cao tối thiểu */
+    border-radius: 0.5rem; /* Bo góc nhẹ */
+    overflow: hidden; /* Đảm bảo overlay không tràn */
 }
 
 .hero-overlay {
@@ -41,219 +44,217 @@ h1, h2, h3 {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5); /* Slightly transparent black */
+    /* Lớp phủ màu đen với độ trong suốt 60% */
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1;
+    /* Không cần bo góc ở đây nếu .hero-section đã có overflow: hidden */
 }
 
 .hero-content {
-    position: relative;
-    z-index: 10;
-    max-width: 800px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    position: relative; /* Đặt lên trên overlay */
+    z-index: 2;
+    max-width: 800px; /* Giới hạn chiều rộng nội dung */
+    text-align: center; /* Căn giữa nội dung bên trong */
 }
 
-.hero-content h1 {
-    font-size: 3.5rem;
-    font-weight: 700;
-    margin-bottom: 15px;
+/* Làm chữ nổi bật hơn trên nền tối */
+.hero-content h1,
+.hero-content .display-4 { /* Áp dụng cho cả h1 và lớp display */
     color: #fff;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-    text-align: center;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7); /* Tăng shadow */
+    font-weight: 700; /* Đảm bảo chữ đủ đậm */
 }
 
-.hero-content p {
-    font-size: 1.2rem;
-    margin-bottom: 1rem;
-    color: #fff;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
-    max-width: 600px;
-    text-align: center;
+.hero-content p,
+.hero-content .lead { /* Áp dụng cho cả p và lớp lead */
+    color: rgba(255, 255, 255, 0.9); /* Màu trắng hơi mờ */
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.6);
+    font-weight: 400; /* Trọng lượng chữ bình thường */
 }
 
+/* Nút bấm trong Hero */
 .hero-content .btn-primary {
-    background-color: #007bff; /* Example color */
-    border: none;
-    color: #fff;
-    padding: 12px 30px;
-    border-radius: 5px;
-    text-decoration: none;
-    display: inline-block;
-    font-weight: 600;
-    transition: background-color 0.3s ease;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
-    max-width: 600px;
+    /* Tùy chỉnh thêm nếu cần, ví dụ: */
+    /* box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hero-content .btn-primary:hover {
+    transform: translateY(-2px);
+    /* box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25); */
 }
 
-
-/* Categories Section */
-.categories-section {
-    padding: 50px 0;
-    text-align: center;
-    background-color: #fff;
+/* Responsive cho Hero Section */
+@media (max-width: 768px) {
+    .hero-section {
+        min-height: 350px;
+        padding: 4rem 1rem;
+    }
+    .hero-content h1,
+    .hero-content .display-4 {
+        font-size: 2.5rem; /* Giảm cỡ chữ trên mobile */
+    }
+    .hero-content p,
+    .hero-content .lead {
+        font-size: 1rem; /* Giảm cỡ chữ trên mobile */
+    }
+    .hero-content .btn-lg {
+        font-size: 1rem; /* Giảm cỡ nút trên mobile */
+        padding: 0.6rem 1.2rem;
+    }
 }
 
-.category-box {
-    background-color: #f9f9f9;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-}
+/* === Các CSS khác cho trang home (Sidebar, Product Card...) giữ nguyên === */
+/* ... (code CSS cũ cho sidebar, product card, etc.) ... *//* .hero-content .btn-primary đã được định dạng bởi Bootstrap */
 
-.category-box:hover {
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    transform: translateY(-5px);
-}
+/* Categories Section - Không dùng trong home.php hiện tại */
+/* .categories-section { ... } */
+/* .category-box { ... } */
 
-.category-box img {
-    width: 100%;
-    max-height: 200px;
-    object-fit: cover;
-    margin-bottom: 10px;
-    border-radius: 5px;
-}
-
-.category-box h3 {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-    color: #333;
-}
-
-
-/* Products Section */
-.products-section {
-    padding: 50px 0;
-    background-color: #f4f4f4;
-}
-
+/* Products Section / Cards */
 .product-card {
     background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    margin-bottom: 20px;
+    border: 1px solid #dee2e6; /* Thêm border nhẹ */
+    /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); */ /* Giảm shadow nếu muốn */
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    /* margin-bottom: 20px; */ /* Nên dùng gap của Bootstrap grid (g-4) */
     overflow: hidden;
 }
 
 .product-card:hover {
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    /* box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); */
     transform: translateY(-5px);
 }
 
-.product-image {
-    width: 100%;
-    height: 250px;
-    object-fit: cover;
-    display: block;
+.product-card .card-img-top {
+    /* Đã style inline trong home.php */
 }
 
-.product-body {
-    padding: 15px;
+.product-card .card-body {
+    padding: 0.8rem; /* Giảm padding */
 }
 
-.product-title {
-    font-size: 1.2rem;
-    font-weight: bold;
-    margin-bottom: 10px;
+.product-card .product-name {
+    font-weight: 500;
+    line-height: 1.4;
+    color: #212529 !important; /* Đảm bảo màu chữ */
+}
+.product-card .product-name:hover {
+    color: #0d6efd !important; /* Màu khi hover */
 }
 
-.product-price {
-    font-size: 1.1rem;
-    color: #e44d26;
-    margin-bottom: 10px;
+
+.product-card .price {
+    /* color: #dc3545; */ /* Đã style inline */
 }
 
-.product-rating {
-    margin-bottom: 10px;
+.product-card .card-footer {
+    /* background-color: transparent !important; */ /* Đã style inline */
+    /* border-top: none !important; */ /* Đã style inline */
 }
 
-.rating-star {
-    color: #ffc107;
+/* Wishlist button states */
+.product-card .actions .btn-wishlist {
+    /* color: #6c757d; */ /* Đã style inline/class */
+    border: none;
+    transition: color 0.2s ease;
+}
+.product-card .actions .btn-wishlist:hover:not(.active):not(:disabled) {
+    color: #dc3545; /* Hover thành màu đỏ */
 }
 
-/* Product List Widget */
+/* Active state dùng class text-danger */
+/* .product-card .actions .btn-wishlist.active {
+    color: #dc3545;
+} */
+
+/* Disabled state */
+.product-card .actions .btn-wishlist.disabled,
+.product-card .actions .btn-cart.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Cart button */
+.product-card .actions .btn-cart {
+     border: none;
+     transition: color 0.2s ease;
+}
+.product-card .actions .btn-cart:not(.disabled):hover {
+    color: #157347; /* Darker success color on hover */
+}
+
+
+/* Product List Widget (Sidebar) */
 .product-list-widget {
     padding: 0;
 }
-
-.list-group-item {
-    padding: 10px 0;
+.product-list-widget .list-group-item {
+    padding: 0.5rem 0.75rem; /* Giảm padding */
     border: none;
-    display: flex;
-    align-items: center;
+    border-bottom: 1px solid #eee; /* Border dưới nhẹ */
+    /* display: flex; */ /* Đã có inline */
+    /* align-items: center; */ /* Đã có inline */
 }
-
-.list-group {
-    padding-left: 0;
+.product-list-widget .list-group-item:last-child {
+    border-bottom: none;
 }
 
 .product-list-widget img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 5px;
-    margin-right: 10px;
+    /* width: 60px; */ /* Đã style inline */
+    /* height: 60px; */ /* Đã style inline */
+    /* object-fit: contain; */ /* Đã style inline */
+    /* border-radius: 0.25rem; */ /* Đã style inline */
+    /* margin-right: 0.75rem; */ /* Đã style inline */
+}
+.product-list-widget .info .name {
+     color: #212529; /* Màu chữ đậm hơn */
+     margin-bottom: 0.1rem;
+     text-decoration: none;
+}
+.product-list-widget .info .name:hover {
+     color: #0d6efd;
+}
+.product-list-widget .info .price {
+    /* color: #dc3545; */ /* Đã style inline */
 }
 
-/* Filter Brand*/
-.filter-brand {
-  margin-bottom: 10px;
+
+/* Filter Widget (Sidebar) */
+.filter-widget .card-header {
+    padding: 0.5rem 1rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
 }
-.filter-brand label {
-  font-size: 1.2rem;
-  padding-left: 15px;
+.filter-widget .card-header h5 {
+    font-size: 0.95rem;
+    margin-bottom: 0;
 }
-
-
-
-.view-more-btn {
-    background-color: #e44d26;
+.filter-widget .card-body,
+.filter-widget .list-group-flush .list-group-item {
+    padding: 0.6rem 1rem; /* Điều chỉnh padding */
+    font-size: 0.9rem;
+}
+.filter-widget .list-group-item {
+    border-bottom: 1px solid #f1f1f1;
+}
+.filter-widget .list-group-item:last-child {
+    border-bottom: none;
+}
+.filter-widget .list-group-item.active {
+    z-index: 2;
     color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    font-weight: 500;
 }
 
-.view-more-btn:hover {
-    background-color: #d14521;
-}
-
-
-.product-card .actions .btn-wishlist {
-    color: #6c757d; /* Màu xám mặc định */
-    border: none;
-    /* Các thuộc tính khác nếu cần */
-}
-
-.product-card .actions .btn-wishlist.active {
-    color: #dc3545; /* Màu đỏ khi được yêu thích */
-}
-
-.product-card .actions .btn-wishlist.disabled {
-    opacity: 0.5; /* Kiểu mờ khi bị vô hiệu hóa */
-    /* Không cần pointer-events: none vì JS đã xử lý */
-}
 
 /* Responsive Design */
+@media (max-width: 992px) {
+    .hero-content h1 { font-size: 2.5rem; }
+    .hero-content p { font-size: 1rem; }
+}
 @media (max-width: 768px) {
-    /* ... styles inside this block only apply when the screen is 768px wide or narrower ... */
-    .hero-content h1 {
-        font-size: 2.5rem;
-    }
-
-    .hero-content p {
-        font-size: 1rem;
-    }
-    .hero-content .btn-primary {
-        padding: 10px 20px;
-    }
-    .category-box img {
-        max-height: 150px;
-    }
+    .hero-section { min-height: 300px; padding: 60px 15px;}
+    .hero-content h1 { font-size: 2rem; }
 }
