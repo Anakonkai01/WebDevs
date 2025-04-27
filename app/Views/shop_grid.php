@@ -1,7 +1,7 @@
 <?php
 // Web/app/Views/shop_grid.php
 $pageTitle = 'Cửa hàng';
-include_once __DIR__ . '/../layout/header.php'; // Header includes Bootstrap CSS/JS & global data
+include_once __DIR__ . '/layout/header.php'; // Header includes Bootstrap CSS/JS & global data
 
 // --- Get Data from Controller ---
 // Use null coalescing operator for safety
@@ -176,5 +176,5 @@ function getSpecFilterLabel(string $specKey): string {
 
 <?php
 // Footer includes Bootstrap JS, the shared wishlist listener, and the conditional include for shop_grid_ajax.js
-include_once __DIR__ . '/../layout/footer.php';
+include_once __DIR__ . '/layout/footer.php';
 ?>

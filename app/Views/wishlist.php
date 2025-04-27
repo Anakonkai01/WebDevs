@@ -3,7 +3,7 @@
 $wishlistItems = $wishlistItems ?? [];
 $flashMessage = $flashMessage ?? null;
 $pageTitle = 'Danh sách yêu thích';
-include_once __DIR__ . '/../layout/header.php';
+include_once __DIR__ . '/layout/header.php';
 ?>
 <link rel="stylesheet" href="/webfinal/public/css/wishlist.css">
 
@@ -86,4 +86,4 @@ include_once __DIR__ . '/../layout/header.php';
         <?php endif; ?>
     </div>
 
-<?php include_once __DIR__ . '/../layout/footer.php'; ?>
+<?php include_once __DIR__ . '/layout/footer.php'; ?>

@@ -11,9 +11,9 @@ $pageTitle = $pageTitle ?? 'Chỉnh sửa Hồ sơ';
 
 // Nếu không có thông tin user, không thể hiển thị form
 if (!$user) {
-    include_once __DIR__ . '/../layout/header.php';
+    include_once __DIR__ . '/layout/header.php';
     echo "<div class='container my-4'><div class='alert alert-danger'>Lỗi: Không thể tải thông tin người dùng.</div></div>";
-    include_once __DIR__ . '/../layout/footer.php';
+    include_once __DIR__ . '/layout/footer.php';
     exit;
 }
 
@@ -27,7 +27,7 @@ function error_class_bs_edit($field, $errors) {
     return isset($errors[$field]) ? 'is-invalid' : '';
 }
 
-include_once __DIR__ . '/../layout/header.php'; // Include header layout
+include_once __DIR__ . '/layout/header.php'; // Include header layout
 
 
     echo '<link rel="stylesheet" href="/webfinal/public/css/edit_profile.css">';
@@ -84,5 +84,5 @@ include_once __DIR__ . '/../layout/header.php'; // Include header layout
     </div>
 
 <?php
-include_once __DIR__ . '/../layout/footer.php'; // Include footer layout
+include_once __DIR__ . '/layout/footer.php'; // Include footer layout
 ?>

@@ -12,7 +12,7 @@ function error_class_bs_erc($field, $errors) { return isset($errors[$field]) ? '
 $useLayout = false;
 
 if ($useLayout) {
-    include_once __DIR__ . '/../layout/header.php';
+    include_once __DIR__ . '/layout/header.php';
 } else { ?>
 <!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title><?= htmlspecialchars($pageTitle) ?></title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
@@ -73,4 +73,4 @@ if ($useLayout) {
 <?php if (!$useLayout): ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body></html>
-<?php else: include_once __DIR__ . '/../layout/footer.php'; endif; ?>
+<?php else: include_once __DIR__ . '/layout/footer.php'; endif; ?>

@@ -8,7 +8,7 @@ $useLayout = true; // Đặt là false nếu muốn trang lỗi hoàn toàn riê
 
 if ($useLayout) {
     // Giả sử BASE_PATH đã được định nghĩa
-    include_once BASE_PATH . '/app/layout/header.php';
+    include_once BASE_PATH . '/app/Views/layout/header.php';
 } else {
     // Hoặc tạo phần head HTML cơ bản tại đây nếu không dùng layout
     echo "<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'><title>$pageTitle</title>";
@@ -30,7 +30,7 @@ if ($useLayout) {
 
 <?php
 if ($useLayout) {
-    include_once BASE_PATH . '/app/layout/footer.php';
+    include_once BASE_PATH . '/app/Views/layout/footer.php';
 } else {
     echo "</body></html>";
 }

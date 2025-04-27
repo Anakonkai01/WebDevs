@@ -25,7 +25,7 @@ $useLayout = false; // Đặt thành true nếu muốn dùng header/footer chung
 
 if ($useLayout) {
     $pageTitle = $pageTitle ?? 'Thay đổi mật khẩu';
-    include_once __DIR__ . '/../layout/header.php';
+    include_once __DIR__ . '/layout/header.php';
 } else {
     ?>
     <!DOCTYPE html>
@@ -148,6 +148,6 @@ if (!$useLayout) {
     </html>
     <?php
 } else {
-    include_once __DIR__ . '/../layout/footer.php';
+    include_once __DIR__ . '/layout/footer.php';
 }
 ?>

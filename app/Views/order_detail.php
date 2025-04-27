@@ -4,9 +4,9 @@ $order = $order ?? null;
 $orderItems = $orderItems ?? [];
 
 if (!$order) {
-    $pageTitle = 'Lỗi đơn hàng'; include_once __DIR__ . '/../layout/header.php';
+    $pageTitle = 'Lỗi đơn hàng'; include_once __DIR__ . '/layout/header.php';
     echo "<div class='container my-4'><div class='alert alert-danger'>Không tìm thấy thông tin đơn hàng.</div></div>";
-    include_once __DIR__ . '/../layout/footer.php';
+    include_once __DIR__ . '/layout/footer.php';
     return;
 }
 
@@ -20,7 +20,7 @@ function translate_status_od(string $status): string { /* ... function code ... 
 }
 
 $pageTitle = 'Chi tiết Đơn hàng #' . htmlspecialchars($order['id']);
-include_once __DIR__ . '/../layout/header.php';
+include_once __DIR__ . '/layout/header.php';
 $cssPath = '/webfinal/public/css/order_detail.css';
 ?>
 <head>
@@ -135,4 +135,4 @@ $cssPath = '/webfinal/public/css/order_detail.css';
         </div> <?php // end row ?>
     </div> <?php // end container ?>
 
-<?php include_once __DIR__ . '/../layout/footer.php'; ?>
+<?php include_once __DIR__ . '/layout/footer.php'; ?>

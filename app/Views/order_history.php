@@ -30,7 +30,7 @@ function getStatusBadgeClass($status) {
 }
 
 $pageTitle = 'Lịch sử đơn hàng';
-include_once __DIR__ . '/../layout/header.php'; // Includes Bootstrap
+include_once __DIR__ . '/layout/header.php'; // Includes Bootstrap
 
 ?>
     <link rel="stylesheet" href="/webfinal/public/css/order_history.css">
@@ -143,4 +143,4 @@ include_once __DIR__ . '/../layout/header.php'; // Includes Bootstrap
         <?php endif; ?>
     </div>
 
-<?php include_once __DIR__ . '/../layout/footer.php'; ?>
+<?php include_once __DIR__ . '/layout/footer.php'; ?>

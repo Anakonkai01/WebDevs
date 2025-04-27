@@ -11,13 +11,13 @@ $wishlistedIds = $wishlistedIds ?? []; // Comes from BaseController::getGlobalVi
 // Attempt to set page title safely
 $pageTitle = isset($product['name']) ? htmlspecialchars($product['name']) : 'Chi tiết Sản phẩm';
 // Include header only once at the beginning
-include_once __DIR__ . '/../layout/header.php';
+include_once __DIR__ . '/layout/header.php';
 
 // --- Check if product exists ---
 if (!$product || !isset($product['id'])) {
     echo "<div class='container my-4'><div class='alert alert-danger'>Lỗi: Sản phẩm không tồn tại hoặc không thể tải thông tin.</div></div>";
     // Include footer before exiting
-    include_once __DIR__ . '/../layout/footer.php';
+    include_once __DIR__ . '/layout/footer.php';
     exit;
 }
 
@@ -286,5 +286,5 @@ $partialsPath = BASE_PATH . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 
 
 <?php
 // Footer includes page-specific JS loader
-include_once __DIR__ . '/../layout/footer.php';
+include_once __DIR__ . '/layout/footer.php';
 ?>
