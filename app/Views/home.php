@@ -1,5 +1,6 @@
 <?php
 // Web/app/Views/Home.php
+global $isLoggedIn, $wishlistedIds;
 $pageTitle = 'Trang chủ';
 // Header bao gồm Bootstrap CSS/JS và các biến toàn cục như $isLoggedIn, $wishlistedIds
 include_once __DIR__ . '/../layout/header.php'; // Đã bao gồm header được cập nhật
@@ -25,18 +26,18 @@ function build_query_string_home(array $params): string {
 <link rel="stylesheet" href="/webfinal/public/css/home.css">
 
 <?php // ----- Hero Section ----- ?>
-<div class="hero-section text-center text-white mb-4"> <?php // Thêm text-white ?>
-    <div class="hero-overlay"></div>
-    <div class="container hero-content"> <?php // Thêm container để giới hạn chiều rộng nội dung ?>
-        <h1 class="display-4 fw-bold mb-3">Khám Phá Sản Phẩm Công Nghệ Mới Nhất</h1> <?php // display-4, fw-bold ?>
-        <p class="lead mb-4 mx-auto" style="max-width: 600px;"> <?php // lead, giới hạn chiều rộng ?>
-            Tìm kiếm những thiết bị điện tử, phụ kiện và sản phẩm công nghệ hàng đầu tại MyShop.
-        </p>
-        <a href="?page=shop_grid" class="btn btn-primary btn-lg mt-3 px-4 py-2 fw-medium"> <?php // btn-lg, padding, fw-medium ?>
-           <i class="fas fa-shopping-bag me-2"></i> Mua Sắm Ngay
-        </a>
+    <div class="hero-section text-center text-white mb-4"> <?php // Đảm bảo các class này tồn tại ?>
+        <div class="hero-overlay"></div>
+        <div class="container hero-content">
+            <h1 class="display-4 fw-bold mb-3">Khám Phá Sản Phẩm Công Nghệ Mới Nhất</h1>
+            <p class="lead mb-4 mx-auto" style="max-width: 700px;"> <?php // Tăng max-width nếu cần ?>
+                Tìm kiếm những thiết bị điện tử, phụ kiện và sản phẩm công nghệ hàng đầu tại MyShop.
+            </p>
+            <a href="?page=shop_grid" class="btn btn-primary btn-lg mt-3 px-4 py-2 fw-medium">
+                <i class="fas fa-shopping-bag me-2"></i> Mua Sắm Ngay
+            </a>
+        </div>
     </div>
-</div>
 <?php // ----- End Hero Section ----- ?>
 
 <div class="row g-4">

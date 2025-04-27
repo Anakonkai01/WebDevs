@@ -3,7 +3,7 @@
         'name' => 'your-vendor-name/shopping-cart',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'be4ece3c4dc53406fc29162fb032fe4862422050',
+        'reference' => '9505a7db1a3936a8a84ad8575e28b9dcead03a74',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -22,7 +22,7 @@
         'your-vendor-name/shopping-cart' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'be4ece3c4dc53406fc29162fb032fe4862422050',
+            'reference' => '9505a7db1a3936a8a84ad8575e28b9dcead03a74',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

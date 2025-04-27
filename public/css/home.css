@@ -1,41 +1,41 @@
-/* Home Page Styles */
-/* General Styles */
+/* ================================== */
+/* === home.css - Cải thiện toàn bộ === */
+/* ================================== */
+
+/* --- General Page Styles --- */
 body {
-    font-family: 'Arial', sans-serif;
-    line-height: 1.6;
-    color: #333;
-    /* background-color: #f4f4f4; */ /* Nên đặt background chung ở layout/body */
-    margin: 0;
-    padding: 0;
+    background-color: #f8f9fa; /* Màu nền chung nhẹ nhàng hơn */
 }
 
-/* Container nên được định nghĩa trong layout hoặc dùng class của Bootstrap */
-/* .container {
-    width: 90%;
-    margin: auto;
-    overflow: hidden;
-} */
-
-h1, h2, h3 {
-    /* color: #333; */ /* Nên kế thừa hoặc định nghĩa trong layout */
+main.container {
+    padding-top: 1.5rem;
+    padding-bottom: 3rem; /* Thêm padding dưới cho main */
 }
 
-/* === Hero Section Styling === */
+h2 {
+    font-weight: 600;
+    color: #343a40;
+    margin-bottom: 1.5rem !important; /* Đồng nhất khoảng cách dưới các tiêu đề section */
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #dee2e6; /* Thêm đường kẻ nhẹ dưới tiêu đề section */
+    display: inline-block; /* Để border chỉ dài theo chữ */
+}
+
+/* === Hero Section Styling (Đã cải thiện ở lần trước - giữ nguyên hoặc tinh chỉnh thêm) === */
 .hero-section {
-    /* --- QUAN TRỌNG: Đảm bảo đường dẫn ảnh đúng --- */
-    /* Đường dẫn này tính từ vị trí file CSS (public/css) đến file ảnh (public/img) */
     background: url('../img/banner.jpg') no-repeat center center/cover;
-    /* ---------------------------------------------- */
-    color: #fff; /* Màu chữ mặc định là trắng */
-    padding: 6rem 1rem; /* Tăng padding dọc */
-    position: relative; /* Cần cho overlay */
-    display: flex; /* Sử dụng flex để căn giữa nội dung */
+    color: #fff;
+    padding: 8rem 1rem;
+    position: relative;
+    display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 450px; /* Chiều cao tối thiểu */
-    border-radius: 0.5rem; /* Bo góc nhẹ */
-    overflow: hidden; /* Đảm bảo overlay không tràn */
+    min-height: 450px; /* Giảm nhẹ chiều cao nếu muốn */
+    border-radius: 0.75rem;
+    overflow: hidden;
+    margin-bottom: 3rem !important;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .hero-overlay {
@@ -44,217 +44,207 @@ h1, h2, h3 {
     left: 0;
     width: 100%;
     height: 100%;
-    /* Lớp phủ màu đen với độ trong suốt 60% */
-    background: rgba(0, 0, 0, 0.6);
+    background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.1)); 
     z-index: 1;
-    /* Không cần bo góc ở đây nếu .hero-section đã có overflow: hidden */
 }
 
 .hero-content {
-    position: relative; /* Đặt lên trên overlay */
+    position: relative;
     z-index: 2;
-    max-width: 800px; /* Giới hạn chiều rộng nội dung */
-    text-align: center; /* Căn giữa nội dung bên trong */
+    max-width: 800px;
+    text-align: center;
 }
 
-/* Làm chữ nổi bật hơn trên nền tối */
 .hero-content h1,
-.hero-content .display-4 { /* Áp dụng cho cả h1 và lớp display */
+.hero-content .display-4 {
     color: #fff;
-    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7); /* Tăng shadow */
-    font-weight: 700; /* Đảm bảo chữ đủ đậm */
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6);
+    font-weight: 700;
+    margin-bottom: 1.5rem !important;
 }
 
 .hero-content p,
-.hero-content .lead { /* Áp dụng cho cả p và lớp lead */
-    color: rgba(255, 255, 255, 0.9); /* Màu trắng hơi mờ */
+.hero-content .lead {
+    color: rgba(255, 255, 255, 0.95);
     text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.6);
-    font-weight: 400; /* Trọng lượng chữ bình thường */
+    margin-bottom: 2rem !important;
+    font-size: 1.2rem; /* Cỡ chữ mô tả */
 }
 
-/* Nút bấm trong Hero */
 .hero-content .btn-primary {
-    /* Tùy chỉnh thêm nếu cần, ví dụ: */
-    /* box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); */
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    padding: 0.8rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    border: none;
+    border-radius: 50px;
 }
 .hero-content .btn-primary:hover {
-    transform: translateY(-2px);
-    /* box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25); */
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    background-color: #0b5ed7;
 }
 
-/* Responsive cho Hero Section */
-@media (max-width: 768px) {
-    .hero-section {
-        min-height: 350px;
-        padding: 4rem 1rem;
-    }
-    .hero-content h1,
-    .hero-content .display-4 {
-        font-size: 2.5rem; /* Giảm cỡ chữ trên mobile */
-    }
-    .hero-content p,
-    .hero-content .lead {
-        font-size: 1rem; /* Giảm cỡ chữ trên mobile */
-    }
-    .hero-content .btn-lg {
-        font-size: 1rem; /* Giảm cỡ nút trên mobile */
-        padding: 0.6rem 1.2rem;
-    }
+/* === Sidebar Styling === */
+aside.col-lg-3 .card.filter-widget,
+aside.col-lg-3 .card {
+    border: none; /* Bỏ viền card mặc định */
+    border-radius: 0.5rem; /* Bo góc nhẹ */
+    margin-bottom: 1.75rem !important; /* Tăng khoảng cách giữa các widget */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07) !important; /* Shadow nhẹ hơn và đồng nhất */
 }
 
-/* === Các CSS khác cho trang home (Sidebar, Product Card...) giữ nguyên === */
-/* ... (code CSS cũ cho sidebar, product card, etc.) ... *//* .hero-content .btn-primary đã được định dạng bởi Bootstrap */
+aside.col-lg-3 .card-header {
+    background-color: #eef2f7; /* Màu nền header nhẹ nhàng */
+    border-bottom: 1px solid #dee2e6;
+    padding: 0.75rem 1.25rem; /* Điều chỉnh padding header */
+}
 
-/* Categories Section - Không dùng trong home.php hiện tại */
-/* .categories-section { ... } */
-/* .category-box { ... } */
+aside.col-lg-3 .card-header h5 {
+    font-size: 1rem; /* Cỡ chữ tiêu đề widget */
+    font-weight: 600;
+    margin-bottom: 0;
+    color: #343a40; /* Màu chữ đậm hơn */
+}
 
-/* Products Section / Cards */
+/* --- Search Form Widget --- */
+aside.col-lg-3 .filter-widget .card-body {
+    padding: 1rem 1.25rem;
+}
+
+/* --- Brand Filter Widget --- */
+.filter-widget .list-group-flush .list-group-item {
+    padding: 0.75rem 1.25rem; /* Đồng nhất padding item */
+    font-size: 0.9rem;
+    border-color: #f1f1f1; /* Màu border nhạt hơn */
+    transition: background-color 0.15s ease;
+}
+.filter-widget .list-group-flush .list-group-item:last-child {
+    border-bottom-right-radius: 0.5rem; /* Bo góc dưới phải */
+    border-bottom-left-radius: 0.5rem; /* Bo góc dưới trái */
+}
+.filter-widget .list-group-item.active {
+    font-weight: 600; /* Chữ đậm hơn cho item active */
+}
+.filter-widget .list-group-item:hover:not(.active) {
+    background-color: #f8f9fa; /* Hiệu ứng hover nhẹ */
+}
+
+/* --- Latest Products Widget --- */
+.product-list-widget .list-group-item {
+    padding: 0.6rem 1rem; /* Điều chỉnh padding */
+}
+.product-list-widget img {
+    width: 50px; /* Giảm nhẹ kích thước ảnh */
+    height: 50px;
+    object-fit: contain;
+    border-radius: 0.25rem;
+    margin-right: 0.75rem;
+    background-color: #fff; /* Nền trắng để ảnh rõ hơn */
+}
+.product-list-widget .info .name {
+    font-size: 0.875rem; /* Cỡ chữ tên SP */
+    margin-bottom: 0.1rem;
+    color: #212529;
+}
+.product-list-widget .info .price {
+    font-size: 0.85rem; /* Cỡ chữ giá */
+    font-weight: 700;
+}
+
+/* === Main Content Styling (Featured Products) === */
+section.col-lg-9 h2 {
+    margin-bottom: 1.75rem !important; /* Đồng bộ khoảng cách dưới tiêu đề */
+}
+
+/* --- Product Card Styling --- */
 .product-card {
-    background-color: #fff;
-    border: 1px solid #dee2e6; /* Thêm border nhẹ */
-    /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); */ /* Giảm shadow nếu muốn */
+    border: 1px solid #e9ecef; /* Viền nhẹ hơn */
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    /* margin-bottom: 20px; */ /* Nên dùng gap của Bootstrap grid (g-4) */
-    overflow: hidden;
+    border-radius: 0.5rem; /* Bo góc đồng bộ */
+    background-color: #fff;
 }
 
 .product-card:hover {
-    /* box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); */
     transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* Shadow rõ hơn khi hover */
 }
 
 .product-card .card-img-top {
-    /* Đã style inline trong home.php */
+    max-height: 180px; /* Giảm nhẹ chiều cao ảnh */
+    padding: 0.75rem; /* Tăng padding ảnh */
+    object-fit: contain;
+    background-color: #fff; /* Đảm bảo nền trắng */
 }
 
 .product-card .card-body {
-    padding: 0.8rem; /* Giảm padding */
+    padding: 0.8rem 1rem; /* Điều chỉnh padding body */
 }
 
+.product-card .card-title {
+    min-height: 2.8em; /* Giữ chiều cao title ổn định */
+    margin-bottom: 0.4rem !important; /* Khoảng cách dưới title */
+    font-size: 0.95rem; /* Cỡ chữ title */
+}
 .product-card .product-name {
-    font-weight: 500;
+    font-weight: 600; /* Tăng độ đậm title */
     line-height: 1.4;
-    color: #212529 !important; /* Đảm bảo màu chữ */
+    color: #212529 !important;
 }
 .product-card .product-name:hover {
-    color: #0d6efd !important; /* Màu khi hover */
+    color: #0d6efd !important;
 }
 
+.product-card .card-text.text-muted {
+    font-size: 0.8rem; /* Cỡ chữ brand/rating */
+    margin-bottom: 0.75rem !important; /* Khoảng cách dưới brand/rating */
+}
 
 .product-card .price {
-    /* color: #dc3545; */ /* Đã style inline */
+    font-size: 1.25rem; /* Cỡ chữ giá */
 }
 
 .product-card .card-footer {
-    /* background-color: transparent !important; */ /* Đã style inline */
-    /* border-top: none !important; */ /* Đã style inline */
+    background-color: #fff !important; /* Đảm bảo footer trắng */
+    border-top: 1px solid #f1f1f1 !important; /* Viền trên footer nhạt */
+    padding-top: 0.5rem;
+    padding-bottom: 0.75rem;
 }
 
-/* Wishlist button states */
-.product-card .actions .btn-wishlist {
-    /* color: #6c757d; */ /* Đã style inline/class */
-    border: none;
-    transition: color 0.2s ease;
+/* --- Buttons in Product Card --- */
+.product-card .actions .btn-wishlist,
+.product-card .actions .btn-cart {
+    font-size: 1.1rem; /* Cỡ icon nút */
+    padding: 0.25rem; /* Thêm padding nhẹ */
+    transition: color 0.2s ease, transform 0.15s ease;
+}
+.product-card .actions .btn-wishlist:hover:not(:disabled),
+.product-card .actions .btn-cart:hover:not(:disabled) {
+    transform: scale(1.1); /* Phóng to nhẹ khi hover */
 }
 .product-card .actions .btn-wishlist:hover:not(.active):not(:disabled) {
-    color: #dc3545; /* Hover thành màu đỏ */
-}
-
-/* Active state dùng class text-danger */
-/* .product-card .actions .btn-wishlist.active {
     color: #dc3545;
-} */
-
-/* Disabled state */
-.product-card .actions .btn-wishlist.disabled,
-.product-card .actions .btn-cart.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Cart button */
-.product-card .actions .btn-cart {
-     border: none;
-     transition: color 0.2s ease;
 }
 .product-card .actions .btn-cart:not(.disabled):hover {
-    color: #157347; /* Darker success color on hover */
+    color: #157347;
 }
 
-
-/* Product List Widget (Sidebar) */
-.product-list-widget {
-    padding: 0;
-}
-.product-list-widget .list-group-item {
-    padding: 0.5rem 0.75rem; /* Giảm padding */
-    border: none;
-    border-bottom: 1px solid #eee; /* Border dưới nhẹ */
-    /* display: flex; */ /* Đã có inline */
-    /* align-items: center; */ /* Đã có inline */
-}
-.product-list-widget .list-group-item:last-child {
-    border-bottom: none;
-}
-
-.product-list-widget img {
-    /* width: 60px; */ /* Đã style inline */
-    /* height: 60px; */ /* Đã style inline */
-    /* object-fit: contain; */ /* Đã style inline */
-    /* border-radius: 0.25rem; */ /* Đã style inline */
-    /* margin-right: 0.75rem; */ /* Đã style inline */
-}
-.product-list-widget .info .name {
-     color: #212529; /* Màu chữ đậm hơn */
-     margin-bottom: 0.1rem;
-     text-decoration: none;
-}
-.product-list-widget .info .name:hover {
-     color: #0d6efd;
-}
-.product-list-widget .info .price {
-    /* color: #dc3545; */ /* Đã style inline */
-}
-
-
-/* Filter Widget (Sidebar) */
-.filter-widget .card-header {
-    padding: 0.5rem 1rem;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-}
-.filter-widget .card-header h5 {
-    font-size: 0.95rem;
-    margin-bottom: 0;
-}
-.filter-widget .card-body,
-.filter-widget .list-group-flush .list-group-item {
-    padding: 0.6rem 1rem; /* Điều chỉnh padding */
-    font-size: 0.9rem;
-}
-.filter-widget .list-group-item {
-    border-bottom: 1px solid #f1f1f1;
-}
-.filter-widget .list-group-item:last-child {
-    border-bottom: none;
-}
-.filter-widget .list-group-item.active {
-    z-index: 2;
-    color: #fff;
-    background-color: #0d6efd;
-    border-color: #0d6efd;
+/* --- "Xem tất cả" Button --- */
+.text-center .btn-outline-primary {
     font-weight: 500;
+    padding: 0.6rem 1.5rem;
+    border-radius: 50px; /* Bo tròn nút */
+    transition: all 0.2s ease;
+}
+.text-center .btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: #fff;
 }
 
-
-/* Responsive Design */
-@media (max-width: 992px) {
-    .hero-content h1 { font-size: 2.5rem; }
-    .hero-content p { font-size: 1rem; }
-}
-@media (max-width: 768px) {
-    .hero-section { min-height: 300px; padding: 60px 15px;}
-    .hero-content h1 { font-size: 2rem; }
+/* === Responsive Adjustments (Đã có trong phần Hero, giữ nguyên hoặc chỉnh thêm nếu cần) === */
+@media (max-width: 991.98px) {
+    aside.col-lg-3 {
+        margin-bottom: 2rem; /* Thêm khoảng cách dưới sidebar trên tablet */
+    }
 }

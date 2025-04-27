@@ -88,7 +88,7 @@ class BaseController{
      * @param string $url URL cần chuyển đến
      * @return void
      */
-    protected function redirect($url)
+    public function redirect($url)
     {
         header("Location: $url");
         exit; // Luôn exit sau khi gọi header Location

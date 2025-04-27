@@ -219,4 +219,3 @@ switch ($page) {
         (new BaseController())->showNotFoundPage();
         break;
 }
-?>
