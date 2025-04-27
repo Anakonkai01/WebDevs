@@ -6,6 +6,7 @@ use App\Core\Database;
 // BaseModel cùng namespace
 class Order extends BaseModel
 {
+    // tên bảng trong database
     protected static string $table = 'orders';
 
     /**
@@ -32,25 +33,24 @@ class Order extends BaseModel
         string $status = 'Pending'
     ) {
         $sql = "INSERT INTO orders(user_id, total, customer_name, customer_address, customer_phone, customer_email, notes, status, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())"; // Thêm created_at
-        $stmt = Database::prepare($sql, "idssssss", [ // Kiểu dữ liệu: integer, double, string, string, string, string, string, string
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+        $stmt = Database::prepare($sql, "idssssss", [
             $user_id, $total, $customer_name, $customer_address, $customer_phone, $customer_email, $notes, $status
         ]);
 
         if ($stmt && $stmt->execute()) {
-            // Trả về ID của bản ghi vừa được chèn
             $lastId = $stmt->insert_id;
-            $stmt->close(); // Đóng statement
+            $stmt->close();
             return $lastId;
         }
-        if ($stmt) $stmt->close(); // Đóng nếu execute lỗi
-        return false; // Trả về false nếu có lỗi
+        if ($stmt) $stmt->close();
+        return false;
     }
 
-    // Các hàm find(), getByUser(), delete() giữ nguyên từ BaseModel hoặc class Order cũ
+    // tìm đơn hàng theo id
     public static function find(int $id): ?array
     {
-        return parent::find($id); // dùng lại từ BaseModel
+        return parent::find($id);
     }
 
     /**
@@ -67,16 +67,14 @@ class Order extends BaseModel
         $types = "i";
         $sql = "SELECT * FROM orders WHERE user_id = ?";
 
-        // Thêm điều kiện lọc theo status nếu không phải 'all'
         if ($statusFilter !== 'all' && !empty($statusFilter)) {
             $sql .= " AND status = ?";
             $params[] = $statusFilter;
             $types .= "s";
         }
 
-        $sql .= " ORDER BY created_at DESC"; // Sắp xếp mới nhất trước
+        $sql .= " ORDER BY created_at DESC";
 
-        // Thêm LIMIT và OFFSET nếu có $limit
         if ($limit !== null) {
             $sql .= " LIMIT ? OFFSET ?";
             $params[] = $limit;
@@ -95,19 +93,13 @@ class Order extends BaseModel
         return [];
     }
 
-    /**
-     * Đếm tổng số đơn hàng của user, hỗ trợ lọc theo trạng thái
-     * @param int $user_id ID người dùng
-     * @param string $statusFilter Trạng thái cần lọc ('all', 'Pending', 'Processing', 'Shipped', etc.)
-     * @return int Tổng số đơn hàng
-     */
+    // đếm số lượng đơn hàng của user
     public static function countByUser(int $user_id, string $statusFilter = 'all'): int
     {
         $params = [$user_id];
         $types = "i";
         $sql = "SELECT COUNT(*) as total FROM orders WHERE user_id = ?";
 
-        // Thêm điều kiện lọc theo status nếu không phải 'all'
         if ($statusFilter !== 'all' && !empty($statusFilter)) {
             $sql .= " AND status = ?";
             $params[] = $statusFilter;
@@ -125,13 +117,7 @@ class Order extends BaseModel
         return 0;
     }
 
-
-    /**
-     * Cập nhật trạng thái cho một đơn hàng cụ thể
-     * @param int $orderId ID đơn hàng
-     * @param string $newStatus Trạng thái mới
-     * @return bool True nếu cập nhật thành công, False nếu thất bại
-     */
+    // cập nhật trạng thái đơn hàng
     public static function updateStatus(int $orderId, string $newStatus): bool
     {
         $sql = "UPDATE orders SET status = ? WHERE id = ?";
@@ -139,22 +125,19 @@ class Order extends BaseModel
         if ($stmt && $stmt->execute()) {
             $affectedRows = $stmt->affected_rows;
             $stmt->close();
-            // Trả về true nếu có đúng 1 dòng bị ảnh hưởng
             return $affectedRows === 1;
         }
         if ($stmt) $stmt->close();
         return false;
     }
 
+    // xóa đơn hàng
     public static function delete(int $id): bool
     {
-        // Lưu ý: Nên kiểm tra xem có được phép xóa đơn hàng không (ví dụ: chỉ xóa đơn Pending?)
-        // Hoặc có thể thêm cột is_deleted thay vì xóa hẳn
         $sql = "DELETE FROM orders WHERE id = ?";
         $stmt = Database::prepare($sql, "i", [$id]);
         $success = $stmt->execute();
         $stmt->close();
         return $success;
-        // Khi xóa order, các order_items liên quan cũng nên được xóa (do có ON DELETE CASCADE trong DB)
     }
 }

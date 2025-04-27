@@ -45,7 +45,7 @@ h1, h2, h3 {
     width: 100%;
     height: 100%;
     /* Lớp phủ màu đen với độ trong suốt 60% */
-    background: rgba(0, 0, 0, 0.6);
+    /* background: rgba(0, 0, 0, 0.6); */
     z-index: 1;
     /* Không cần bo góc ở đây nếu .hero-section đã có overflow: hidden */
 }

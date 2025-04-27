@@ -2,7 +2,7 @@
 namespace App\Controllers;
 
 use App\Models\Wishlist;
-use App\Models\Cart; // Giả sử bạn có model Cart hoặc xử lý cart trong BaseController
+use App\Models\Cart;
 
 class BaseController{
 
@@ -11,7 +11,7 @@ class BaseController{
      * @return array
      */
     protected function getGlobalViewData(): array {
-        // *** Đảm bảo session luôn được khởi động ***
+        // Kiểm tra và khởi động session nếu chưa có
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
@@ -20,20 +20,16 @@ class BaseController{
         $userId = $_SESSION['user_id'] ?? null;
         $data['isLoggedIn'] = ($userId !== null);
 
-        // Lấy số lượng giỏ hàng
-        // Cách 1: Đếm trực tiếp từ session (nếu dùng session cart)
+        // Đếm số sản phẩm trong giỏ hàng
         $data['cartItemCount'] = count($_SESSION['cart'] ?? []);
 
-        // Cách 2: Nếu dùng DB cart, cần gọi Model (ví dụ)
-        // $data['cartItemCount'] = $data['isLoggedIn'] ? Cart::countItemsByUser($userId) : 0;
-
-        // Lấy số lượng wishlist
-        $data['wishlistedIds'] = []; // Mặc định
-        $data['wishlistItemCount'] = 0; // Mặc định
+        // Lấy danh sách sản phẩm yêu thích
+        $data['wishlistedIds'] = []; 
+        $data['wishlistItemCount'] = 0; 
         if ($data['isLoggedIn']) {
             $data['wishlistedIds'] = Wishlist::getWishlistedProductIds($userId);
             if (!is_array($data['wishlistedIds'])) {
-                error_log("Warning: Wishlist::getWishlistedProductIds did not return an array for user ID: " . $userId);
+                error_log("Lỗi: Không lấy được danh sách sản phẩm yêu thích cho user ID: " . $userId);
                 $data['wishlistedIds'] = [];
             }
             $data['wishlistItemCount'] = count($data['wishlistedIds']);
@@ -51,34 +47,31 @@ class BaseController{
      */
     protected function render($view, $data = [])
     {
-        // Đảm bảo session đã chạy (quan trọng nếu getGlobalViewData không được gọi trước)
+        // Kiểm tra session
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
 
-        // Trộn dữ liệu chung với dữ liệu riêng của view
+        // Gộp dữ liệu chung và dữ liệu riêng của trang
         $finalData = array_merge($this->getGlobalViewData(), $data);
 
-        // --- QUAN TRỌNG: Xử lý Flash Message ở đây ---
+        // Xử lý thông báo flash
         $flashMessage = $_SESSION['flash_message'] ?? null;
         if ($flashMessage) {
-            $finalData['flashMessage'] = $flashMessage; // Truyền flash message vào data cho view
-            unset($_SESSION['flash_message']); // Xóa ngay sau khi đọc
+            $finalData['flashMessage'] = $flashMessage;
+            unset($_SESSION['flash_message']);
         }
-        // --- Kết thúc xử lý Flash Message ---
 
-        // Đường dẫn đến view
+        // Tìm và hiển thị file view
         $viewPath = BASE_PATH . '/app/Views/' . $view . '.php';
 
         if (file_exists($viewPath)) {
-            extract($finalData); // Làm cho các biến trong $finalData có sẵn trong view
-            require $viewPath; // Nạp view
+            extract($finalData);
+            require $viewPath;
         } else {
-            // Xử lý lỗi không tìm thấy view
-            error_log("View file not found: " . $viewPath);
+            error_log("Không tìm thấy file view: " . $viewPath);
             http_response_code(500);
-            // echo "Lỗi: Không tìm thấy tệp giao diện."; // Hoặc render trang lỗi 500
-            $this->render('errors/500', ['message' => 'Lỗi server: Không tìm thấy view ' . $view]);
+            $this->render('errors/500', ['message' => 'Lỗi server: Không tìm thấy trang ' . $view]);
             exit;
         }
     }
@@ -88,10 +81,10 @@ class BaseController{
      * @param string $url URL cần chuyển đến
      * @return void
      */
-    protected function redirect($url)
+    public function redirect($url)
     {
         header("Location: $url");
-        exit; // Luôn exit sau khi gọi header Location
+        exit;
     }
 
 
@@ -106,7 +99,7 @@ class BaseController{
             'pageTitle' => '404 - Không tìm thấy trang',
             'message' => $message
         ]);
-        exit; // Dừng script sau khi hiển thị trang lỗi
+        exit;
     }
 
     /**
@@ -116,12 +109,11 @@ class BaseController{
      */
     public function showErrorPage(string $message = 'Đã có lỗi xảy ra. Vui lòng thử lại sau.') {
         http_response_code(500);
-        // Giả sử bạn có view errors/500.php
         $this->render('errors/500', [
             'pageTitle' => 'Lỗi Server',
             'message' => $message
         ]);
-        exit; // Dừng script sau khi hiển thị trang lỗi
+        exit;
     }
 
 } // End Class BaseController

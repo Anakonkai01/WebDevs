@@ -6,11 +6,11 @@ use App\Core\Database;
 
 class OrderItem extends BaseModel
 {
-    /** Tên bảng */
+    // tên bảng trong database
     protected static string $table = 'order_items';
 
     /* ──────────────────────────── CREATE ──────────────────────────── */
-    /** Thêm mới một item vào đơn */
+    // thêm item vào đơn hàng
     public static function create(int $orderId, int $productId, int $quantity, float $price): bool
     {
         $sql = "
@@ -25,7 +25,7 @@ class OrderItem extends BaseModel
     }
 
     /* ──────────────────────── READ ──────────────────────── */
-    /** Lấy array các item thô theo order_id */
+    // lấy danh sách item theo order
     public static function getItemsByOrder(int $orderId): array
     {
         $sql = "SELECT * FROM order_items WHERE order_id = ?";
@@ -34,7 +34,7 @@ class OrderItem extends BaseModel
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
-    /** Lấy chi tiết item kèm thông tin sản phẩm (name, image, stock) */
+    // lấy chi tiết item kèm thông tin sản phẩm
     public static function getDetailedByOrder(int $orderId): array
     {
         $sql = "
@@ -56,7 +56,7 @@ class OrderItem extends BaseModel
     }
 
     /* ───────────────────── UPDATE ───────────────────── */
-    /** Cập nhật số lượng cho một item */
+    // cập nhật số lượng item
     public static function updateQuantity(int $orderId, int $productId, int $quantity): bool
     {
         $sql = "
@@ -71,7 +71,7 @@ class OrderItem extends BaseModel
     }
 
     /* ───────────────────── DELETE ───────────────────── */
-    /** Xoá một item khỏi đơn */
+    // xóa item khỏi đơn hàng
     public static function delete(int $orderId, int $productId): bool
     {
         $sql = "
@@ -82,7 +82,7 @@ class OrderItem extends BaseModel
         return $stmt->execute();
     }
 
-    /** Xoá toàn bộ item của một order */
+    // xóa toàn bộ item của order
     public static function deleteByOrder(int $orderId): bool
     {
         $sql = "DELETE FROM order_items WHERE order_id = ?";
@@ -91,7 +91,7 @@ class OrderItem extends BaseModel
     }
 
     /* ───────────────────── UTILITY ───────────────────── */
-    /** Tính tổng tiền của toàn bộ order */
+    // tính tổng tiền đơn hàng
     public static function calcTotal(int $orderId): float
     {
         $sql = "
