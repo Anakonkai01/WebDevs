@@ -1,27 +1,37 @@
 <?php
-// webfinal/app/Views/partials/product_cart_simple.php
-// Expects $relP variable from the loop in product_detail.php
+// Check if product data is available
+if (!isset($relP)) {
+    return; // Exit if no product data is found
+}
 
-if (!isset($relP)) return; // Exit if no product data
-
+// Get product ID and check if it's valid
 $relPId = (int)($relP['id'] ?? 0);
-if ($relPId <= 0) return; // Skip if ID is invalid
+if ($relPId <= 0) {
+    return; // Exit if product ID is invalid
+}
 
+// Get product details
 $relPName = htmlspecialchars($relP['name'] ?? 'N/A');
 $relPImage = htmlspecialchars($relP['image'] ?? 'default.jpg');
 $relPPrice = (float)($relP['price'] ?? 0);
 $relPRating = (float)($relP['rating'] ?? 0);
 $relPStock = (int)($relP['stock'] ?? 0);
 
-// Re-use the star rendering function if needed, or define it locally
-if (!function_exists('render_stars_simple_related')) { // Use different name to avoid conflict
+// Function to render star ratings
+if (!function_exists('render_stars_simple_related')) {
     function render_stars_simple_related(float $rating, $maxStars = 5): string {
         $rating = max(0, min($maxStars, $rating));
         $output = '';
+        // Loop through each star
         for ($i = 1; $i <= $maxStars; $i++) {
-            if ($rating >= $i) $output .= '<i class="fas fa-star"></i>';
-            elseif ($rating >= $i - 0.5) $output .= '<i class="fas fa-star-half-alt"></i>';
-            else $output .= '<i class="far fa-star"></i>';
+            // Check if star should be full, half or empty
+            if ($rating >= $i) {
+                $output .= '<i class="fas fa-star"></i>';
+            } elseif ($rating >= $i - 0.5) {
+                $output .= '<i class="fas fa-star-half-alt"></i>'; // Half star
+            } else {
+                $output .= '<i class="far fa-star"></i>'; // Empty star
+            }
         }
         return $output;
     }
@@ -39,22 +49,12 @@ if (!function_exists('render_stars_simple_related')) { // Use different name to 
                 </a>
             </h6>
             <div class="d-flex justify-content-between align-items-center mt-auto mb-1">
-                 <span class="price small fw-bold text-danger"><?= number_format($relPPrice, 0, ',', '.') ?>₫</span>
+                <span class="price small fw-bold text-danger"><?= number_format($relPPrice, 0, ',', '.') ?>₫</span>
                  <span class="star-rating small text-warning" title="<?= sprintf('%.1f', $relPRating) ?> sao">
                      <?= render_stars_simple_related($relPRating) ?>
                      <span class="visually-hidden"><?= sprintf('%.1f', $relPRating) ?> sao</span>
                  </span>
             </div>
-             <?php /* Optional: Stock Status
-             <small class="text-muted small <?= $relPStock > 0 ? 'text-success' : 'text-danger' ?>">
-                 <?= $relPStock > 0 ? 'Còn hàng' : 'Hết hàng' ?>
-             </small>
-             */ ?>
         </div>
-         <?php /* Optional: Footer Button
-         <div class="card-footer bg-white border-top-0 p-2 text-center">
-             <a href="?page=product_detail&id=<?= $relPId ?>" class="btn btn-sm btn-outline-primary w-100 stretched-link">Xem chi tiết</a>
-         </div>
-          */ ?>
     </div>
 </div>

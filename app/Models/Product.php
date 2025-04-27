@@ -1,24 +1,32 @@
 <?php
+
 namespace App\Models;
 
 use App\Core\Database;
-use Exception; // <-- Use Exception global (nếu có dùng try-catch)
-// BaseModel cùng namespace, không cần use
-
 class Product extends BaseModel
 {
-    /** tên bảng trong CSDL */
     protected static string $table = "products";
 
-    /* ───────────────────────  CRUD  ─────────────────────── */
-    // ... (Các hàm create, update, delete giữ nguyên) ...
-    /** Thêm sản phẩm */
+    // create new product
     public static function create(
-        string $name, string $desc, float  $price, string $image,
-        int $stock, string $brand, float $rating = 0.0,
-        ?string $screen_size = null, ?string $screen_tech = null, ?string $cpu = null, ?string $ram = null,
-        ?string $storage = null, ?string $rear_camera = null, ?string $front_camera = null,
-        ?string $battery_capacity = null, ?string $os = null, ?string $dimensions = null, ?string $weight = null
+        string  $name,
+        string  $desc,
+        float   $price,
+        string  $image,
+        int     $stock,
+        string  $brand,
+        float   $rating = 0.0,
+        ?string $screen_size      = null,
+        ?string $screen_tech      = null,
+        ?string $cpu              = null,
+        ?string $ram              = null,
+        ?string $storage          = null,
+        ?string $rear_camera      = null,
+        ?string $front_camera     = null,
+        ?string $battery_capacity = null,
+        ?string $os               = null,
+        ?string $dimensions       = null,
+        ?string $weight           = null
     ): bool {
         $sql = "
             INSERT INTO products
@@ -26,122 +34,194 @@ class Product extends BaseModel
                  screen_size, screen_tech, cpu, ram, storage, rear_camera, front_camera, battery_capacity, os, dimensions, weight)
             VALUES (?,?,?,?,?,?,?, ?,?,?,?,?,?,?, ?,?,?,?)
         ";
-        $stmt = Database::prepare($sql, "ssdsisd sssssssssss", [
-            $name, $desc, $price, $image, $stock, $brand, $rating,
-            $screen_size, $screen_tech, $cpu, $ram, $storage, $rear_camera, $front_camera, $battery_capacity, $os, $dimensions, $weight
-        ]);
-         if ($stmt) {
+        // Prepare the SQL statement with the appropriate data types
+        $stmt = Database::prepare($sql, "ssdsisd sssssssssss", [$name, $desc, $price, $image, $stock, $brand, $rating, $screen_size, $screen_tech, $cpu, $ram, $storage, $rear_camera, $front_camera, $battery_capacity, $os, $dimensions, $weight]);
+        // If the statement is prepared successfully, execute it
+        if ($stmt) {
             $success = $stmt->execute();
+             //close statement
             $stmt->close();
             return $success;
         }
+        // If statement preparation or execution fails, return false
         return false;
     }
 
-    /** Cập nhật sản phẩm */
+    
     public static function update(
-        int $id, string $name, string $desc, float $price, string $image,
-        int $stock, string $brand, float $rating,
-        ?string $screen_size = null, ?string $screen_tech = null, ?string $cpu = null, ?string $ram = null,
-        ?string $storage = null, ?string $rear_camera = null, ?string $front_camera = null,
+        int     $id, string $name, string $desc, float $price, string $image, int $stock, string $brand, float $rating,
+        ?string $screen_size      = null, ?string $screen_tech = null, ?string $cpu = null, ?string $ram = null,
+        ?string $storage          = null, ?string $rear_camera = null, ?string $front_camera = null,
         ?string $battery_capacity = null, ?string $os = null, ?string $dimensions = null, ?string $weight = null
     ): bool {
-        $sql = "
-            UPDATE products SET
+        $sql = "UPDATE products SET
                 name = ?, description = ?, price = ?, image = ?,
                 stock = ?, brand = ?, rating = ?,
                 screen_size = ?, screen_tech = ?, cpu = ?, ram = ?, storage = ?,
                 rear_camera = ?, front_camera = ?, battery_capacity = ?, os = ?,
                 dimensions = ?, weight = ?
-            WHERE id = ?
-        ";
+            WHERE id = ?";
+        // Prepare the SQL statement with the appropriate data types
         $stmt = Database::prepare($sql, "ssdsisd sssssssssss i", [
-            $name, $desc, $price, $image, $stock, $brand, $rating,
-            $screen_size, $screen_tech, $cpu, $ram, $storage, $rear_camera, $front_camera,
-            $battery_capacity, $os, $dimensions, $weight, $id
+            $name, $desc, $price, $image, $stock, $brand, $rating, $screen_size, $screen_tech, $cpu, $ram, $storage,
+            $rear_camera, $front_camera, $battery_capacity, $os, $dimensions, $weight, $id
         ]);
-         if ($stmt) {
+        // If the statement is prepared successfully, execute it
+        if ($stmt) {
             $success = $stmt->execute();
+            //close statement
             $stmt->close();
             return $success;
         }
+        // If statement preparation or execution fails, return false
         return false;
     }
 
-    /** Xoá sản phẩm */
+
     public static function delete(int $id): bool
     {
+        // Prepare the SQL statement to delete the product by ID
         $stmt = Database::prepare("DELETE FROM products WHERE id = ?", "i", [$id]);
-         if ($stmt) {
+        // If the statement is prepared successfully, execute it
+        if ($stmt) {
             $success = $stmt->execute();
+            //close statement
             $stmt->close();
             return $success;
         }
+        // If statement preparation or execution fails, return false
         return false;
     }
 
-    /* ─────────────────  TRUY VẤN PHỤC VỤ TRANG HOME  ───────────────── */
-    // ... (searchByName, getByBrand, getLatest, getTopRated, getMostReviewed, getDistinctBrands giữ nguyên) ...
-     /** Tìm kiếm theo tên */
-    public static function searchByName(string $keyword): array
-    {
+     //search product by name
+    public static function searchByName(string $keyword): array 
+    {   
+        // Prepare the keyword for the LIKE clause
         $like = "%$keyword%";
+        // Prepare the SQL statement to search for products by name
         $stmt = Database::prepare("SELECT * FROM products WHERE name LIKE ?", "s", [$like]);
-        if ($stmt && $stmt->execute()) { $result = $stmt->get_result(); $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : []; $stmt->close(); return $data; }
-        if ($stmt) $stmt->close(); return [];
+        // Execute the statement and get the results
+        if ($stmt && $stmt->execute()) {
+            $result = $stmt->get_result();
+            //get all data
+            $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+            $stmt->close();
+            return $data;
+        }
+        // Close the statement and return an empty array if something goes wrong
+        if ($stmt) {
+            $stmt->close();
+        }
+        return [];
     }
-    /** Lọc theo hãng (brand) */
-    public static function getByBrand(string $brand, int $limit = 12): array // Added limit parameter
+
+    //get product by brand
+
+    public static function getByBrand(string $brand, int $limit = 12): array
     {
-        if ($brand === "All" || empty($brand)){ return self::getLatest($limit); } // Return latest if 'All' or empty
+        // If the brand is 'All' or empty, return the latest products
+        if ($brand === "All" || empty($brand)) {
+            return self::getLatest($limit);
+        }
+        // Prepare the SQL statement to get products by brand with a limit
         $stmt = Database::prepare("SELECT * FROM products WHERE brand = ? LIMIT ?", "si", [$brand, $limit]);
-        if ($stmt && $stmt->execute()) { $result = $stmt->get_result(); $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : []; $stmt->close(); return $data; }
-        if ($stmt) $stmt->close(); return [];
+        // Execute the statement and get the results
+        if ($stmt && $stmt->execute()) {
+            $result = $stmt->get_result();
+             //get all data
+            $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+            $stmt->close();
+            return $data;
+        }
+        // Close the statement and return an empty array if something goes wrong
+        if ($stmt) {
+            $stmt->close();
+        }
+        return [];
     }
-    /** Lấy sản phẩm mới nhất */
+
     public static function getLatest(int $limit = 6): array
     {
+        // Prepare the SQL statement to get the latest products with a limit
         $stmt = Database::prepare("SELECT * FROM products ORDER BY created_at DESC LIMIT ?", "i", [$limit]);
-        if ($stmt && $stmt->execute()) { $result = $stmt->get_result(); $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : []; $stmt->close(); return $data; }
-        if ($stmt) $stmt->close(); return [];
+        // Execute the statement and get the results
+        if ($stmt && $stmt->execute()) {
+            $result = $stmt->get_result();
+             //get all data
+            $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+            $stmt->close();
+            return $data;
+        }
+        // Close the statement and return an empty array if something goes wrong
+        if ($stmt) {
+            $stmt->close();
+        }
+        return [];
     }
-    /** Top‑rated (đánh giá cao nhất) */
+
     public static function getTopRated(int $limit = 5): array
     {
+        // Prepare the SQL statement to get the top-rated products with a limit
         $stmt = Database::prepare("SELECT * FROM products ORDER BY rating DESC LIMIT ?", "i", [$limit]);
-        if ($stmt && $stmt->execute()) { $result = $stmt->get_result(); $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : []; $stmt->close(); return $data; }
-        if ($stmt) $stmt->close(); return [];
+        // Execute the statement and get the results
+        if ($stmt && $stmt->execute()) {
+            $result = $stmt->get_result();
+            //get all data
+            $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+            $stmt->close();
+            return $data;
+        }
+        // Close the statement and return an empty array if something goes wrong
+        if ($stmt) {
+            $stmt->close();
+        }
+        return [];
     }
-    /** Sản phẩm có nhiều review nhất */
+
     public static function getMostReviewed(int $limit = 5): array
     {
-        // Fixed: Use LEFT JOIN to include products with 0 reviews if necessary, order by count DESC then created_at DESC
         $sql = "SELECT p.*, COUNT(r.id) AS review_count
                 FROM products p
                 LEFT JOIN reviews r ON p.id = r.product_id
                 GROUP BY p.id
                 ORDER BY review_count DESC, p.created_at DESC
                 LIMIT ?";
+        // Prepare the SQL statement to get the most reviewed products
         $stmt = Database::prepare($sql, "i", [$limit]);
-        if ($stmt && $stmt->execute()) { $result = $stmt->get_result(); $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : []; $stmt->close(); return $data; }
-        if ($stmt) $stmt->close(); return [];
+        // Execute the statement and get the results
+        if ($stmt && $stmt->execute()) {
+            $result = $stmt->get_result();
+             //get all data
+            $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+            $stmt->close();
+            return $data;
+        }
+        // Close the statement and return an empty array if something goes wrong
+        if ($stmt) {
+            $stmt->close();
+        }
+        return [];
     }
-     public static function getDistinctBrands(): array {
+
+    public static function getDistinctBrands(): array {
+        // Prepare the SQL statement to get distinct brands
         $stmt = Database::prepare("SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL AND brand != '' ORDER BY brand ASC");
-        if ($stmt && $stmt->execute()) { $result = $stmt->get_result(); $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : []; $stmt->close(); return array_column($data, 'brand'); }
-        if ($stmt) $stmt->close(); return [];
+        // Execute the statement and get the results
+        if ($stmt && $stmt->execute()) {       
+            $result = $stmt->get_result();
+            $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+            $stmt->close();
+            // Extract and return only the brand names
+            return array_column($data, 'brand');
+        }
+        // Close the statement and return an empty array if something goes wrong
+        if ($stmt) {
+            $stmt->close();
+        }
+        return [];
     }
 
-    /* ───────────────── TRUY VẤN PHỤC VỤ TRANG SHOP GRID ──────────────── */
 
-    /**
-     * Lấy danh sách sản phẩm đã lọc, sắp xếp và phân trang
-     * @param array $filters Mảng lọc (brand, min_price, max_price, search, specs...)
-     * @param string $sort Chuỗi sắp xếp
-     * @param int $limit Số lượng
-     * @param int $offset Vị trí bắt đầu
-     * @return array Mảng sản phẩm
-     */
     public static function getFilteredProducts(array $filters = [], string $sort = 'created_at_desc', int $limit = 9, int $offset = 0): array
     {
         $sql = "SELECT * FROM " . self::$table;
@@ -163,24 +243,21 @@ class Product extends BaseModel
         if ($stmt && $stmt->execute()) {
             $result = $stmt->get_result();
             $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+            //close statement
             $stmt->close();
             return $data;
         }
         if ($stmt) $stmt->close();
-        error_log("SQL Error getFilteredProducts: " . ($stmt ? $stmt->error : Database::conn()->error));
+        error_log("SQL Error : " . ($stmt ? $stmt->error : Database::conn()->error));
         return [];
     }
 
-    /**
-     * Đếm tổng số sản phẩm thỏa mãn bộ lọc
-     * @param array $filters Mảng lọc
-     * @return int Tổng số sản phẩm
-     */
+
     public static function countFilteredProducts(array $filters = []): int
     {
         $sql = "SELECT COUNT(*) as total FROM " . self::$table;
         list($whereClause, $params, $types) = self::buildWhereClause($filters);
-
+        
         if (!empty($whereClause)) {
             $sql .= " WHERE " . $whereClause;
         }
@@ -190,18 +267,16 @@ class Product extends BaseModel
         if ($stmt && $stmt->execute()) {
             $result = $stmt->get_result();
             $row = $result ? $result->fetch_assoc() : null;
+            //close statement
             $stmt->close();
             return $row ? (int)$row['total'] : 0;
         }
         if ($stmt) $stmt->close();
-        error_log("SQL Error countFilteredProducts: " . ($stmt ? $stmt->error : Database::conn()->error));
+        error_log("SQL Error : " . ($stmt ? $stmt->error : Database::conn()->error));
         return 0;
     }
-
-    /**
+    /*
      * Helper: Xây dựng mệnh đề WHERE và các tham số/types tương ứng
-     * @param array $filters
-     * @return array [string $whereClause, array $params, string $types]
      */
     private static function buildWhereClause(array $filters): array
     {
@@ -247,10 +322,7 @@ class Product extends BaseModel
         return [$whereClause, $params, $types];
     }
 
-    /**
-     * Helper: Xây dựng mệnh đề ORDER BY
-     * @param string $sort
-     * @return string
+    /*helper: build order by
      */
     private static function buildOrderByClause(string $sort): string
     {
@@ -265,16 +337,15 @@ class Product extends BaseModel
         }
     }
 
-
-    /**
-     * Lấy các giá trị duy nhất cho một cột thông số kỹ thuật cụ thể
-     * @param string $specColumn Tên cột (ví dụ: 'ram', 'cpu', 'screen_size')
-     * @return array Mảng các giá trị duy nhất
+    /* get unique values for a specific column
+     * ( 'ram', 'cpu', 'screen_size')
+     * return array Mảng các giá trị duy nhất
      */
     public static function getDistinctValuesForSpec(string $specColumn): array
     {
         // Danh sách các cột specs được phép truy vấn
         $allowedColumns = ['ram', 'cpu', 'screen_size', 'storage', 'os', 'battery_capacity', 'screen_tech']; // SAME AS buildWhereClause
+        //check column is valid
         if (!in_array($specColumn, $allowedColumns)) {
             error_log("Attempted to query distinct values for invalid spec column: " . $specColumn);
             return [];
@@ -287,6 +358,7 @@ class Product extends BaseModel
         if ($stmt && $stmt->execute()) {
             $result = $stmt->get_result();
             $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+            //close statement
             $stmt->close();
             // Filter out any potential empty strings just in case
             return array_filter(array_column($data, $specColumn), function($value) {
@@ -295,11 +367,14 @@ class Product extends BaseModel
         }
         if ($stmt) $stmt->close();
         error_log("SQL Error getDistinctValuesForSpec ($specColumn): " . Database::conn()->error);
-        return [];
+        return []; 
     }
 
-
-    /** Lấy giá Min và Max của tất cả sản phẩm */
+    /*
+     * get min and max price
+     *
+     * return array|null An array containing the minimum and maximum prices, or null if there are no products.
+     */
     public static function getMinMaxPrice(): ?array {
         $sql = "SELECT MIN(price) as min_price, MAX(price) as max_price FROM " . self::$table;
         $result = Database::query($sql);
@@ -312,12 +387,9 @@ class Product extends BaseModel
         return $data;
     }
 
-    /* ───────────────── QUẢN LÝ KHO ──────────────── */
-     /**
-     * Giảm số lượng tồn kho của sản phẩm.
-     * @param int $productId ID sản phẩm
-     * @param int $quantity Số lượng cần giảm
-     * @return bool True nếu thành công, False nếu thất bại
+    /*--------------------- manage stock --------------------*/
+    /*decrease product stock
+     *
      */
     public static function decreaseStock(int $productId, int $quantity): bool
     {
@@ -331,6 +403,7 @@ class Product extends BaseModel
         if ($stmt && $stmt->execute()) {
             $affectedRows = $stmt->affected_rows;
             $stmt->close();
+            // Check if exactly one row was affected
             // Success only if exactly one row was affected
             return $affectedRows === 1;
         }
@@ -339,11 +412,9 @@ class Product extends BaseModel
         return false;
     }
 
-    /**
-     * Lấy số lượng tồn kho hiện tại
-     * @param int $productId
-     * @return int|null Số lượng tồn kho hoặc null nếu không tìm thấy SP
-     */
+     /*
+     * get stock current
+     */ 
     public static function getStock(int $productId) : ?int {
         $product = self::find($productId); // Dùng lại hàm find từ BaseModel/Product
         // Check if stock key exists and is numeric
@@ -351,11 +422,8 @@ class Product extends BaseModel
     }
 
     /**
-     * Tăng số lượng tồn kho của sản phẩm.
-     * @param int $productId ID sản phẩm
-     * @param int $quantity Số lượng cần tăng
-     * @return bool True nếu thành công, False nếu thất bại
-     */
+     * increase product stock
+     */ 
     public static function increaseStock(int $productId, int $quantity): bool
     {
         if ($quantity <= 0) {
@@ -367,6 +435,7 @@ class Product extends BaseModel
         if ($stmt && $stmt->execute()) {
             $success = $stmt->affected_rows === 1;
             $stmt->close();
+             //Check if any row is affected
              if (!$success) error_log("Stock increase affected 0 rows for product ID $productId (Maybe product doesn't exist?).");
             return $success;
         }
@@ -374,4 +443,4 @@ class Product extends BaseModel
         error_log("Failed to increase stock for product ID $productId. Error: " . ($stmt ? $stmt->error : Database::conn()->error));
         return false;
     }
-} // End Class Product
+} 

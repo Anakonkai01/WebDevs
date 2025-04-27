@@ -1,60 +1,51 @@
 <?php
-// Web/app/Views/shop_grid.php
-$pageTitle = 'Cửa hàng';
-include_once __DIR__ . '/layout/header.php'; // Header includes Bootstrap CSS/JS & global data
 
-// --- Get Data from Controller ---
-// Use null coalescing operator for safety
+$pageTitle = 'Cửa hàng';
+include_once __DIR__ . '/layout/header.php'; // include header
+
+// Get data from controller
 $products = $products ?? [];
 $totalProducts = $totalProducts ?? 0;
 $itemsPerPage = $itemsPerPage ?? 9;
 $availableBrands = $availableBrands ?? [];
 $availableSpecs = $availableSpecs ?? [];
-$currentFilters = $currentFilters ?? []; // This holds UI filter state (search, brand, price_range, specs)
+$currentFilters = $currentFilters ?? [];
 $currentSort = $currentSort ?? 'created_at_desc';
 $sortOptionsMap = $sortOptionsMap ?? ['created_at_desc' => 'Mặc định'];
 $priceRangesMap = $priceRangesMap ?? [];
-// Use $currentFilters['price_range'] directly, $currentPriceRangeKey is redundant
 $currentPage = $currentPage ?? 1;
 $totalPages = $totalPages ?? 1;
-$startItemNum = $startItemNum ?? 0;
-$endItemNum = $endItemNum ?? 0;
-$isLoggedIn = $isLoggedIn ?? false;
-$wishlistedIds = $wishlistedIds ?? [];
+$startItemNum = $startItemNum ?? 0; // start item
+$endItemNum = $endItemNum ?? 0; // end item
+$isLoggedIn = $isLoggedIn ?? false; // check login
+$wishlistedIds = $wishlistedIds ?? []; // wishlist
 
-// --- Helper Function for Spec Labels ---
 function getSpecFilterLabel(string $specKey): string {
     $labels = [
-        'ram' => 'RAM',
-        'cpu' => 'CPU',
-        'screen_size' => 'Kích thước màn hình',
-        'storage' => 'Bộ nhớ trong',
-        'os' => 'Hệ điều hành',
-        'battery_capacity' => 'Dung lượng pin',
-        'screen_tech' => 'Công nghệ màn hình'
+        'ram' => 'RAM','cpu' => 'CPU','screen_size' => 'Kích thước màn hình','storage' => 'Bộ nhớ trong','os' => 'Hệ điều hành','battery_capacity' => 'Dung lượng pin','screen_tech' => 'Công nghệ màn hình'
     ];
     return $labels[$specKey] ?? ucfirst(str_replace('_', ' ', $specKey));
 }
 ?>
-<link rel="stylesheet" href="/webfinal/public/css/shop_grid.css"> <div class="row g-4"> <?php // Main row with gutters ?>
+<link rel="stylesheet" href="/webfinal/public/css/shop_grid.css"> <div class="row g-4">
 
-    <?php // ----- Sidebar Column ----- ?>
-    <aside class="col-lg-3" id="shop-sidebar">
-        <form id="filter-sort-form"> <?php // Wrap all filters/sort in one form for easier JS access ?>
+    <?php // Sidebar Column ?>
+     <aside class="col-lg-3" id="shop-sidebar">
+         <form id="filter-sort-form">
             <h3 class="mb-3 fs-5 fw-semibold">Bộ lọc</h3>
 
-            <?php // Search Filter ?>
-            <div class="card shadow-sm mb-3 filter-widget">
-                <div class="card-header bg-light py-2"><h5 class="mb-0 fs-6 fw-semibold">Tìm kiếm</h5></div>
-                <div class="card-body py-2 px-3">
-                    <div class="input-group input-group-sm">
-                        <input type="search" class="form-control" name="search" id="search_input" placeholder="Tìm sản phẩm..." value="<?= htmlspecialchars($currentFilters['search'] ?? '') ?>" aria-label="Tìm sản phẩm">
-                        <button class="btn btn-outline-secondary" type="submit" id="search-submit-button" aria-label="Tìm"><i class="fas fa-search"></i></button>
-                    </div>
-                </div>
-            </div>
+            <?php // Search ?>
+             <div class="card shadow-sm mb-3 filter-widget">
+                 <div class="card-header bg-light py-2"><h5 class="mb-0 fs-6 fw-semibold">Tìm kiếm</h5></div>
+                 <div class="card-body py-2 px-3">
+                     <div class="input-group input-group-sm">
+                         <input type="search" class="form-control" name="search" id="search_input" placeholder="Tìm sản phẩm..." value="<?= htmlspecialchars($currentFilters['search'] ?? '') ?>" aria-label="Tìm sản phẩm">
+                         <button class="btn btn-outline-secondary" type="submit" id="search-submit-button" aria-label="Tìm"><i class="fas fa-search"></i></button> 
+                     </div>
+                 </div>
+             </div>
 
-            <?php // Brand Filter ?>
+             <?php // Brand Filter ?>
             <div class="card shadow-sm mb-3 filter-widget">
                 <div class="card-header bg-light py-2"><h5 class="mb-0 fs-6 fw-semibold">Hãng</h5></div>
                 <div class="list-group list-group-flush filter-options" data-filter-key="brand">
@@ -67,19 +58,18 @@ function getSpecFilterLabel(string $specKey): string {
                     <?php endif; ?>
                 </div>
             </div>
-
-            <?php // Price Range Filter ?>
+            <?php // Price Range ?>
             <div class="card shadow-sm mb-3 filter-widget">
                 <div class="card-header bg-light py-2"><h5 class="mb-0 fs-6 fw-semibold">Khoảng giá</h5></div>
                 <div class="list-group list-group-flush filter-options" data-filter-key="price_range">
                     <?php foreach ($priceRangesMap as $key => $rangeInfo): ?>
                          <?php $rangeValue = htmlspecialchars($key); ?>
                          <a href="#" data-value="<?= $rangeValue ?>" class="list-group-item list-group-item-action py-2 filter-link <?= (isset($currentFilters['price_range']) && $currentFilters['price_range'] == $key) ? 'active' : '' ?>"><?= htmlspecialchars($rangeInfo['label'] ?? '') ?></a>
-                    <?php endforeach; ?>
+                     <?php endforeach; ?>
                 </div>
             </div>
 
-            <?php // ----- Specs Filters (Accordion) ----- ?>
+            <?php // Specs Filters (Accordion) ?>
             <?php if (!empty($availableSpecs)): ?>
             <div class="accordion shadow-sm mb-3 filter-widget" id="specsAccordion">
                 <?php $specIndex = 0; ?>
@@ -129,52 +119,38 @@ function getSpecFilterLabel(string $specKey): string {
                     </select>
                 </div>
             </div>
-        </form> <?php // End filter/sort form ?>
-    </aside> <?php // End Sidebar Column ?>
+         </form>
+    </aside>
 
-    <?php // ----- Main Content Column ----- ?>
-    <div class="col-lg-9">
-        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-            <span class="text-muted small" id="product-count-display">
-                 <?php // Initial count text generated by PHP ?>
-                 <?= ($totalProducts > 0) ? "Hiển thị {$startItemNum}–{$endItemNum} / {$totalProducts} sản phẩm" : "Không tìm thấy sản phẩm nào." ?>
-            </span>
-             <?php // Loading indicator - controlled by JS ?>
+    <?php // Main Content Column ?>
+     <div class="col-lg-9">
+         <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+             <span class="text-muted small" id="product-count-display">
+                 <?= ($totalProducts > 0) ? "Hiển thị {$startItemNum}–{$endItemNum} / {$totalProducts} sản phẩm" : "Không tìm thấy sản phẩm nào." ?></span>
+            
              <div id="loading-indicator" class="spinner-border spinner-border-sm text-primary" role="status" style="display: none;">
-                <span class="visually-hidden">Đang tải...</span>
-            </div>
-        </div>
-
-        <?php // Container cho Grid Sản phẩm - Updated by AJAX ?>
-        <div id="product-grid-container" style="min-height: 200px;"> <?php // Add min-height to prevent collapse ?>
-            <?php
-            // Include partial view for initial page load
-            $viewDataGrid = [
-                'products' => $products,
-                'isLoggedIn' => $isLoggedIn,
-                'wishlistedIds' => $wishlistedIds
-            ];
-            // extract($viewDataGrid); // No need to extract again if already done by render()
-            include BASE_PATH . '/app/Views/partials/product_grid_items.php';
-            ?>
-        </div>
-
-        <?php // Container cho Pagination - Updated by AJAX ?>
-        <div id="pagination-container" class="mt-4">
+                 <span class="visually-hidden">Đang tải...</span>
+             </div>
+         </div>
+         <div id="product-grid-container" style="min-height: 200px;"> 
              <?php
-             // Include partial view for initial page load
-             $viewDataPagination = [
-                 'currentPage' => $currentPage,
-                 'totalPages' => $totalPages
+             $viewDataGrid = [
+                 'products' => $products,
+                 'isLoggedIn' => $isLoggedIn,
+                 'wishlistedIds' => $wishlistedIds
              ];
-            // extract($viewDataPagination); // No need to extract again
+             include BASE_PATH . '/app/Views/partials/product_grid_items.php'; // show product
+             ?>
+         </div>
+         <div id="pagination-container" class="mt-4"> 
+             <?php
+             $viewDataPagination = ['currentPage' => $currentPage,'totalPages' => $totalPages];
              include BASE_PATH . '/app/Views/partials/pagination.php';
              ?>
-        </div>
-    </div> <?php // End Main Content Column ?>
+            </div>
+     </div> <?php // End Main Content Column ?>
 </div> <?php // End Main Row ?>
 
-<?php
-// Footer includes Bootstrap JS, the shared wishlist listener, and the conditional include for shop_grid_ajax.js
-include_once __DIR__ . '/layout/footer.php';
-?>
+<?php // Footer 
+include_once __DIR__ . '/layout/footer.php'; // include footer
+?> 

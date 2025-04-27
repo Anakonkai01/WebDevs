@@ -1,43 +1,40 @@
 <?php
-// Web/app/Controllers/UserController.php
 
-namespace App\Controllers; // Đảm bảo namespace đúng
+namespace App\Controllers;
 
-use App\Models\User; // Sử dụng User model
-use PHPMailer\PHPMailer\PHPMailer; // Thêm PHPMailer
-use PHPMailer\PHPMailer\Exception as PHPMailerException; // Thêm Exception
-use DateTime; // Thêm DateTime
+use App\Models\User;
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception as PHPMailerException;
+use DateTime;
 
-class UserController extends BaseController {
 
-    // --- HÀM GỬI EMAIL HELPER (Nên đặt trong BaseController) ---
+class UserController extends BaseController
+{
     /**
-     * Gửi email sử dụng cấu hình trong config.php
-     * @param string $toEmail Địa chỉ người nhận
-     * @param string $toName Tên người nhận
-     * @param string $subject Chủ đề email
-     * @param string $htmlBody Nội dung email (HTML)
-     * @return string|bool True nếu gửi thành công, chuỗi lỗi (string) nếu thất bại
+     * Sends an email using the configuration defined in config.php
      */
-    protected function sendEmail(string $toEmail, string $toName, string $subject, string $htmlBody): string|bool {
-        $mail = new PHPMailer(true); // Enable exceptions
+    protected function sendEmail(string $toEmail, string $toName, string $subject, string $htmlBody): string|bool
+    {
+        $mail = new PHPMailer(true); // Enable PHPMailer exceptions
 
         try {
-            // Server settings from config.php
+            // Configure server settings from config.php
             $mail->isSMTP();
-            $mail->Host       = MAIL_HOST;
-            $mail->SMTPAuth   = true;
-            $mail->Username   = MAIL_USERNAME;
-            $mail->Password   = MAIL_PASSWORD; // Sử dụng Mật khẩu ứng dụng nếu cần
-            $mail->SMTPSecure = MAIL_ENCRYPTION; // 'tls' or 'ssl'
-            $mail->Port       = MAIL_PORT;
-            $mail->CharSet    = PHPMailer::CHARSET_UTF8; // Nên dùng UTF-8
+            $mail->Host = MAIL_HOST;
+            $mail->SMTPAuth = true;
+            $mail->Username = MAIL_USERNAME;
+            $mail->Password = MAIL_PASSWORD;
+            $mail->SMTPSecure = MAIL_ENCRYPTION;
+            $mail->Port = MAIL_PORT;
+            $mail->CharSet = PHPMailer::CHARSET_UTF8;
 
-            // Recipients
+            // Set sender information
             $mail->setFrom(MAIL_FROM_ADDRESS, MAIL_FROM_NAME);
+
+            // Add recipient information
             $mail->addAddress($toEmail, $toName);
 
-            // Content
+            // Set email content
             $mail->isHTML(true);
             $mail->Subject = $subject;
             $mail->Body    = $htmlBody;
@@ -45,34 +42,48 @@ class UserController extends BaseController {
 
             $mail->send();
             return true; // Trả về true nếu thành công
-        } catch (PHPMailerException $e) {
+        } catch (PHPMailerException $e) { 
             error_log("PHPMailer Error sending email to {$toEmail}: {$mail->ErrorInfo}");
-            return $mail->ErrorInfo; // *** Trả về chuỗi lỗi ErrorInfo ***
-        } catch (\Exception $e) {
+            return $mail->ErrorInfo;
+        } catch (\Exception $e) { 
             error_log("General Error sending email to {$toEmail}: {$e->getMessage()}");
-            return "Lỗi hệ thống: " . $e->getMessage(); // *** Trả về chuỗi lỗi chung ***
+            return "Lỗi hệ thống: " . $e->getMessage();
         }
     }
 
-    // --- HIỂN THỊ FORM ---
-    public function showLoginForm() {
-        if (session_status() == PHP_SESSION_NONE) { session_start(); }
+    /**
+     * Displays the login form.
+     */
+    public function showLoginForm()
+    {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
         $errorMessage = $_SESSION['flash_error'] ?? null;
-        // Lấy thêm flash message nếu có (ví dụ sau khi xác thực thành công)
         $flashMessage = $_SESSION['flash_message'] ?? null;
-        if ($errorMessage) { unset($_SESSION['flash_error']); }
-        if ($flashMessage) { unset($_SESSION['flash_message']); }
-        $this->render('login', ['errorMessage' => $errorMessage, 'flashMessage' => $flashMessage]); // Truyền cả flashMessage
+        if ($errorMessage) {
+            unset($_SESSION['flash_error']);
+        }
+        if ($flashMessage) {
+            unset($_SESSION['flash_message']);
+        }
+        $this->render('login', ['errorMessage' => $errorMessage, 'flashMessage' => $flashMessage]);
     }
 
-    public function showRegisterForm() {
-        if (session_status() == PHP_SESSION_NONE) { session_start(); }
+    /**
+     * Displays the registration form.
+     */
+    public function showRegisterForm()
+    {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
         $formErrors = $_SESSION['form_errors'] ?? [];
         $formData = $_SESSION['form_data'] ?? [];
         unset($_SESSION['form_errors'], $_SESSION['form_data']);
         $this->render('register', ['errors' => $formErrors, 'old' => $formData]);
     }
-
+    
     public function showProfile() {
          if (session_status() == PHP_SESSION_NONE) { session_start(); }
         if (!isset($_SESSION['user_id'])) {
@@ -90,6 +101,9 @@ class UserController extends BaseController {
         $this->render('profile', ['user' => $user, 'pageTitle' => 'Hồ sơ của bạn' ]);
     }
 
+    /**
+     * Displays the edit profile form.
+     */
     public function showEditProfileForm() {
          if (session_status() == PHP_SESSION_NONE) { session_start(); }
         if (!isset($_SESSION['user_id'])) {
@@ -109,6 +123,10 @@ class UserController extends BaseController {
         $this->render('edit_profile', [ 'user' => $user, 'errors' => $errors, 'old' => $oldData, 'pageTitle' => 'Chỉnh sửa Hồ sơ' ]);
     }
 
+
+    /**
+     * Displays the change password form.
+     */
     public function showChangePasswordForm() {
          if (session_status() == PHP_SESSION_NONE) { session_start(); }
         if (!isset($_SESSION['user_id'])) { $this->redirect('?page=login'); return; }
@@ -117,17 +135,27 @@ class UserController extends BaseController {
         $this->render('change_password', ['errors' => $errors, 'pageTitle' => 'Đổi mật khẩu' ]);
     }
 
-    // --- XỬ LÝ ĐĂNG KÝ (CÓ XÁC THỰC EMAIL) ---
-    public function handleRegister() {
-        if (session_status() == PHP_SESSION_NONE) { session_start(); }
+    /**
+     * Handles user registration, including email verification
+     * Validates registration input, creates a new user, sends a verification email,
+     * and redirects to the appropriate page based on success or failure.
+     */
+    public function handleRegister()
+    {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
         $username = trim($_POST['username'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
         $errors = $this->validateRegistrationInput($_POST);
 
         if (empty($errors)) {
-            if (User::isUsernameExist($username)) { $errors['username'] = 'Tên đăng nhập này đã được sử dụng.'; }
-            if (User::isEmailExist($email)) { $errors['email'] = 'Địa chỉ email này đã được sử dụng.'; }
+            if (User::isUsernameExist($username)) {
+                $errors['username'] = 'Tên đăng nhập này đã được sử dụng.';
+            }
+            if (User::isEmailExist($email)) {
+                $errors['email'] = 'Địa chỉ email này đã được sử dụng.'; }
         }
 
         if (!empty($errors)) {
@@ -138,13 +166,13 @@ class UserController extends BaseController {
         } else {
             $userId = User::createAndGetId($username, $email, $password);
 
-            if ($userId) {
-                // --- GỬI EMAIL XÁC THỰC ---
+            if ($userId) { // If user creation is successful
                 try {
                     $verificationCode = random_int(100000, 999999); // Tạo mã 6 chữ số
-                    $expiryTime = (new DateTime())->modify('+15 minutes'); // Hết hạn sau 15 phút
-                    User::setEmailVerificationCode($userId, (string)$verificationCode, $expiryTime); // Lưu mã vào DB
-
+                    $expiryTime = (new DateTime())->modify('+15 minutes');
+                    // Store verification code in database
+                    User::setEmailVerificationCode($userId, (string) $verificationCode, $expiryTime);
+                    // Set email content
                     $subject = "MyShop - Xác thực địa chỉ Email của bạn";
                     $body = "Chào {$username},<br><br>" .
                             "Mã xác thực tài khoản MyShop của bạn là: <strong>{$verificationCode}</strong><br>" .
@@ -152,15 +180,13 @@ class UserController extends BaseController {
                             "Nếu bạn không đăng ký tài khoản này, vui lòng bỏ qua email này.<br><br>" .
                             "Trân trọng,<br>Đội ngũ MyShop";
 
-                    $sendResult = $this->sendEmail($email, $username, $subject, $body);
-
-                    if ($sendResult === true) { // Kiểm tra thành công
-                        $_SESSION['flash_message'] = ['type' => 'success', 'message' => 'Đăng ký thành công! Vui lòng kiểm tra email (' . $email . ') để nhập mã xác thực.'];
-                        // Chuyển hướng đến trang nhập mã xác thực
-                        $this->redirect('?page=verify_email&email=' . urlencode($email)); // Đã sửa chuyển hướng
+                    $sendResult = $this->sendEmail($email, $username, $subject, $body);// Send verification email
+                    if ($sendResult === true) {
+                        $_SESSION['flash_message'] = ['type' => 'success', 'message' => 'Đăng ký thành công! Vui lòng kiểm tra email (' . $email . ') để nhập mã xác thực.'];// Redirect to email verification page
+                        $this->redirect('?page=verify_email&email=' . urlencode($email));
                         exit;
                     } else {
-                        // Gửi email thất bại, $sendResult chứa chuỗi lỗi
+                        // Handle email sending failure
                         error_log("Lỗi gửi email xác thực cho user ID: $userId, email: $email - Chi tiết: " . $sendResult);
                         // Hiển thị lỗi chi tiết để debug
                         $_SESSION['flash_message'] = ['type' => 'danger', 'message' => 'Lỗi gửi email xác thực: ' . htmlspecialchars($sendResult)];
@@ -171,26 +197,33 @@ class UserController extends BaseController {
                         exit;
                     }
                 } catch (\Exception $e) {
-                     error_log("Lỗi tạo mã xác thực hoặc DateTime cho user ID: $userId, email: $email - " . $e->getMessage());
-                     $_SESSION['flash_message'] = ['type' => 'warning', 'message' => 'Đăng ký thành công nhưng có lỗi khi tạo mã xác thực. Vui lòng liên hệ hỗ trợ.'];
-                     $this->redirect('?page=login');
-                     exit;
+                    error_log("Lỗi tạo mã xác thực hoặc DateTime cho user ID: $userId, email: $email - " . $e->getMessage());
+                    $_SESSION['flash_message'] = ['type' => 'warning', 'message' => 'Đăng ký thành công nhưng có lỗi khi tạo mã xác thực. Vui lòng liên hệ hỗ trợ.'];
+                    $this->redirect('?page=login');
+                    exit;
                 }
-                // --- KẾT THÚC GỬI EMAIL XÁC THỰC ---
-
             } else {
                 error_log("Lỗi tạo user mới với username: $username, email: $email");
                 $_SESSION['flash_message'] = ['type' => 'danger', 'message' => 'Đã có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại.'];
                 $_SESSION['form_data'] = $_POST;
                 $this->redirect('?page=register');
                 exit;
-            }
-        }
+            } 
+        } 
     }
 
-    // --- XỬ LÝ ĐĂNG NHẬP (KIỂM TRA XÁC THỰC EMAIL) ---
-    public function handleLogin() {
-        if (session_status() == PHP_SESSION_NONE) { session_start(); }
+    /**
+     * Handles user login, including email verification check.
+     *
+     * Validates login input, checks if the user exists and if the password is correct,
+     * and redirects to the appropriate page based on success or failure.
+     *
+     */
+    public function handleLogin()
+    {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
         $loginInput = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? null;
 
@@ -202,15 +235,14 @@ class UserController extends BaseController {
         $user = User::findByUsername($loginInput) ?? User::findByEmail($loginInput);
 
         if ($user && password_verify($password, $user['password'])) {
-            // --- KIỂM TRA XÁC THỰC EMAIL ---
+            // Check email verification status
             if ($user['is_email_verified'] != 1) {
-                 $_SESSION['flash_error'] = 'Tài khoản của bạn chưa được xác thực. Vui lòng kiểm tra email hoặc nhập mã xác thực.';
-                 // Chuyển hướng đến trang yêu cầu nhập mã, gửi kèm email
-                 $this->redirect('?page=verify_email&email=' . urlencode($user['email']));
-                 exit;
+                $_SESSION['flash_error'] = 'Tài khoản của bạn chưa được xác thực. Vui lòng kiểm tra email hoặc nhập mã xác thực.';
+                // Redirect to email verification page
+                $this->redirect('?page=verify_email&email=' . urlencode($user['email']));
+                exit;
             }
-            // --- KẾT THÚC KIỂM TRA ---
-
+            // Email verified, proceed with login
             session_regenerate_id(true);
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
@@ -225,155 +257,193 @@ class UserController extends BaseController {
         }
     }
 
-    // --- ĐĂNG XUẤT ---
-    public function logout() {
-        if (session_status() == PHP_SESSION_NONE) { session_start(); }
+    /**
+     * Logs out the current user.
+     *
+     * Clears user-related session variables, destroys the session, and redirects to the home page.
+     *
+     */
+    public function logout()
+    {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
         unset($_SESSION['user_id'], $_SESSION['username']);
-        session_destroy();
-        session_start();
         session_regenerate_id(true);
         $_SESSION['flash_message'] = ['type' => 'success', 'message' => 'Bạn đã đăng xuất thành công.'];
         $this->redirect('?page=home');
         exit;
     }
 
-// --- CẬP NHẬT HỒ SƠ ---
-public function handleUpdateProfile() {
-    if (session_status() == PHP_SESSION_NONE) { session_start(); }
-    if (!isset($_SESSION['user_id'])) { $this->redirect('?page=login'); return; }
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { $this->redirect('?page=edit_profile'); return; }
-
-    $userId = $_SESSION['user_id'];
-    $newUsername = trim($_POST['username'] ?? '');
-    $newEmail = trim($_POST['email'] ?? '');
-    $currentPassword = $_POST['current_password'] ?? '';
-    $currentUser = User::find($userId);
-
-    if (!$currentUser) {
-        $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Lỗi không tìm thấy tài khoản.'];
-        $this->redirect('?page=profile'); return;
-    }
-
-    // Kiểm tra mật khẩu hiện tại
-    if (!User::verifyPassword($userId, $currentPassword)) {
-        $this->redirectBackWithErrors(['current_password' => 'Mật khẩu hiện tại không chính xác.'], $_POST, '?page=edit_profile');
-        return;
-    }
-
-    $errors = [];
-    $updates = [];
-    $emailChanged = false; // Cờ kiểm tra email có thay đổi không
-
-    // Xử lý username (giữ nguyên)
-    if ($newUsername !== $currentUser['username']) {
-        if (empty($newUsername)) { $errors['username'] = 'Tên đăng nhập không được để trống.'; }
-        elseif (!preg_match('/^[a-zA-Z0-9_]{3,20}$/', $newUsername)) { $errors['username'] = "Tên đăng nhập không hợp lệ (chữ, số, _, 3-20 ký tự)."; }
-        elseif (User::isUsernameExist($newUsername)) { $errors['username'] = 'Tên đăng nhập này đã được sử dụng.'; }
-        else { $updates['username'] = $newUsername; }
-    }
-
-    // Xử lý email
-    if ($newEmail !== $currentUser['email']) {
-        if (empty($newEmail)) {
-            $errors['email'] = 'Email không được để trống.';
-        } elseif (!filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = 'Định dạng email không hợp lệ.';
-        } elseif (User::isEmailExist($newEmail)) {
-            $errors['email'] = 'Địa chỉ email này đã được sử dụng.';
-        } else {
-            $updates['email'] = $newEmail;
-            $updates['is_email_verified'] = 0; // Quan trọng: Đặt lại trạng thái xác thực
-            $emailChanged = true;
+    // --- CẬP NHẬT HỒ SƠ ---
+    /**
+     * Handles updating user profile information.
+     *
+     * Validates the submitted data, updates the user's information in the database,
+     * sends an email verification request if the email was changed, and redirects to the appropriate page.
+     *
+     * @return void
+     */
+    public function handleUpdateProfile()
+    {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
         }
-    }
+        if (!isset($_SESSION['user_id'])) { $this->redirect('?page=login'); return; } // Check if user is logged in
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { $this->redirect('?page=edit_profile'); return; }// Check if request is POST
+        $userId = $_SESSION['user_id'];
+        $newUsername = trim($_POST['username'] ?? '');
+        $newEmail = trim($_POST['email'] ?? '');
+        $currentPassword = $_POST['current_password'] ?? '';
+        $currentUser = User::find($userId);
 
-    // Nếu có lỗi validation
-    if (!empty($errors)) {
-        $this->redirectBackWithErrors($errors, $_POST, '?page=edit_profile');
-        return;
-    }
-
-    // Nếu không có gì để cập nhật
-    if (empty($updates)) {
-        $_SESSION['flash_message'] = ['type' => 'info', 'message' => 'Không có thông tin nào được thay đổi.'];
-        $this->redirect('?page=profile');
-        return;
-    }
-
-    // Thực hiện cập nhật vào DB trước
-    $updateSuccess = User::updateProfile($userId, $updates);
-
-    if ($updateSuccess) {
-        // Cập nhật session username nếu nó thay đổi
-        if (isset($updates['username'])) {
-            $_SESSION['username'] = $updates['username'];
+        if (!$currentUser) {
+            $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Lỗi không tìm thấy tài khoản.'];
+            $this->redirect('?page=profile'); return;
         }
 
-        // Nếu email đã thay đổi -> gửi mail xác thực và chuyển hướng
-        if ($emailChanged) {
-            try {
-                $verificationCode = random_int(100000, 999999);
-                $expiryTime = (new DateTime())->modify('+15 minutes');
+        // Verify current password
+        if (!User::verifyPassword($userId, $currentPassword)) { // Check if current password is correct
+            $this->redirectBackWithErrors(['current_password' => 'Mật khẩu hiện tại không chính xác.'], $_POST, '?page=edit_profile');
+            return;
+        }
 
-                // Lưu mã code VÀO DB SAU KHI ĐÃ CẬP NHẬT EMAIL MỚI THÀNH CÔNG
-                if (!User::setEmailVerificationCode($userId, (string)$verificationCode, $expiryTime)) {
-                    // Lỗi khi lưu mã code -> Báo lỗi và chuyển về profile
-                    error_log("Lỗi lưu mã xác thực đổi email cho user ID: $userId");
-                    $_SESSION['flash_message'] = ['type' => 'danger', 'message' => 'Hồ sơ đã cập nhật nhưng lỗi khi tạo mã xác thực email mới. Vui lòng liên hệ hỗ trợ.'];
+        $errors = [];
+        $updates = [];
+        $emailChanged = false;
+        /**
+         * Check Username Change
+         * 
+         * if new Username is not equal current username 
+         * 
+         * check username is empty or invalid, and check if username exist in database
+         * 
+         * if user name is valid then add new username to updates array
+         * 
+         */
+        if ($newUsername !== $currentUser['username']) {
+            if (empty($newUsername)) { $errors['username'] = 'Tên đăng nhập không được để trống.'; }
+            elseif (!preg_match('/^[a-zA-Z0-9_]{3,20}$/', $newUsername)) { $errors['username'] = "Tên đăng nhập không hợp lệ (chữ, số, _, 3-20 ký tự)."; }
+            elseif (User::isUsernameExist($newUsername)) { $errors['username'] = 'Tên đăng nhập này đã được sử dụng.'; }
+            else { $updates['username'] = $newUsername; }
+        }
+
+        /**
+         * Check email Change
+         * 
+         * if new Email is not equal current Email 
+         * 
+         * check email is empty or invalid, and check if email exist in database
+         * 
+         * if Email is valid then add new email to updates array and set the email verified false
+         * 
+         */
+        if ($newEmail !== $currentUser['email']) {
+            if (empty($newEmail)) {
+                $errors['email'] = 'Email không được để trống.';
+            } elseif (!filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
+                $errors['email'] = 'Định dạng email không hợp lệ.';
+            } elseif (User::isEmailExist($newEmail)) {
+                $errors['email'] = 'Địa chỉ email này đã được sử dụng.';
+            } else {
+                $updates['email'] = $newEmail;
+                $updates['is_email_verified'] = 0; // Quan trọng: Đặt lại trạng thái xác thực
+                $emailChanged = true;
+            }
+        }
+        if (!empty($errors)) { // If any validation errors occur
+            $this->redirectBackWithErrors($errors, $_POST, '?page=edit_profile');
+            return;
+        }
+        // Nếu không có gì để cập nhật
+        if (empty($updates)) {
+            $_SESSION['flash_message'] = ['type' => 'info', 'message' => 'Không có thông tin nào được thay đổi.'];
+            $this->redirect('?page=profile');
+            return;
+        }
+
+        // Perform the database update
+        $updateSuccess = User::updateProfile($userId, $updates);
+
+        if ($updateSuccess) { // If update is successful
+            if (isset($updates['username'])) { // Update session username if it was changed
+                $_SESSION['username'] = $updates['username'];
+            }
+
+            if ($emailChanged) { // If email was changed
+                try {
+                    $verificationCode = random_int(100000, 999999);
+                    $expiryTime = (new DateTime())->modify('+15 minutes');
+
+                    // Lưu mã code VÀO DB SAU KHI ĐÃ CẬP NHẬT EMAIL MỚI THÀNH CÔNG
+                    if (!User::setEmailVerificationCode($userId, (string)$verificationCode, $expiryTime)) {
+                        // Lỗi khi lưu mã code -> Báo lỗi và chuyển về profile
+                        error_log("Lỗi lưu mã xác thực đổi email cho user ID: $userId");
+                        $_SESSION['flash_message'] = ['type' => 'danger', 'message' => 'Hồ sơ đã cập nhật nhưng lỗi khi tạo mã xác thực email mới. Vui lòng liên hệ hỗ trợ.'];
+                        $this->redirect('?page=profile');
+                        exit; // DỪNG LẠI
+                    }
+
+                    // Chuẩn bị gửi email
+                    $subject = "MyShop - Xác thực địa chỉ Email mới của bạn";
+                    // Lấy username mới nhất (có thể vừa được cập nhật)
+                    $emailRecipientName = $updates['username'] ?? $currentUser['username'];
+                    $body = "Chào {$emailRecipientName},<br><br>" .
+                            "Bạn đã yêu cầu thay đổi email tài khoản MyShop của mình.<br>" .
+                            "Mã xác thực cho địa chỉ email mới ({$newEmail}) của bạn là: <strong>{$verificationCode}</strong><br>" .
+                            "Mã này sẽ hết hạn sau 15 phút.<br><br>" .
+                            "Vui lòng nhập mã này trên trang web để hoàn tất việc thay đổi email.<br><br>" .
+                            "Trân trọng,<br>Đội ngũ MyShop";
+
+                    // Gửi email ĐẾN ĐỊA CHỈ EMAIL MỚI
+                    $sendResult = $this->sendEmail($newEmail, $emailRecipientName, $subject, $body);
+
+                    // Xử lý kết quả gửi mail
+                    if ($sendResult === true) {
+                        // Gửi thành công -> Thông báo và chuyển hướng đến trang verify_email
+                        $_SESSION['flash_message'] = ['type' => 'warning', 'message' => 'Hồ sơ đã được cập nhật. Vui lòng kiểm tra email mới (' . $newEmail . ') và nhập mã xác thực để hoàn tất.'];
+                        $this->redirect('?page=verify_email&email=' . urlencode($newEmail));
+                        exit; // DỪNG LẠI
+                    } else {
+                        // Gửi thất bại -> Thông báo lỗi và chuyển hướng về profile
+                        error_log("Lỗi gửi email xác thực đổi email cho user ID: $userId, email mới: $newEmail - Chi tiết: " . $sendResult);
+                        $_SESSION['flash_message'] = ['type' => 'danger', 'message' => 'Hồ sơ đã được cập nhật, nhưng không thể gửi email xác thực đến địa chỉ mới. Lỗi: ' . htmlspecialchars($sendResult) . '. Vui lòng liên hệ hỗ trợ.'];
+                        $this->redirect('?page=profile');
+                        exit; // DỪNG LẠI
+                    }
+                } catch (\Exception $e) {
+                    // Lỗi Exception (ví dụ: random_int, DateTime) -> Báo lỗi và chuyển về profile
+                    error_log("Lỗi Exception when change email user ID: $userId - " . $e->getMessage());
+                    $_SESSION['flash_message'] = ['type' => 'danger', 'message' => 'Hồ sơ đã cập nhật, nhưng có lỗi hệ thống khi xử lý email mới. Vui lòng liên hệ hỗ trợ.'];
                     $this->redirect('?page=profile');
                     exit; // DỪNG LẠI
                 }
-
-                // Chuẩn bị gửi email
-                $subject = "MyShop - Xác thực địa chỉ Email mới của bạn";
-                // Lấy username mới nhất (có thể vừa được cập nhật)
-                $emailRecipientName = $updates['username'] ?? $currentUser['username'];
-                $body = "Chào {$emailRecipientName},<br><br>" .
-                        "Bạn đã yêu cầu thay đổi email tài khoản MyShop của mình.<br>" .
-                        "Mã xác thực cho địa chỉ email mới ({$newEmail}) của bạn là: <strong>{$verificationCode}</strong><br>" .
-                        "Mã này sẽ hết hạn sau 15 phút.<br><br>" .
-                        "Vui lòng nhập mã này trên trang web để hoàn tất việc thay đổi email.<br><br>" .
-                        "Trân trọng,<br>Đội ngũ MyShop";
-
-                // Gửi email ĐẾN ĐỊA CHỈ EMAIL MỚI
-                $sendResult = $this->sendEmail($newEmail, $emailRecipientName, $subject, $body);
-
-                // Xử lý kết quả gửi mail
-                if ($sendResult === true) {
-                    // Gửi thành công -> Thông báo và chuyển hướng đến trang verify_email
-                    $_SESSION['flash_message'] = ['type' => 'warning', 'message' => 'Hồ sơ đã được cập nhật. Vui lòng kiểm tra email mới (' . $newEmail . ') và nhập mã xác thực để hoàn tất.'];
-                    $this->redirect('?page=verify_email&email=' . urlencode($newEmail));
-                    exit; // DỪNG LẠI
-                } else {
-                    // Gửi thất bại -> Thông báo lỗi và chuyển hướng về profile
-                    error_log("Lỗi gửi email xác thực đổi email cho user ID: $userId, email mới: $newEmail - Chi tiết: " . $sendResult);
-                    $_SESSION['flash_message'] = ['type' => 'danger', 'message' => 'Hồ sơ đã được cập nhật, nhưng không thể gửi email xác thực đến địa chỉ mới. Lỗi: ' . htmlspecialchars($sendResult) . '. Vui lòng liên hệ hỗ trợ.'];
-                    $this->redirect('?page=profile');
-                    exit; // DỪNG LẠI
-                }
-            } catch (\Exception $e) {
-                // Lỗi Exception (ví dụ: random_int, DateTime) -> Báo lỗi và chuyển về profile
-                error_log("Lỗi Exception khi đổi email user ID: $userId - " . $e->getMessage());
-                $_SESSION['flash_message'] = ['type' => 'danger', 'message' => 'Hồ sơ đã cập nhật, nhưng có lỗi hệ thống khi xử lý email mới. Vui lòng liên hệ hỗ trợ.'];
+            } else {
+                $_SESSION['flash_message'] = ['type' => 'success', 'message' => 'Hồ sơ đã được cập nhật thành công.'];
                 $this->redirect('?page=profile');
                 exit; // DỪNG LẠI
             }
         } else {
-            // Chỉ cập nhật username -> Thông báo thành công và chuyển hướng về profile
-            $_SESSION['flash_message'] = ['type' => 'success', 'message' => 'Hồ sơ đã được cập nhật thành công.'];
-            $this->redirect('?page=profile');
-            exit; // DỪNG LẠI
+            // Database update failed, redirect back to edit form with errors
+            $this->redirectBackWithErrors(['database' => 'Lỗi cập nhật hồ sơ trong cơ sở dữ liệu.'], $_POST, '?page=edit_profile');
+            // Không cần exit ở đây vì redirectBackWithErrors đã có exit
         }
-    } else {
-        // Lỗi cập nhật DB -> Quay lại form edit với lỗi
-        $this->redirectBackWithErrors(['database' => 'Lỗi cập nhật hồ sơ trong cơ sở dữ liệu.'], $_POST, '?page=edit_profile');
-        // Không cần exit ở đây vì redirectBackWithErrors đã có exit
     }
-}
 
-    // --- ĐỔI MẬT KHẨU ---
+     /**
+     * Handles changing the user's password.
+     *
+     * Validates the submitted data, verifies the current password, updates the password in the database,
+     * and redirects to the appropriate page.
+     */
     public function handleChangePassword() {
-        if (session_status() == PHP_SESSION_NONE) { session_start(); }
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        if (!isset($_SESSION['user_id'])) {
+            $this->redirect('?page=login');
+            return;
+        }
         if (!isset($_SESSION['user_id'])) { $this->redirect('?page=login'); return; }
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { $this->redirect('?page=change_password'); return; }
         $currentPassword = $_POST['current_password'] ?? '';
@@ -406,9 +476,13 @@ public function handleUpdateProfile() {
         }
     }
 
-    // ========== CÁC PHƯƠNG THỨC MỚI CHO XÁC THỰC EMAIL VÀ QUÊN MẬT KHẨU ==========
+    // Email Verification and Password Recovery
 
-    /**
+      /**
+     * Displays the email verification form.
+     *
+     * Retrieves the email from the GET parameters, and any flash messages or errors from the session.
+     *
      * Hiển thị form nhập mã xác thực email.
      */
     public function showVerifyEmailForm() {
@@ -422,7 +496,10 @@ public function handleUpdateProfile() {
     }
 
     /**
-     * Xử lý mã xác thực email được submit từ form.
+     * Handles the email verification process.
+     *
+     * Validates the submitted verification code and email, checks the database for the corresponding user,
+     * and updates the user's email verification status if the code is correct.
      */
     public function handleVerifyEmail() {
         if (session_status() == PHP_SESSION_NONE) { session_start(); }
@@ -457,7 +534,6 @@ public function handleUpdateProfile() {
 
         $verificationInfo = User::getEmailVerificationInfo($user['id']);
 
-        // *** ĐOẠN CODE ĐÃ SỬA CHO LỖI DATETIME ***
         $expiryDateTime = $verificationInfo['expires_at'] ?? null; // Lấy trực tiếp DateTime object hoặc null
 
         if (!$verificationInfo || $verificationInfo['code'] !== $code) {
@@ -473,7 +549,6 @@ public function handleUpdateProfile() {
              $this->redirect('?page=verify_email&email=' . urlencode($email));
              return;
         }
-        // *** KẾT THÚC PHẦN SỬA ***
 
         // Xác thực thành công
         if (User::verifyEmail($user['id'])) {
@@ -487,7 +562,10 @@ public function handleUpdateProfile() {
 
 
         /**
-     * Hiển thị form yêu cầu reset mật khẩu (nhập email).
+     * Displays the form to request a password reset.
+     *
+     * Retrieves any flash messages from the session and passes them to the 'forgot_password_request' view.
+     * 
      */
     public function showForgotPasswordForm() {
         if (session_status() == PHP_SESSION_NONE) { session_start(); }
@@ -498,7 +576,11 @@ public function handleUpdateProfile() {
     }
 
     /**
-     * Xử lý yêu cầu quên mật khẩu: tạo mã code, gửi email, chuyển hướng nhập code.
+     * Handles the password reset request.
+     *
+     * Validates the submitted email, generates a reset code, sends an email with the code,
+     * and redirects to the appropriate page based on the success or failure of the process.
+     *
      */
     public function handleForgotPasswordRequest() {
         if (session_status() == PHP_SESSION_NONE) { session_start(); }
@@ -560,7 +642,9 @@ public function handleUpdateProfile() {
     }
 
     /**
-     * Hiển thị form nhập mã xác thực đặt lại mật khẩu.
+     * Displays the form to enter the password reset code.
+     *
+     * Retrieves the email from the GET parameters, and any flash messages or errors from the session.
      */
     public function showEnterResetCodeForm() {
         if (session_status() == PHP_SESSION_NONE) { session_start(); }
@@ -579,7 +663,10 @@ public function handleUpdateProfile() {
     }
 
     /**
-     * Xử lý mã xác thực đặt lại mật khẩu.
+     * Handles the password reset code verification.
+     *
+     * Validates the submitted reset code and email, checks the database for the corresponding user,
+     * and sets session variables for the next step if the code is correct.
      */
     public function handleEnterResetCode() {
         if (session_status() == PHP_SESSION_NONE) { session_start(); }
@@ -599,7 +686,6 @@ public function handleUpdateProfile() {
 
         $user = User::findByEmail($email);
 
-                // --- THAY ĐỔI LOGIC KIỂM TRA ---
                 if (!$user) {
                     // Email không tồn tại -> Báo lỗi chung
                     $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Email hoặc Mã đặt lại mật khẩu không chính xác hoặc đã hết hạn.'];
@@ -626,7 +712,6 @@ public function handleUpdateProfile() {
                     $this->redirect('?page=enter_reset_code&email=' . urlencode($email));
                     return;
                 }
-                // --- KẾT THÚC THAY ĐỔI ---
         
         
                 // Mã hợp lệ, đặt cờ session và chuyển hướng đến trang nhập mật khẩu mới
@@ -641,7 +726,10 @@ public function handleUpdateProfile() {
 
 
     /**
-     * Hiển thị form đặt lại mật khẩu mới (sau khi đã xác thực mã code).
+     * Displays the form to set a new password.
+     *
+     * Checks if the user has verified the reset code, and if so, displays the form to set a new password.
+     * 
      */
     public function showResetPasswordFormFromCode() {
         if (session_status() == PHP_SESSION_NONE) { session_start(); }
@@ -663,7 +751,11 @@ public function handleUpdateProfile() {
     }
 
     /**
-     * Xử lý việc đặt lại mật khẩu mới (sau khi đã xác thực mã code).
+     * Handles the new password setting process.
+     *
+     * Validates the submitted new password and confirmation, checks against the current password,
+     * updates the password in the database, and redirects to the appropriate page.
+     * 
      */
     public function handleResetPasswordFromCode() {
         if (session_status() == PHP_SESSION_NONE) { session_start(); }
@@ -712,8 +804,13 @@ public function handleUpdateProfile() {
         }
     }
 
-    // --- HÀM HELPER ---
-    private function validateRegistrationInput(array $postData): array {
+     /**
+     * Validates the registration input data.
+     *
+     * Checks if the username, email, password, and password confirmation meet the required criteria.
+     */
+    private function validateRegistrationInput(array $postData): array
+    {
          $errors = [];
         if (empty($postData['username'])) { $errors['username'] = "Tên đăng nhập không được để trống."; }
         elseif (!preg_match('/^[a-zA-Z0-9_]{3,20}$/', $postData['username'])) { $errors['username'] = "Tên đăng nhập chỉ chứa chữ cái, số, dấu gạch dưới và dài 3-20 ký tự."; }
@@ -726,7 +823,14 @@ public function handleUpdateProfile() {
         return $errors;
     }
 
-    private function redirectBackWithErrors(array $errors, array $postData, string $targetPage): void {
+    /**
+     * Redirects the user back to the previous page with errors and old data.
+     *
+     * Stores the errors and old data in the session and redirects to the specified target page.
+     *
+     */
+    private function redirectBackWithErrors(array $errors, array $postData, string $targetPage): void
+    {
          if (session_status() == PHP_SESSION_NONE) { session_start(); }
         $_SESSION['form_errors'] = $errors;
         $_SESSION['form_data'] = $postData;
@@ -734,4 +838,4 @@ public function handleUpdateProfile() {
         exit;
     }
 
-} // End Class UserController
+}

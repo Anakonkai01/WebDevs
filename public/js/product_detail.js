@@ -1,30 +1,26 @@
-/**
- * product_detail.js
- * Handles AJAX Add to Cart, Review Star interactions, Quantity Controls,
- * and potentially Thumbnail clicks.
- * Wishlist toggle is handled by the shared listener in footer.php.
- */
-
-// Guard to prevent running the initialization more than once
+// Check if the script has been loaded before
 if (typeof window.productDetailScriptLoaded === 'undefined') {
-    window.productDetailScriptLoaded = true; // Set the guard
+    window.productDetailScriptLoaded = true;
 
+    // Wait for DOM to load
     document.addEventListener('DOMContentLoaded', function() {
+        console.log("product_detail.js loaded and initialized.");
 
-        console.log("product_detail.js initialized");
-
-        // --- Declare variables in accessible scope ---
+        // Get HTML element references
         const addToCartForm = document.getElementById('add-to-cart-form');
         const quantitySelector = document.querySelector('.quantity-selector');
-        // Find hidden input relative to the form (more robust)
+        // get hidden input for quantity
         const formInputForQuantity = addToCartForm ? addToCartForm.querySelector('input[name="quantity"][type="hidden"]') : null;
         const displayInput = quantitySelector ? quantitySelector.querySelector('.quantity-display') : null;
         const decreaseBtn = quantitySelector ? quantitySelector.querySelector('.quantity-decrease') : null;
         const increaseBtn = quantitySelector ? quantitySelector.querySelector('.quantity-increase') : null;
         const addToCartButton = document.getElementById('add-to-cart-btn');
         const messageDiv = document.getElementById('add-to-cart-message');
+        
+        // get element inside button add to cart
         const buttonText = addToCartButton?.querySelector('.button-text');
         const buttonSpinner = addToCartButton?.querySelector('.spinner-border');
+        
 
         // --- Quantity Controls Logic ---
         if (quantitySelector && displayInput && decreaseBtn && increaseBtn && formInputForQuantity) {
@@ -33,14 +29,17 @@ if (typeof window.productDetailScriptLoaded === 'undefined') {
             const minQty = parseInt(displayInput.min, 10) || 1;
             let maxQty = parseInt(displayInput.max, 10);
             if (isNaN(maxQty) || maxQty <= 0) { // Treat invalid or non-positive max as Infinity
-                maxQty = Infinity;
+               maxQty = Infinity;
             }
-            // console.log("Quantity limits:", { minQty, maxQty });
+           
+           
+             //function update state of the button
 
+             
             const updateButtons = (currentValue) => {
                 decreaseBtn.disabled = (currentValue <= minQty);
                 increaseBtn.disabled = (currentValue >= maxQty);
-            };
+             };
 
             decreaseBtn.addEventListener('click', () => {
                 let currentValue = parseInt(displayInput.value, 10);
@@ -48,7 +47,7 @@ if (typeof window.productDetailScriptLoaded === 'undefined') {
                 if (currentValue > minQty) {
                     currentValue--;
                     displayInput.value = currentValue;
-                    formInputForQuantity.value = currentValue; // Update hidden input
+                    formInputForQuantity.value = currentValue; 
                     updateButtons(currentValue);
                 }
             });
@@ -58,7 +57,7 @@ if (typeof window.productDetailScriptLoaded === 'undefined') {
                 if (isNaN(currentValue)) currentValue = minQty;
                 if (currentValue < maxQty) {
                     currentValue++;
-                    displayInput.value = currentValue;
+                    displayInput.value = currentValue; 
                     formInputForQuantity.value = currentValue; // Update hidden input
                     updateButtons(currentValue);
                 }
@@ -66,26 +65,25 @@ if (typeof window.productDetailScriptLoaded === 'undefined') {
 
             // Initial button state check
             let initialValue = parseInt(displayInput.value, 10);
-            if(isNaN(initialValue) || initialValue < minQty) initialValue = minQty; // Ensure initial value is at least min
-             if(initialValue > maxQty) initialValue = maxQty; // Ensure initial value doesn't exceed max
+            if(isNaN(initialValue) || initialValue < minQty) initialValue = minQty; 
+            if(initialValue > maxQty) initialValue = maxQty; 
             displayInput.value = initialValue;
-            formInputForQuantity.value = initialValue; // Sync hidden input
+            formInputForQuantity.value = initialValue; 
             updateButtons(initialValue);
 
         } else {
             console.warn("Quantity control initialization failed. Check if elements exist and the form has the hidden quantity input.");
         }
 
-        // --- Add to Cart AJAX ---
+        // Add to cart via ajax
         if (addToCartForm && addToCartButton && formInputForQuantity) {
-            // console.log("Add to cart form elements ready.");
             addToCartForm.addEventListener('submit', async function(event) {
+                // prevent default form
                 event.preventDefault();
-                // console.log("Add to cart form submitted via AJAX.");
 
-                // --- Button Loading State ---
-                if (buttonText) buttonText.textContent = 'Đang thêm...';
-                if (buttonSpinner) buttonSpinner.classList.remove('d-none');
+                // loading when user click
+                if (buttonText) buttonText.textContent = 'Loading...';
+                if (buttonSpinner) buttonSpinner.classList.remove('d-none'); // show spinner
                 addToCartButton.disabled = true;
                 if (messageDiv) messageDiv.style.display = 'none';
 
@@ -104,12 +102,12 @@ if (typeof window.productDetailScriptLoaded === 'undefined') {
                     const contentType = response.headers.get("content-type");
                     if (!contentType || !contentType.includes("application/json")) {
                         const text = await response.text();
-                        console.error("Non-JSON response:", text, `Status: ${response.status}`);
-                        throw new Error(`Phản hồi không hợp lệ từ máy chủ (Code: ${response.status}).`);
+                        console.error("Invalid non-JSON response:", text, `Status: ${response.status}`);
+                        throw new Error(`Invalid response from server (Code: ${response.status}).`);
                     }
                     try {
                         data = await response.json();
-                    } catch (e) {
+                    } catch (e) { // Catch error JSON
                         console.error("JSON Parse Error:", e);
                         throw new Error(`Lỗi đọc phản hồi từ máy chủ (Code: ${response.status}).`);
                     }
@@ -118,9 +116,9 @@ if (typeof window.productDetailScriptLoaded === 'undefined') {
                         throw new Error(data?.message || `Lỗi máy chủ (Code: ${response.status})`);
                     }
 
-                    // --- Handle Success ---
+                    // handle success
                     if (messageDiv) {
-                        messageDiv.textContent = data.message || (data.success ? 'Thêm vào giỏ thành công!' : 'Đã xảy ra lỗi.');
+                        messageDiv.textContent = data.message || (data.success ? 'Added to cart successfully!' : 'An error occurred.');
                         messageDiv.className = `alert small mt-3 mb-0 alert-${data.success ? 'success' : 'warning'}`;
                         messageDiv.style.display = 'block';
                         setTimeout(() => { if (messageDiv) messageDiv.style.display = 'none'; }, 5000);
@@ -136,14 +134,14 @@ if (typeof window.productDetailScriptLoaded === 'undefined') {
 
                 } catch (error) {
                     console.error('Error adding to cart:', error);
-                    const errorMessage = error.message || 'Lỗi kết nối hoặc xử lý. Vui lòng thử lại.';
+                    const errorMessage = error.message || 'Connection or processing error. Please try again.';
                     if (messageDiv) {
                         messageDiv.textContent = errorMessage;
                         messageDiv.className = 'alert alert-danger small mt-3 mb-0';
                         messageDiv.style.display = 'block';
                     } else {
-                        alert(errorMessage);
-                    }
+                       alert(errorMessage);
+                     }
                 } finally {
                     if (buttonText) buttonText.textContent = 'Thêm vào giỏ';
                     if (buttonSpinner) buttonSpinner.classList.add('d-none');
@@ -157,17 +155,15 @@ if (typeof window.productDetailScriptLoaded === 'undefined') {
              if(!formInputForQuantity) console.warn("Reason: Hidden input[name='quantity'] within the form not found.");
         }
 
-        // --- Interactive Star Rating for Review Form ---
+        // handle star rating
         const ratingStarsContainer = document.querySelector('.rating-stars');
-        const ratingValueInput = document.getElementById('rating'); // Hidden input
+        const ratingValueInput = document.getElementById('rating'); 
         if (ratingStarsContainer && ratingValueInput) {
-            // console.log("Rating stars elements ready.");
             const starRadioInputs = ratingStarsContainer.querySelectorAll('input[type="radio"][name="rating_radio"]');
             starRadioInputs.forEach(radio => {
                 radio.addEventListener('change', function() {
                     if (this.checked) {
-                        ratingValueInput.value = this.value; // Update the hidden input value
-                        // console.log("Rating selected:", this.value);
+                        ratingValueInput.value = this.value; 
                     }
                 });
             });
@@ -175,14 +171,13 @@ if (typeof window.productDetailScriptLoaded === 'undefined') {
             const initiallyChecked = ratingStarsContainer.querySelector('input[type="radio"][name="rating_radio"]:checked');
             if (initiallyChecked) {
                 ratingValueInput.value = initiallyChecked.value;
-            } else {
-                 ratingValueInput.value = ""; // Ensure empty if nothing selected initially
-            }
+            }else ratingValueInput.value = ""; 
+            
         } else {
             console.warn("Star rating functionality cannot be initialized. Check .rating-stars container and #rating hidden input.");
         }
-
-        // --- Optional: Thumbnail Click Handler ---
+        
+        // handle click change image
          const mainImage = document.getElementById('main-product-image');
         const thumbnailLinks = document.querySelectorAll('.product-thumbnails a'); // Ensure thumbnails exist with this structure
         if (mainImage && thumbnailLinks.length > 0) {
@@ -190,7 +185,7 @@ if (typeof window.productDetailScriptLoaded === 'undefined') {
                 link.addEventListener('click', function(event) {
                     event.preventDefault();
                     const newImageSrc = this.dataset.imageSrc; // Expecting <a data-image-src="...">
-                    if (newImageSrc && mainImage.src !== newImageSrc) {
+                    if (newImageSrc && mainImage.src !== newImageSrc) { // change image
                         mainImage.src = newImageSrc;
                         thumbnailLinks.forEach(l => l.classList.remove('active'));
                         this.classList.add('active');
@@ -198,8 +193,7 @@ if (typeof window.productDetailScriptLoaded === 'undefined') {
                 });
             });
         }
-
-    }); // End DOMContentLoaded
+    }); 
 
 } else {
     console.log("product_detail.js already loaded, skipping initialization.");

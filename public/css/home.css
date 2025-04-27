@@ -1,17 +1,20 @@
-/* ================================== */
-/* === home.css - Cải thiện toàn bộ === */
-/* ================================== */
+/* ======================================== */
+/* === home.css - Home Page Styling === */
+/* ======================================== */
 
 /* --- General Page Styles --- */
+/* Common styles for the whole page */
 body {
-  background-color: #f8f9fa; /* Màu nền chung nhẹ nhàng hơn */
+  background-color: #f8f9fa; /* Light background color */
 }
 
+/* Main container styles */
 main.container {
   padding-top: 1rem;
-  padding-bottom: 2rem; /* Thêm padding dưới cho main */
+  padding-bottom: 2rem; /* Add padding to the bottom of the main */
 }
 
+/* Heading styles */
 h2 {
   font-weight: 600;
   color: #343a40;
@@ -19,11 +22,13 @@ h2 {
   padding-bottom: 0.5rem;
   border-bottom: 1px solid #dee2e6; /* Thêm đường kẻ nhẹ dưới tiêu đề section */
   display: inline-block; /* Để border chỉ dài theo chữ */
+  /* Keep border only as long as the text */
 }
 
-/* === Hero Section Styling (Đã cải thiện ở lần trước - giữ nguyên hoặc tinh chỉnh thêm) === */
+/* === Hero Section Styling === */
+/* Styles for the hero section */
 .hero-section {
-  background: url("../img/banner.jpg") no-repeat center center/cover;
+  background: url("../img/banner.jpg") no-repeat center center/cover; /* Background image */
   color: #fff;
   padding: 6rem 1rem;
   position: relative;
@@ -31,13 +36,14 @@ h2 {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 400px; /* Giảm nhẹ chiều cao nếu muốn */
+  min-height: 400px; /* Minimum height */
   border-radius: 0.75rem;
   overflow: hidden;
   margin-bottom: 2rem !important;
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 }
 
+/* Hero overlay for better text visibility */
 .hero-overlay {
   position: absolute;
   top: 0;
@@ -48,6 +54,7 @@ h2 {
   z-index: 1;
 }
 
+/* Content inside the hero section */
 .hero-content {
   position: relative;
   z-index: 2;
@@ -56,6 +63,7 @@ h2 {
   padding: 0 1rem;
 }
 
+/* Hero content heading */
 .hero-content h1,
 .hero-content .display-4 {
   color: #fff;
@@ -65,6 +73,7 @@ h2 {
   font-size: calc(1.5rem + 1.5vw);
 }
 
+/* Hero content paragraph */
 .hero-content p,
 .hero-content .lead {
   color: rgba(255, 255, 255, 0.95);
@@ -73,6 +82,7 @@ h2 {
   font-size: 1.1rem; /* Cỡ chữ mô tả */
 }
 
+/* Hero content button */
 .hero-content .btn-primary {
   padding: 0.7rem 1.8rem;
   font-size: 1rem;
@@ -83,6 +93,8 @@ h2 {
   border: none;
   border-radius: 50px;
 }
+
+/* Hero content button hover effect */
 .hero-content .btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
@@ -90,18 +102,20 @@ h2 {
 }
 
 /* === Sidebar Styling === */
+/* Styles for the sidebar widgets */
 aside.col-lg-3 .card.filter-widget,
 aside.col-lg-3 .card {
-  border: none; /* Bỏ viền card mặc định */
-  border-radius: 0.5rem; /* Bo góc nhẹ */
-  margin-bottom: 1.5rem !important; /* Tăng khoảng cách giữa các widget */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07) !important; /* Shadow nhẹ hơn và đồng nhất */
+  border: none; /* Remove default card border */
+  border-radius: 0.5rem; /* Rounded corners */
+  margin-bottom: 1.5rem !important; /* Increase spacing between widgets */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07) !important; /* Lighter and consistent shadow */
 }
 
+/* Card header styles */
 aside.col-lg-3 .card-header {
-  background-color: #eef2f7; /* Màu nền header nhẹ nhàng */
+  background-color: #eef2f7; /* Light header background color */
   border-bottom: 1px solid #dee2e6;
-  padding: 0.75rem 1rem; /* Điều chỉnh padding header */
+  padding: 0.75rem 1rem; /* Adjust header padding */
 }
 
 aside.col-lg-3 .card-header h5 {
@@ -111,35 +125,41 @@ aside.col-lg-3 .card-header h5 {
   color: #343a40; /* Màu chữ đậm hơn */
 }
 
-/* --- Search Form Widget --- */
+/* --- Search Form Widget --- */ /* Styles for the search form widget */
 aside.col-lg-3 .filter-widget .card-body {
   padding: 1rem;
 }
 
-/* --- Brand Filter Widget --- */
+/* --- Brand Filter Widget --- */ /* Styles for the brand filter widget */
 .filter-widget .list-group-flush .list-group-item {
   padding: 0.6rem 1rem; /* Đồng nhất padding item */
   font-size: 0.9rem;
   border-color: #f1f1f1; /* Màu border nhạt hơn */
   transition: background-color 0.15s ease;
 }
+
+/* Rounding corners for the last item in the brand filter */
 .filter-widget .list-group-flush .list-group-item:last-child {
-  border-bottom-right-radius: 0.5rem; /* Bo góc dưới phải */
-  border-bottom-left-radius: 0.5rem; /* Bo góc dưới trái */
+  border-bottom-right-radius: 0.5rem; /* Rounded bottom right corner */
+  border-bottom-left-radius: 0.5rem; /* Rounded bottom left corner */
 }
+/* Style for active items in brand filter */
 .filter-widget .list-group-item.active {
   font-weight: 600; /* Chữ đậm hơn cho item active */
 }
+
+/* Hover effect for brand filter items */
 .filter-widget .list-group-item:hover:not(.active) {
-  background-color: #f8f9fa; /* Hiệu ứng hover nhẹ */
+  background-color: #f8f9fa; /* Light hover effect */
 }
 
-/* --- Latest Products Widget --- */
+/* --- Latest Products Widget --- */ /* Styles for the latest products widget */
 .product-list-widget .list-group-item {
-  padding: 0.5rem 0.75rem; /* Điều chỉnh padding */
+  padding: 0.5rem 0.75rem; /* Adjust padding */
 }
+/* Styles for product image in widget */
 .product-list-widget img {
-  width: 45px; /* Giảm nhẹ kích thước ảnh */
+  width: 45px; /* Reduce image size slightly */
   height: 45px;
   object-fit: contain;
   border-radius: 0.25rem;
@@ -155,31 +175,34 @@ aside.col-lg-3 .filter-widget .card-body {
   font-size: 0.8rem; /* Cỡ chữ giá */
   font-weight: 700;
 }
+/* Style for the product name in widget */
 
-/* === Main Content Styling (Featured Products) === */
+/* === Main Content Styling (Featured Products) === */ /* Styles for the main content area */
 section.col-lg-9 h2 {
   margin-bottom: 1.5rem !important; /* Đồng bộ khoảng cách dưới tiêu đề */
 }
 
-/* --- Product Card Styling --- */
+/* --- Product Card Styling --- */ /* Styles for product cards */
 .product-card {
   border: 1px solid #e9ecef; /* Viền nhẹ hơn */
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-  border-radius: 0.5rem; /* Bo góc đồng bộ */
+  border-radius: 0.5rem; /* Consistent rounding */
   background-color: #fff;
   height: 100%;
 }
 
+/* Hover effect for product card */
 .product-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1); /* Shadow rõ hơn khi hover */
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1); /* More pronounced shadow on hover */
 }
 
+/* Product card image styles */
 .product-card .card-img-top {
-  max-height: 160px; /* Giảm nhẹ chiều cao ảnh */
-  padding: 0.75rem; /* Tăng padding ảnh */
+  max-height: 160px; /* Reduce image height slightly */
+  padding: 0.75rem; /* Increase image padding */
   object-fit: contain;
-  background-color: #fff; /* Đảm bảo nền trắng */
+  background-color: #fff; /* Ensure white background */
 }
 
 .product-card .card-body {
@@ -223,6 +246,7 @@ section.col-lg-9 h2 {
   align-items: center;
 }
 
+
 /* --- Buttons in Product Card --- */
 .product-card .actions .btn-wishlist,
 .product-card .actions .btn-cart {
@@ -240,10 +264,11 @@ section.col-lg-9 h2 {
   color: #198754;
   transform: scale(1.1);
 }
-
+/* Style for button xem tat ca*/
 /* --- "Xem tất cả" Button --- */
 .text-center .btn-outline-primary {
   padding: 0.6rem 1.5rem;
+
   font-weight: 500;
   border-width: 2px;
   transition: all 0.2s ease;
@@ -253,9 +278,9 @@ section.col-lg-9 h2 {
   box-shadow: 0 4px 10px rgba(13, 110, 253, 0.15);
 }
 
-/* === Responsive Adjustments (Đã có trong phần Hero, giữ nguyên hoặc chỉnh thêm nếu cần) === */
+/* === Responsive Adjustments === */
 @media (max-width: 991.98px) {
-  aside.col-lg-3 {
+  aside.col-lg-3 {/* Add margin to the bottom of the sidebar on tablet */
     margin-bottom: 2rem; /* Thêm khoảng cách dưới sidebar trên tablet */
   }
 

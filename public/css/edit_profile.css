@@ -1,31 +1,44 @@
 /* public/css/edit_profile.css */
+/*
+  Edit Profile Container:
+  Styles for the main container of the edit profile page.
+*/
 .edit-profile-container {
     max-width: 700px;
     margin: 20px auto;
     padding: 20px;
     border: 1px solid #ccc;
     border-radius: 5px;
-    background-color: #f8f8f8;
+    background-color: #f8f8f8; /* Light gray background */
 }
 
+/*
+  Heading Style:
+  Styles for the main heading (h1) of the page.
+*/
 .edit-profile-container h1 {
     text-align: center;
     margin-bottom: 20px;
 }
 
+/*
+  Form Group:
+  Styles for each form group, typically containing a label and an input field.
+*/
 .form-group {
     margin-bottom: 15px;
 }
-
+/* Style for the label in the form group */
 .form-group label {
     display: block;
     margin-bottom: 5px;
 }
 
+/* Style for input fields in the form group */
 .form-group input[type="text"],
 .form-group input[type="email"],
 .form-group input[type="password"] {
-    width: 100%;
+    width: 100%; /* Full width */
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 3px;

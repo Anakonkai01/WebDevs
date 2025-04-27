@@ -1,36 +1,44 @@
 <?php
-// Web/app/Controllers/OrderController.php
 namespace App\Controllers;
 
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
-use App\Core\Database;
-use Exception; // <-- Cần cho try...catch
+use App\Core\Database; 
+use Exception;
 
-class OrderController extends BaseController {
-
+class OrderController extends BaseController { //extends base controller
+    /**
+     * OrderController constructor.
+     * Starts a session if one does not already exist.
+     */
     public function __construct() {
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
     }
 
-    // Phương thức showCheckoutForm giữ nguyên như phiên bản trước (đã xử lý selected_ids)
+    /**
+     * Show checkout form
+     */
     public function showCheckoutForm() {
-        if (!isset($_SESSION['user_id'])) {
+        // Check user logged in
+        if (!isset($_SESSION['user_id'])) { 
+            //save url redirect after login
             $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI'];
             $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Vui lòng đăng nhập để thanh toán.'];
             $this->redirect('?page=login');
             return;
         }
 
+        // Get full cart and selected IDs
         $fullCart = $_SESSION['cart'] ?? [];
         $selectedIdsParam = $_GET['selected_ids'] ?? '';
 
         if (empty($fullCart)) {
             $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Giỏ hàng trống! Hãy thêm sản phẩm trước khi thanh toán.'];
+            // Redirect to cart page
             $this->redirect('?page=cart');
             return;
         }
@@ -44,6 +52,7 @@ class OrderController extends BaseController {
         if (empty($selectedIds)) {
             $_SESSION['flash_message'] = ['type' => 'warning', 'message' => 'Vui lòng chọn ít nhất một sản phẩm trong giỏ hàng để thanh toán.'];
             $this->redirect('?page=cart');
+            // Redirect to cart page
             return;
         }
 
@@ -61,12 +70,13 @@ class OrderController extends BaseController {
         }
 
         $totalPrice = 0;
-        foreach ($checkoutCart as $item) {
+        foreach ($checkoutCart as $item) { //calculate total price
             $totalPrice += (float)($item['price'] ?? 0) * (int)($item['quantity'] ?? 0);
         }
 
         $_SESSION['checkout_cart'] = $checkoutCart;
-        $user = User::find($_SESSION['user_id']);
+        // Get user data
+        $user = User::find($_SESSION['user_id']); 
         $errors = $_SESSION['checkout_errors'] ?? [];
         $oldData = $_SESSION['checkout_data'] ?? [];
         unset($_SESSION['checkout_errors'], $_SESSION['checkout_data']);
@@ -80,21 +90,22 @@ class OrderController extends BaseController {
         ]);
     }
 
-    // ======================================================
-    // PHƯƠNG THỨC placeOrder ĐÃ ĐƯỢC REFACTOR
-    // ======================================================
-    public function placeOrder() {
-        // 1. Kiểm tra đăng nhập và giỏ hàng checkout
-        if (!isset($_SESSION['user_id'])) { $this->redirect('?page=login'); return; }
+    /** 
+     * Place order 
+     */
+    public function placeOrder() { 
+        //check user and checkout_cart session
+        if (!isset($_SESSION['user_id'])) { $this->redirect('?page=login'); return; } 
 
-        $checkoutCart = $_SESSION['checkout_cart'] ?? [];
+        $checkoutCart = $_SESSION['checkout_cart'] ?? []; 
         if (empty($checkoutCart)) {
             $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Không có sản phẩm nào được chọn để thanh toán hoặc phiên làm việc đã hết hạn.'];
             $this->redirect('?page=cart');
+            // Redirect to cart page if cart is empty
+
             return;
         }
-
-        // 2. Validate dữ liệu khách hàng từ POST
+        // Validate customer data
         $customerInfo = [
             'name' => trim($_POST['customer_name'] ?? ''),
             'address' => trim($_POST['customer_address'] ?? ''),
@@ -109,28 +120,27 @@ class OrderController extends BaseController {
             $_SESSION['checkout_errors'] = $validationErrors;
             $_SESSION['checkout_data'] = $_POST; // Lưu lại toàn bộ POST data
             $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Vui lòng kiểm tra lại thông tin giao hàng.'];
-            // Quay lại giỏ hàng để người dùng chọn lại và nhập lại thông tin
-            // Hoặc có thể quay lại trang checkout nhưng cần đảm bảo selected_ids còn
             $this->redirect('?page=cart');
             return;
         }
 
-        // 3. Kiểm tra tồn kho và chuẩn bị dữ liệu item
+        //check stock and prepare data to order
         $preparedOrderData = $this->checkStockAndPrepareItems($checkoutCart);
         if ($preparedOrderData === false) {
-            // flash_message đã được set trong checkStockAndPrepareItems
+            // flash_message is set in checkStockAndPrepareItems
             $this->redirect('?page=cart');
             return;
         }
+        // Extract items to process, total price and user id
         $itemsToProcess = $preparedOrderData['itemsToProcess'];
         $totalPrice = $preparedOrderData['totalPrice'];
         $userId = $_SESSION['user_id'];
 
-        // 4. Thực hiện giao dịch đặt hàng
+        // execute transaction
         $orderId = $this->executeOrderTransaction($userId, $totalPrice, $customerInfo, $itemsToProcess);
 
-        // 5. Xử lý kết quả giao dịch
-        if ($orderId) {
+        // handle transaction result
+        if ($orderId) { // if success
             // Thành công: Dọn dẹp session và chuyển hướng
             $this->cleanupSessionAfterOrder($checkoutCart);
             $_SESSION['last_order_id'] = $orderId;
@@ -141,32 +151,24 @@ class OrderController extends BaseController {
         }
     }
 
-    // ======================================================
-    // CÁC PHƯƠNG THỨC PRIVATE HELPER CHO placeOrder
-    // ======================================================
-
-    /**
-     * Validate dữ liệu thông tin giao hàng từ POST.
-     * @param array $customerInfo Dữ liệu khách hàng từ POST
-     * @return array Mảng lỗi (rỗng nếu không có lỗi)
+    /** 
+     * validate customer data
      */
     private function validateCheckoutData(array $customerInfo): array {
         $errors = [];
         if (empty($customerInfo['name'])) $errors['customer_name'] = "Vui lòng nhập tên người nhận.";
         if (empty($customerInfo['address'])) $errors['customer_address'] = "Vui lòng nhập địa chỉ.";
         if (empty($customerInfo['phone'])) $errors['customer_phone'] = "Vui lòng nhập số điện thoại.";
-        // Thêm validate khác nếu cần (định dạng SĐT, Email...)
         if (!empty($customerInfo['email']) && !filter_var($customerInfo['email'], FILTER_VALIDATE_EMAIL)) {
             $errors['customer_email'] = "Định dạng email không hợp lệ.";
         }
         return $errors;
     }
 
-    /**
-     * Kiểm tra tồn kho và chuẩn bị danh sách item để xử lý.
-     * @param array $checkoutCart Giỏ hàng đã lọc.
-     * @return array|false Mảng chứa ['itemsToProcess', 'totalPrice'] nếu thành công, false nếu lỗi tồn kho.
+    /** 
+     * Check stock and prepare item to process
      */
+
     private function checkStockAndPrepareItems(array $checkoutCart): array|false {
         $totalPrice = 0;
         $itemsToProcess = [];
@@ -178,30 +180,25 @@ class OrderController extends BaseController {
             if ($productStock === null || $productStock < $quantity) {
                 $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Sản phẩm "' . htmlspecialchars($item['name'] ?? 'N/A') . '" không đủ số lượng tồn kho (' . ($productStock ?? 0) . '). Vui lòng quay lại giỏ hàng và cập nhật.'];
                 return false; // Trả về false nếu có lỗi tồn kho
-            }
+            } 
             $totalPrice += $price * $quantity;
             $itemsToProcess[$productId] = ['quantity' => $quantity, 'price' => $price];
-        }
+        } 
         return ['itemsToProcess' => $itemsToProcess, 'totalPrice' => $totalPrice];
     }
 
     /**
-     * Thực hiện toàn bộ giao dịch tạo đơn hàng trong database.
-     * @param int $userId
-     * @param float $totalPrice
-     * @param array $customerInfo
-     * @param array $itemsToProcess
-     * @return int|false Order ID nếu thành công, false nếu thất bại.
+     *  create new order
      */
     private function executeOrderTransaction(int $userId, float $totalPrice, array $customerInfo, array $itemsToProcess): int|false {
         $conn = Database::conn();
         $conn->begin_transaction();
 
-        try {
-            // 1. Tạo đơn hàng chính
+        try { //try catch error
+            //create order
             $orderId = Order::createAndGetId(
                 $userId, $totalPrice, $customerInfo['name'], $customerInfo['address'], $customerInfo['phone'],
-                $customerInfo['email'], $customerInfo['notes'], 'Pending'
+                $customerInfo['email'], $customerInfo['notes'], 'Pending' // default status is Pending
             );
             if (!$orderId) throw new Exception("Không thể tạo bản ghi đơn hàng chính.");
 
@@ -228,61 +225,75 @@ class OrderController extends BaseController {
         }
     }
 
-    /**
-     * Dọn dẹp session sau khi đặt hàng thành công.
-     * @param array $checkoutCart Các sản phẩm đã được xử lý trong đơn hàng.
-     * @return void
+    /** 
+     * clean session after order success
      */
     private function cleanupSessionAfterOrder(array $checkoutCart): void {
-        if (isset($_SESSION['cart'])) {
+        if (isset($_SESSION['cart'])) { // remove product from cart session
             foreach (array_keys($checkoutCart) as $productIdToRemove) {
                 unset($_SESSION['cart'][$productIdToRemove]);
             }
-        }
+        } 
         unset($_SESSION['checkout_cart']);
     }
 
-    // ======================================================
-    // CÁC PHƯƠNG THỨC KHÁC GIỮ NGUYÊN
-    // ======================================================
-
+    /**
+     * show success page
+     */
     public function showSuccessPage() {
-        // ... (Giữ nguyên)
+        //get order id 
+        /**
+         * @var int|null $lastOrderId The ID of the last order placed by the user.
+         * @var array $orderId An array with one element, the ID of the last order placed by the user.
+         */
         $lastOrderId = $_SESSION['last_order_id'] ?? null;
         $this->render('order_success', ['orderId' => $lastOrderId]);
     }
 
+    /** Show history page */
     public function orderHistory() {
-        // ... (Giữ nguyên)
-        if (!isset($_SESSION['user_id'])) {
-            $_SESSION['redirect_after_login'] = '?page=order_history';
+        if (!isset($_SESSION['user_id'])) { // Check user
+            $_SESSION['redirect_after_login'] = '?page=order_history'; //save url redirect
             $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Vui lòng đăng nhập để xem lịch sử đơn hàng.'];
             $this->redirect('?page=login');
             return;
         }
+
+        // Retrieve user ID
         $userId = $_SESSION['user_id'];
+        // Define pagination
         $ordersPerPage = 10;
+        // Get current page from query string
         $currentPage = isset($_GET['pg']) ? max(1, (int)$_GET['pg']) : 1;
+        // Calculate offset
         $offset = ($currentPage - 1) * $ordersPerPage;
+        // Define valid status
         $validStatuses = ['all', 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+        // Get selected status from query string
         $selectedStatus = $_GET['status'] ?? 'all';
+        // Check if the selected status is valid
         if (!in_array($selectedStatus, $validStatuses)) { $selectedStatus = 'all'; }
+        // Get order by user
         $orders = Order::getByUser($userId, $selectedStatus, $ordersPerPage, $offset);
+        // Count orders by user
         $totalOrders = Order::countByUser($userId, $selectedStatus);
+        // Calculate total page
         $totalPages = $totalOrders > 0 ? ceil($totalOrders / $ordersPerPage) : 1;
         $flashMessage = $_SESSION['flash_message'] ?? null;
         if ($flashMessage) { unset($_SESSION['flash_message']); }
+
         $this->render('order_history', [
             'orders' => $orders, 'flashMessage' => $flashMessage, 'currentPage' => $currentPage,
+
             'totalPages' => $totalPages, 'totalOrders' => $totalOrders, 'selectedStatus' => $selectedStatus,
             'validStatuses' => $validStatuses
         ]);
     }
 
+    /** show order detail */
     public function orderDetail(int $orderId) {
-        // ... (Giữ nguyên)
-        if (!isset($_SESSION['user_id'])) {
-            $_SESSION['redirect_after_login'] = '?page=order_detail&id=' . $orderId;
+        if (!isset($_SESSION['user_id'])) { //check user
+            $_SESSION['redirect_after_login'] = '?page=order_detail&id=' . $orderId; //save url redirect
             $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Vui lòng đăng nhập để xem chi tiết đơn hàng.'];
             $this->redirect('?page=login');
             return;
@@ -291,7 +302,6 @@ class OrderController extends BaseController {
         $order = Order::find($orderId);
         if (!$order || $order['user_id'] != $userId) {
             http_response_code(404);
-            // Render view lỗi 404 hoặc echo
             echo "<h2>404 - Không tìm thấy đơn hàng hoặc bạn không có quyền xem đơn hàng này.</h2>";
             return;
         }
@@ -299,8 +309,10 @@ class OrderController extends BaseController {
         $this->render('order_detail', [ 'order' => $order, 'orderItems' => $orderItems ]);
     }
 
+    /** 
+     * Cancel order
+     */
     public function cancelOrder() {
-        // ... (Giữ nguyên)
         if (!isset($_SESSION['user_id'])) { $this->redirect('?page=login'); return; }
         $userId = $_SESSION['user_id'];
         $orderId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -332,4 +344,4 @@ class OrderController extends BaseController {
             $this->redirect('?page=order_history');
         }
     }
-} // End Class OrderController
+}

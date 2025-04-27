@@ -1,15 +1,25 @@
-/* Web/app/Views/checkout.php */
-        .checkout-form-wrapper {
-            max-width: 800px;
-            margin: auto;
-        }
-        .form-control-plaintext {
-            background-color: #f8f9fa;
-            padding-top: 0.5rem;
-            padding-bottom: 0.5rem;
-        }
-        .cart-summary-box { background-color: #f8f9fa; border: 1px solid #dee2e6; position: sticky; top: 80px; }
-        .cart-item-img { width: 80px; height: 80px; object-fit: contain; }
+/* Checkout Form Wrapper */
+.checkout-form-wrapper {
+    max-width: 800px; /* Set a maximum width for the form wrapper */
+    margin: auto; /* Center the form horizontally */
+}
+
+/* Plaintext Form Control */
+.form-control-plaintext {
+    background-color: #f8f9fa; /* Light gray background */
+    padding-top: 0.5rem; /* Top padding */
+    padding-bottom: 0.5rem; /* Bottom padding */
+}
+
+/* Cart Summary Box */
+.cart-summary-box {
+    background-color: #f8f9fa; /* Light gray background */
+    border: 1px solid #dee2e6; /* Light gray border */
+    position: sticky; /* Make the summary box sticky */
+    top: 80px; /* Stick to the top with 80px offset */
+}
+
+.cart-item-img { width: 80px; height: 80px; object-fit: contain; }
 
 
 
@@ -22,8 +32,6 @@
     object-fit: contain; /* Đảm bảo ảnh không bị méo, hiển thị toàn bộ trong khung */
     background-color: #fff; /* Optional: thêm nền trắng nếu ảnh có nền trong suốt */
 }
-/* ============================================================= */
 
-/* Giữ lại các style cũ nếu có */
-.cart-summary-box { background-color: #f8f9fa; border: 1px solid #dee2e6; position: sticky; top: 80px; }
-/* .cart-item-img { width: 80px; height: 80px; object-fit: contain; } */ /* Có thể xóa dòng này nếu không dùng ở đâu khác */
+/* Keep old style */
+.cart-summary-box { background-color: #f8f9fa; border: 1px solid #dee2e6; position: sticky; top: 80px;}

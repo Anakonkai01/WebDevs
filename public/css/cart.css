@@ -1,21 +1,20 @@
-/* === Quantity Selector Styling (Cart) === */
 #cart-table .quantity-selector {
-    display: inline-flex; /* Keep controls inline */
+    display: inline-flex;
     align-items: center;
     vertical-align: middle;
     border: 1px solid #dee2e6;
-    border-radius: 0.25rem; /* Smaller radius for table */
+    border-radius: 0.25rem;
     overflow: hidden;
-    max-width: 110px; /* Limit width in table */
+    max-width: 110px;
 }
 
 #cart-table .quantity-selector .btn {
     border-radius: 0;
     border: none;
-    background-color: #f8f9fa; /* Lighter background */
+    background-color: #f8f9fa;
     color: #495057;
-    padding: 0.3rem 0.6rem; /* Smaller padding */
-    font-size: 0.9rem; /* Smaller font */
+    padding: 0.3rem 0.6rem;
+    font-size: 0.9rem;
     line-height: 1;
     transition: background-color 0.15s ease-in-out;
 }
@@ -25,7 +24,7 @@
 }
 
 #cart-table .quantity-selector .btn:focus {
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25); /* Focus shadow */
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
     z-index: 1;
 }
 
@@ -40,11 +39,11 @@
     text-align: center;
     border: none;
     border-left: 1px solid #dee2e6;
-    border-right: 1px solid #dee2e6;
-    width: 40px; /* Smaller width for table */
+    border-right: 1px solid #dee2e6;;
+    width: 40px;
     font-weight: 500;
-    font-size: 0.9rem; /* Match button size */
-    padding: 0.3rem 0.1rem; /* Match button padding */
+    font-size: 0.9rem;
+    padding: 0.3rem 0.1rem;
     height: auto;
     box-shadow: none !important;
     -moz-appearance: textfield;
@@ -57,26 +56,23 @@
     margin: 0;
 }
 
-/* Style for deselected cart rows */
 #cart-table tbody tr.item-deselected {
     opacity: 0.6;
-    background-color: #f8f9fa; /* Optional: slightly different background */
+    background-color: #f8f9fa;
     transition: opacity 0.3s ease, background-color 0.3s ease;
 }
 #cart-table tbody tr {
     transition: opacity 0.3s ease, background-color 0.3s ease;
 }
 
-/* Cart Summary Alignment */
 .cart-summary-box .d-flex span:first-child {
-    flex-grow: 1; /* Allow label to take space */
+    flex-grow: 1;
 }
 .cart-summary-box .d-flex span:last-child {
-    flex-shrink: 0; /* Prevent price from wrapping */
+    flex-shrink: 0;
     text-align: right;
 }
 
-/* Ensure remove button has consistent size */
 #cart-table .remove-item-btn {
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;

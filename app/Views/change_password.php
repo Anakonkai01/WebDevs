@@ -1,42 +1,49 @@
 <?php
-// Web/app/Views/change_password.php
-if (session_status() == PHP_SESSION_NONE) { session_start(); }
-if (!isset($_SESSION['user_id'])) { header('Location: ?page=login'); exit; }
+// Start session if not already started
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 
-// Lấy lỗi từ controller (nếu có redirect về)
+// Check if user is logged in, redirect to login if not
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ?page=login');
+    exit;
+}
+
+// Get errors from session
 $errors = $_SESSION['form_errors'] ?? [];
-if (!empty($errors)) unset($_SESSION['form_errors']); // Xóa lỗi sau khi đọc
+if (!empty($errors)) {
+    unset($_SESSION['form_errors']); // Clear errors
+}
 
-$flashMessage = $_SESSION['flash_message'] ?? null; // Flash message chung (ví dụ: đổi thành công)
-if ($flashMessage) unset($_SESSION['flash_message']); // Xóa sau khi đọc
+// Get flash message from session
+$flashMessage = $_SESSION['flash_message'] ?? null;
+if ($flashMessage) {
+    unset($_SESSION['flash_message']); // Clear flash message
+}
 
-// Helper functions để hiển thị lỗi (sử dụng prefix để tránh trùng tên nếu dùng layout)
-function display_error_bs_cpw($field, $errors) {
+// Display error message for a field
+function display_error_bs_cpw($field, $errors)
+{
     if (isset($errors[$field])) {
-        echo '<div class="invalid-feedback d-block small mt-1">' . htmlspecialchars($errors[$field]) . '</div>'; // d-block để lỗi luôn hiện
+        echo '<div class="invalid-feedback d-block small mt-1">' . htmlspecialchars($errors[$field]) . '</div>';
     }
 }
-function error_class_bs_cpw($field, $errors) {
+// Return CSS class if error exists
+function error_class_bs_cpw($field, $errors)
+{
     return isset($errors[$field]) ? 'is-invalid' : '';
 }
 
-// Quyết định dùng layout hay trang độc lập
-$useLayout = false; // Đặt thành true nếu muốn dùng header/footer chung
+// Determine whether to use the layout (header/footer).
+$useLayout = false;
 
 if ($useLayout) {
     $pageTitle = $pageTitle ?? 'Thay đổi mật khẩu';
     include_once __DIR__ . '/layout/header.php';
 } else {
-    ?>
-    <!DOCTYPE html>
-    <html lang="vi">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Thay đổi mật khẩu</title>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-        <?php // Nhúng CSS tương tự login/register nếu cần ?>
+?>
+    <!DOCTYPE html> <html lang="vi"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Thay đổi mật khẩu</title> <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
         <style>
             body { background-color: #eef2f7; }
             .change-pw-container { min-height: 100vh; }
@@ -48,10 +55,9 @@ if ($useLayout) {
             .input-group.has-validation .invalid-feedback { width: 100%; margin-top: 0.25rem; display: block; text-align: left; }
         </style>
     </head>
-    <body class="d-flex justify-content-center align-items-center change-pw-container p-3 p-md-4">
-    <?php
+    <body class="d-flex justify-content-center align-items-center change-pw-container p-3 p-md-4"> <?php
 }
-?>
+?> <!-- End of Header Section -->
 
     <div class="card shadow-lg change-pw-card">
         <div class="card-body">
@@ -60,19 +66,18 @@ if ($useLayout) {
                 <p class="text-muted">Thay đổi mật khẩu</p>
             </div>
 
-            <?php // Hiển thị flash message (nếu không dùng layout) ?>
+            <!-- Display flash message if available -->
             <?php if (!$useLayout && $flashMessage && is_array($flashMessage)): ?>
                 <div class="alert alert-<?= htmlspecialchars($flashMessage['type'] ?? 'info') ?> alert-dismissible fade show small" role="alert">
                     <?= htmlspecialchars($flashMessage['message'] ?? '') ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             <?php endif; ?>
-
-             <?php // Hiển thị lỗi database chung ?>
+             <!-- Display general database error if any. -->
             <?php if (isset($errors['database'])): ?>
                 <div class="alert alert-danger small" role="alert"><?= htmlspecialchars($errors['database']) ?></div>
             <?php endif; ?>
-
+            <!-- Change Password Form -->
             <form action="?page=handle_change_password" method="POST" novalidate>
                 <?php // Input Group cho Mật khẩu hiện tại ?>
                 <div class="mb-3">
@@ -116,22 +121,22 @@ if ($useLayout) {
                 <button class="w-100 btn btn-primary btn-lg" type="submit">
                     <i class="fas fa-save me-2"></i>Đổi mật khẩu
                 </button>
-            </form>
+            </form><!-- End form -->
             <div class="text-center mt-4 pt-3 border-top">
                 <small><a href="?page=profile" class="text-decoration-none"><i class="fas fa-arrow-left me-1"></i> Quay lại Hồ sơ</a></small>
             </div>
         </div>
     </div>
-
-<?php
+<?php // End of Content / Body Section
 if (!$useLayout) {
-    ?>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <?php // Nhúng JS chứa hàm togglePasswordVisibility ?>
-    <script>
-        function togglePasswordVisibility(inputId, buttonElement) {
+?>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script> 
+    <script> function togglePasswordVisibility(inputId, buttonElement) {
+            // Retrieve the input element by ID.
             const input = document.getElementById(inputId);
+            // Retrieve the icon element within the button.
             const icon = buttonElement.querySelector('i');
+            // Check if the input and icon elements exist.
             if (!input || !icon) return;
             if (input.type === "password") {
                 input.type = "text";
@@ -144,10 +149,9 @@ if (!$useLayout) {
             }
         }
     </script>
-    </body>
-    </html>
-    <?php
-} else {
+    </body> </html> <?php
+} else { // If using layout, include the footer.
     include_once __DIR__ . '/layout/footer.php';
 }
+
 ?>
