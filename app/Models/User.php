@@ -2,8 +2,8 @@
 namespace App\Models;
 
 use App\Core\Database;
-use Exception; // Giữ lại nếu cần
-use DateTime; // Thêm để sử dụng DateTime cho expiry
+use Exception;
+use DateTime; 
 
 class User extends BaseModel{
     protected static string $table = 'users';
@@ -60,19 +60,7 @@ class User extends BaseModel{
         if ($stmt) $stmt->close(); return false;
     }
 
-    // --- Các hàm cập nhật (Giữ nguyên hoặc cải thiện kiểm tra lỗi) ---
-    /**
-     * Cập nhật username và/hoặc email.
-     * @param int $userId
-     * @param array $updates Mảng dạng ['username' => 'new_user', 'email' => 'new@email.com']
-     * @return bool
-     */
-    /**
-     * Cập nhật username và/hoặc email.
-     * @param int $userId
-     * @param array $updates Mảng dạng ['username' => 'new_user', 'email' => 'new@email.com', 'is_email_verified' => 0]
-     * @return bool
-     */
+
     public static function updateProfile(int $userId, array $updates): bool {
         if (empty($updates)) return true; // Không có gì để cập nhật
 
