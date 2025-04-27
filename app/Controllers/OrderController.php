@@ -7,7 +7,7 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
 use App\Core\Database;
-use Exception; // <-- Cần cho try...catch
+use Exception; 
 
 class OrderController extends BaseController {
 
@@ -17,7 +17,6 @@ class OrderController extends BaseController {
         }
     }
 
-    // Phương thức showCheckoutForm giữ nguyên như phiên bản trước (đã xử lý selected_ids)
     public function showCheckoutForm() {
         if (!isset($_SESSION['user_id'])) {
             $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI'];
@@ -80,9 +79,7 @@ class OrderController extends BaseController {
         ]);
     }
 
-    // ======================================================
-    // PHƯƠNG THỨC placeOrder ĐÃ ĐƯỢC REFACTOR
-    // ======================================================
+
     public function placeOrder() {
         // 1. Kiểm tra đăng nhập và giỏ hàng checkout
         if (!isset($_SESSION['user_id'])) { $this->redirect('?page=login'); return; }
@@ -141,9 +138,7 @@ class OrderController extends BaseController {
         }
     }
 
-    // ======================================================
-    // CÁC PHƯƠNG THỨC PRIVATE HELPER CHO placeOrder
-    // ======================================================
+
 
     /**
      * Validate dữ liệu thông tin giao hàng từ POST.
@@ -242,9 +237,6 @@ class OrderController extends BaseController {
         unset($_SESSION['checkout_cart']);
     }
 
-    // ======================================================
-    // CÁC PHƯƠNG THỨC KHÁC GIỮ NGUYÊN
-    // ======================================================
 
     public function showSuccessPage() {
         // ... (Giữ nguyên)
@@ -280,7 +272,6 @@ class OrderController extends BaseController {
     }
 
     public function orderDetail(int $orderId) {
-        // ... (Giữ nguyên)
         if (!isset($_SESSION['user_id'])) {
             $_SESSION['redirect_after_login'] = '?page=order_detail&id=' . $orderId;
             $_SESSION['flash_message'] = ['type' => 'error', 'message' => 'Vui lòng đăng nhập để xem chi tiết đơn hàng.'];
@@ -300,7 +291,6 @@ class OrderController extends BaseController {
     }
 
     public function cancelOrder() {
-        // ... (Giữ nguyên)
         if (!isset($_SESSION['user_id'])) { $this->redirect('?page=login'); return; }
         $userId = $_SESSION['user_id'];
         $orderId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -332,4 +322,4 @@ class OrderController extends BaseController {
             $this->redirect('?page=order_history');
         }
     }
-} // End Class OrderController
+} 

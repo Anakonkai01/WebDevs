@@ -2,7 +2,7 @@
 namespace App\Models;
 
 use App\Core\Database;
-use Exception; // Giữ lại nếu cần
+use Exception;
 use DateTime; // Thêm để sử dụng DateTime cho expiry
 
 class User extends BaseModel{

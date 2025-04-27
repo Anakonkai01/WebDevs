@@ -10,7 +10,6 @@ use DateTime; // Thêm DateTime
 
 class UserController extends BaseController {
 
-    // --- HÀM GỬI EMAIL HELPER (Nên đặt trong BaseController) ---
     /**
      * Gửi email sử dụng cấu hình trong config.php
      * @param string $toEmail Địa chỉ người nhận
@@ -28,10 +27,10 @@ class UserController extends BaseController {
             $mail->Host       = MAIL_HOST;
             $mail->SMTPAuth   = true;
             $mail->Username   = MAIL_USERNAME;
-            $mail->Password   = MAIL_PASSWORD; // Sử dụng Mật khẩu ứng dụng nếu cần
-            $mail->SMTPSecure = MAIL_ENCRYPTION; // 'tls' or 'ssl'
+            $mail->Password   = MAIL_PASSWORD;
+            $mail->SMTPSecure = MAIL_ENCRYPTION; 
             $mail->Port       = MAIL_PORT;
-            $mail->CharSet    = PHPMailer::CHARSET_UTF8; // Nên dùng UTF-8
+            $mail->CharSet    = PHPMailer::CHARSET_UTF8;
 
             // Recipients
             $mail->setFrom(MAIL_FROM_ADDRESS, MAIL_FROM_NAME);
@@ -164,9 +163,8 @@ class UserController extends BaseController {
                         error_log("Lỗi gửi email xác thực cho user ID: $userId, email: $email - Chi tiết: " . $sendResult);
                         // Hiển thị lỗi chi tiết để debug
                         $_SESSION['flash_message'] = ['type' => 'danger', 'message' => 'Lỗi gửi email xác thực: ' . htmlspecialchars($sendResult)];
-                        // Có thể nên xóa user vừa tạo nếu gửi mail lỗi ngay lúc đăng ký?
-                        // User::delete($userId);
-                        // $_SESSION['flash_message']['message'] = 'Đã xảy ra lỗi khi gửi email xác thực. Vui lòng thử đăng ký lại.';
+                        User::delete($userId);
+                        $_SESSION['flash_message']['message'] = 'Đã xảy ra lỗi khi gửi email xác thực. Vui lòng thử đăng ký lại.';
                         $this->redirect('?page=register'); // Redirect về trang đăng ký với lỗi
                         exit;
                     }
@@ -626,7 +624,6 @@ public function handleUpdateProfile() {
                     $this->redirect('?page=enter_reset_code&email=' . urlencode($email));
                     return;
                 }
-                // --- KẾT THÚC THAY ĐỔI ---
         
         
                 // Mã hợp lệ, đặt cờ session và chuyển hướng đến trang nhập mật khẩu mới
@@ -734,4 +731,4 @@ public function handleUpdateProfile() {
         exit;
     }
 
-} // End Class UserController
+} 

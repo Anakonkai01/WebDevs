@@ -4,7 +4,7 @@
 namespace App\Controllers;
 
 use App\Models\Review;
-use App\Models\Product; // Keep if needed elsewhere
+use App\Models\Product;
 
 class ReviewController extends BaseController {
 
@@ -70,8 +70,7 @@ class ReviewController extends BaseController {
                 $rating = $validatedRating; // Gán giá trị hợp lệ
             }
         }
-        // Bỏ comment dòng dưới nếu *bắt buộc* phải chọn sao
-        // else { $errors['rating'] = "Vui lòng chọn điểm đánh giá."; }
+
 
 
         // --- Xử lý nếu có lỗi validation ---

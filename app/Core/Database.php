@@ -1,5 +1,5 @@
 <?php
-namespace App\Core; // <--- Namespace
+namespace App\Core; 
 
 use mysqli;
 use mysqli_result;
@@ -20,8 +20,6 @@ class Database {
                 self::$conn->set_charset(DB_CHARSET);
             } catch (mysqli_sql_exception $e) {
                 error_log("Database Connection Error: " . $e->getMessage());
-                // Cần xử lý hiển thị lỗi thân thiện hơn ở đây
-                // Ví dụ: render trang lỗi 500
                 die("Không thể kết nối đến cơ sở dữ liệu. Vui lòng thử lại sau.");
             }
         }

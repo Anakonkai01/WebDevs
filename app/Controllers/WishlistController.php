@@ -4,7 +4,7 @@
 namespace App\Controllers;
 
 use App\Models\Wishlist;
-use App\Models\Product; // Cần thiết để kiểm tra sản phẩm tồn tại (tùy chọn nhưng nên có)
+use App\Models\Product; 
 
 class WishlistController extends BaseController {
 

@@ -3,11 +3,10 @@ namespace App\Controllers;
 
 use App\Models\Product;
 use App\Models\Review;
-use Exception; // Cần cho try-catch
+use Exception; 
 
 class ProductController extends BaseController {
 
-    // --- Constants (Giữ nguyên từ phiên bản trước) ---
     private const ITEMS_PER_PAGE = 9;
     private const DEFAULT_SORT = 'created_at_desc';
     private const ALLOWED_SORT_OPTIONS = ['created_at_desc', 'price_asc', 'price_desc', 'name_asc', 'name_desc', 'rating_desc'];
@@ -32,9 +31,7 @@ class ProductController extends BaseController {
         'rating_desc'    => 'Đánh giá cao nhất'
     ];
 
-    // --- Hàm shopGrid và các helper của nó giữ nguyên ---
     public function shopGrid() {
-        // ... (Giữ nguyên code shopGrid)
         $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH'])
                   && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
@@ -297,4 +294,4 @@ class ProductController extends BaseController {
         return $relatedProducts;
     }
 
-} // End Class ProductController
+}

@@ -78,7 +78,7 @@ class CartController extends BaseController {
     }
 
     /**
-     * Displays the cart page. - Giữ nguyên
+     * Displays the cart page. 
      */
     public function index() {
         $cartItems = $_SESSION['cart'] ?? [];
@@ -94,9 +94,6 @@ class CartController extends BaseController {
     }
 
 
-    // ======================================================
-    // HÀM update ĐÃ ĐƯỢC REFACTOR (Phần AJAX)
-    // ======================================================
     public function update() {
         $isAjax = isset($_POST['ajax']) && $_POST['ajax'] == 1;
 
@@ -198,7 +195,7 @@ class CartController extends BaseController {
 
 
     /**
-     * Removes a product from the cart (supports AJAX). - Giữ nguyên
+     * Removes a product from the cart (supports AJAX). 
      */
     public function remove() {
         $isAjax = isset($_GET['ajax']) && $_GET['ajax'] == 1;
@@ -243,7 +240,7 @@ class CartController extends BaseController {
     }
 
     /**
-     * Adds items from a previous order back to the current cart. - Giữ nguyên
+     * Adds items from a previous order back to the current cart. 
      */
     public function reorder() {
         if (!isset($_SESSION['user_id'])) { $this->redirect('?page=login'); return; }
@@ -282,9 +279,7 @@ class CartController extends BaseController {
     }
 
 
-    // ======================================================
-    // CÁC HÀM PRIVATE HELPER CHO update() (phần AJAX)
-    // ======================================================
+
 
     /**
      * Tính tổng giá trị của toàn bộ giỏ hàng hiện tại trong session.
@@ -377,4 +372,4 @@ class CartController extends BaseController {
         $response['totalPrice'] = $this->calculateCartTotal();
     }
 
-} // End Class CartController
+} 

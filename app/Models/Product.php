@@ -2,8 +2,7 @@
 namespace App\Models;
 
 use App\Core\Database;
-use Exception; // <-- Use Exception global (nếu có dùng try-catch)
-// BaseModel cùng namespace, không cần use
+use Exception; 
 
 class Product extends BaseModel
 {
@@ -81,7 +80,6 @@ class Product extends BaseModel
     }
 
     /* ─────────────────  TRUY VẤN PHỤC VỤ TRANG HOME  ───────────────── */
-    // ... (searchByName, getByBrand, getLatest, getTopRated, getMostReviewed, getDistinctBrands giữ nguyên) ...
      /** Tìm kiếm theo tên */
     public static function searchByName(string $keyword): array
     {
