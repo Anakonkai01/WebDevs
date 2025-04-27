@@ -2,7 +2,7 @@
 // Web/app/Views/contact.php
 $pageTitle = $pageTitle ?? 'Liên hệ';
 // Header bao gồm Bootstrap CSS/JS và các biến toàn cục
-include_once __DIR__ . '/../layout/header.php';
+include_once __DIR__ . '//layout/header.php';
 // Nhúng file CSS riêng cho trang contact (nếu cần tùy chỉnh thêm)
 echo '<link rel="stylesheet" href="/webfinal/public/css/contact.css">';
 ?>
@@ -98,5 +98,5 @@ echo '<link rel="stylesheet" href="/webfinal/public/css/contact.css">';
 
 <?php
 // Footer bao gồm các file JS cần thiết
-include_once __DIR__ . '/../layout/footer.php';
+include_once __DIR__ . '//layout/footer.php';
 ?>

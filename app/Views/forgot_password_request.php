@@ -1,7 +1,7 @@
 <?php
 // Web/app/Views/forgot_password_request.php
 $pageTitle = $pageTitle ?? 'Quên Mật Khẩu';
-include_once __DIR__ . '/../layout/header.php'; // Hoặc dùng cấu trúc trang riêng
+include_once __DIR__ . '//layout/header.php'; // Hoặc dùng cấu trúc trang riêng
 echo '<link rel="stylesheet" href="/webfinal/public/css/forgot_password_request.css">';
 ?>
 
@@ -32,4 +32,4 @@ echo '<link rel="stylesheet" href="/webfinal/public/css/forgot_password_request.
         </div>
     </div>
 
-<?php include_once __DIR__ . '/../layout/footer.php'; // Hoặc dùng cấu trúc trang riêng ?>
+<?php include_once __DIR__ . '//layout/footer.php'; // Hoặc dùng cấu trúc trang riêng ?>

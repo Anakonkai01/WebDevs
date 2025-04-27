@@ -3,7 +3,7 @@
 $cartItems = $cartItems ?? [];
 $totalPrice = $totalPrice ?? 0; // Tổng tiền ban đầu của tất cả item
 $flashMessage = $flashMessage ?? null; // Flash message from controller
-include_once __DIR__ . '/../layout/header.php'; // Include header
+include_once __DIR__ . '//layout/header.php'; // Include header
 echo '<link rel="stylesheet" href="/webfinal/public/css/cart.css">';
 ?>
 <?php // Thêm CSS cho Quantity Control (có thể chuyển vào cart.css) ?>
@@ -102,5 +102,5 @@ echo '<link rel="stylesheet" href="/webfinal/public/css/cart.css">';
    <script src="/webfinal/public/js/cart.js"></script> <?php // Load cart specific JS ?>
 
 <?php
-include_once __DIR__ . '/../layout/footer.php'; // Include footer
+include_once __DIR__ . '//layout/footer.php'; // Include footer
 ?>

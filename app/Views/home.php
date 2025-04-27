@@ -2,7 +2,7 @@
 // Web/app/Views/Home.php
 $pageTitle = 'Trang chủ';
 // Header bao gồm Bootstrap CSS/JS và các biến toàn cục như $isLoggedIn, $wishlistedIds
-include_once __DIR__ . '/../layout/header.php'; // Đã bao gồm header được cập nhật
+include_once __DIR__ . '//layout/header.php'; // Đã bao gồm header được cập nhật
 
 // Lấy dữ liệu từ controller
 $brand = $brand ?? '';
@@ -161,5 +161,5 @@ function build_query_string_home(array $params): string {
 
 <?php
 // Đã xóa include home.js - dùng footer.php
-include_once __DIR__ . '/../layout/footer.php';
+include_once __DIR__ . '//layout/footer.php';
 ?>

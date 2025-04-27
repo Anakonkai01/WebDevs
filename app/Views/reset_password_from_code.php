@@ -11,7 +11,7 @@ function error_class_bs_rpfc($field, $errors) { return isset($errors[$field]) ? 
 $useLayout = false;
 
 if ($useLayout) {
-    include_once __DIR__ . '/../layout/header.php';
+    include_once __DIR__ . '//layout/header.php';
 } else { ?>
 <!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title><?= htmlspecialchars($pageTitle) ?></title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
@@ -80,4 +80,4 @@ if ($useLayout) {
 <?php // Nhúng JS chứa hàm togglePasswordVisibility ?>
 <script> function togglePasswordVisibility(inputId, buttonElement) { const input = document.getElementById(inputId); const icon = buttonElement.querySelector('i'); if (!input || !icon) return; if (input.type === "password") { input.type = "text"; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); } else { input.type = "password"; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); } } </script>
 </body></html>
-<?php else: include_once __DIR__ . '/../layout/footer.php'; endif; ?>
+<?php else: include_once __DIR__ . '//layout/footer.php'; endif; ?>

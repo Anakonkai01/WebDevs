@@ -1,11 +1,11 @@
 <?php
 // Web/app/Views/profile.php
 $pageTitle = $pageTitle ?? 'Hồ sơ của bạn';
-include_once __DIR__ . '/../layout/header.php';
+include_once __DIR__ . '//layout/header.php';
 
 if (!isset($_SESSION['user_id']) || !isset($user) || !$user) {
     echo "<div class='alert alert-warning'>Vui lòng đăng nhập để xem hồ sơ.</div>";
-    include_once __DIR__ . '/../layout/footer.php';
+    include_once __DIR__ . '//layout/footer.php';
     exit;
 }
 
@@ -13,7 +13,7 @@ $pageTitle = "Hồ sơ của bạn";
 $username = htmlspecialchars($user['username'] ?? 'N/A');
 $email = htmlspecialchars($user['email'] ?? 'N/A');
 $createdAt = isset($user['created_at']) ? date('d/m/Y H:i', strtotime($user['created_at'])) : 'N/A';
-include_once __DIR__ . '/../layout/header.php';
+include_once __DIR__ . '//layout/header.php';
 ?>
 <link rel="stylesheet" href="/webfinal/public/css/profile.css">
 
@@ -99,5 +99,5 @@ include_once __DIR__ . '/../layout/header.php';
     </div> <?php // End container ?>
 
 <?php
-include_once __DIR__ . '/../layout/footer.php';
+include_once __DIR__ . '//layout/footer.php';
 ?>

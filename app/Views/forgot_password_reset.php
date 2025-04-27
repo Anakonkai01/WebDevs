@@ -6,7 +6,7 @@ $pageTitle = $pageTitle ?? 'Quên Mật Khẩu';
 $useLayout = false; // Đặt là true nếu muốn dùng header/footer chung
 
 if ($useLayout) {
-    include_once __DIR__ . '/../layout/header.php';
+    include_once __DIR__ . '//layout/header.php';
 } else { ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -75,5 +75,5 @@ if ($useLayout) {
 </body>
 </html>
 <?php else:
-    include_once __DIR__ . '/../layout/footer.php';
+    include_once __DIR__ . '//layout/footer.php';
 endif; ?>

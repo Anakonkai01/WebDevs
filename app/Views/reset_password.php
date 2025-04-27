@@ -14,7 +14,7 @@ function error_class_bs_rpw($field, $errors) { return isset($errors[$field]) ? '
 $useLayout = false; // Đặt là true nếu muốn dùng header/footer chung
 
 if ($useLayout) {
-    include_once __DIR__ . '/../layout/header.php';
+    include_once __DIR__ . '//layout/header.php';
 } else { ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -116,5 +116,5 @@ if ($useLayout) {
 <?php else:
     // Nếu dùng layout, đảm bảo footer.php có load JS chứa hàm togglePasswordVisibility
     // Hoặc bạn có thể nhúng script đó riêng vào đây nếu footer chưa có
-    include_once __DIR__ . '/../layout/footer.php';
+    include_once __DIR__ . '//layout/footer.php';
 endif; ?>

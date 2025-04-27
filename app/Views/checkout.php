@@ -17,7 +17,7 @@ function error_class($field, $errors) {
 }
 
 
-include_once __DIR__ . '/../layout/header.php';
+include_once __DIR__ . '//layout/header.php';
 ?>
 <link rel="stylesheet" href="/webfinal/public/css/checkout.css">
 <?php
@@ -143,4 +143,4 @@ include_once __DIR__ . '/../layout/header.php';
         <?php endif; // End check for empty cart ?>
     </div> <?php // End Container ?>
 
-<?php include_once __DIR__ . '/../layout/footer.php'; ?>
+<?php include_once __DIR__ . '//layout/footer.php'; ?>
