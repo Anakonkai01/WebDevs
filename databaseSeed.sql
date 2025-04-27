@@ -9,14 +9,19 @@ DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS users;
 
-
+-- Tạo bảng users với các cột mới
 CREATE TABLE users (
-                       id INT AUTO_INCREMENT PRIMARY KEY,
-                       username VARCHAR(50) NOT NULL UNIQUE,
-                       email VARCHAR(100) NOT NULL UNIQUE, -- Giữ lại email để đăng nhập/liên lạc
-                       password VARCHAR(255) NOT NULL,
-                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    is_email_verified TINYINT(1) DEFAULT 0,                -- Cột mới: Trạng thái xác thực email
+    email_verification_code VARCHAR(255) NULL DEFAULT NULL, -- Cột mới: Mã xác thực
+    email_verification_expires_at TIMESTAMP NULL DEFAULT NULL, -- Cột mới: Thời gian hết hạn mã
+    password_reset_token VARCHAR(255) NULL DEFAULT NULL,     -- Cột mới: Token reset mật khẩu
+    password_reset_expires_at TIMESTAMP NULL DEFAULT NULL,   -- Cột mới: Thời gian hết hạn token
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_reset_token (password_reset_token)     -- Tùy chọn: Đảm bảo token là duy nhất
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Bảng products
@@ -108,27 +113,27 @@ SET FOREIGN_KEY_CHECKS = 1;
    ─────────────────────────────────────────── */
 -- Thay thế mật khẩu bằng hash được tạo từ password_hash() trong PHP
 -- Ví dụ: password_hash('password123', PASSWORD_DEFAULT)
-INSERT INTO users (username, email, password) VALUES
-('user01', 'user01@example.com', '$2y$10$abcdefghijklmnopqrstuv01'), -- Thay hash này
-('user02', 'user02@example.com', '$2y$10$abcdefghijklmnopqrstuv02'), -- Thay hash này
-('user03', 'user03@example.com', '$2y$10$abcdefghijklmnopqrstuv03'), -- Thay hash này
-('user04', 'user04@example.com', '$2y$10$abcdefghijklmnopqrstuv04'), -- Thay hash này
-('user05', 'user05@example.com', '$2y$10$abcdefghijklmnopqrstuv05'), -- Thay hash này
-('user06', 'user06@example.com', '$2y$10$abcdefghijklmnopqrstuv06'), -- Thay hash này
-('user07', 'user07@example.com', '$2y$10$abcdefghijklmnopqrstuv07'), -- Thay hash này
-('user08', 'user08@example.com', '$2y$10$abcdefghijklmnopqrstuv08'), -- Thay hash này
-('user09', 'user09@example.com', '$2y$10$abcdefghijklmnopqrstuv09'), -- Thay hash này
-('user10', 'user10@example.com', '$2y$10$abcdefghijklmnopqrstuv10'), -- Thay hash này
-('user11', 'user11@example.com', '$2y$10$abcdefghijklmnopqrstuv11'), -- Thay hash này
-('user12', 'user12@example.com', '$2y$10$abcdefghijklmnopqrstuv12'), -- Thay hash này
-('user13', 'user13@example.com', '$2y$10$abcdefghijklmnopqrstuv13'), -- Thay hash này
-('user14', 'user14@example.com', '$2y$10$abcdefghijklmnopqrstuv14'), -- Thay hash này
-('user15', 'user15@example.com', '$2y$10$abcdefghijklmnopqrstuv15'), -- Thay hash này
-('user16', 'user16@example.com', '$2y$10$abcdefghijklmnopqrstuv16'), -- Thay hash này
-('user17', 'user17@example.com', '$2y$10$abcdefghijklmnopqrstuv17'), -- Thay hash này
-('user18', 'user18@example.com', '$2y$10$abcdefghijklmnopqrstuv18'), -- Thay hash này
-('user19', 'user19@example.com', '$2y$10$abcdefghijklmnopqrstuv19'), -- Thay hash này
-('user20', 'user20@example.com', '$2y$10$abcdefghijklmnopqrstuv20'); -- Thay hash này
+INSERT INTO users (username, email, password, is_email_verified, email_verification_code, email_verification_expires_at) VALUES
+('user01', 'user01@example.com', '$2y$10$abcdefghijklmnopqrstuv01', 1, NULL, NULL),
+('user02', 'user02@example.com', '$2y$10$abcdefghijklmnopqrstuv02', 1, NULL, NULL),
+('user03', 'user03@example.com', '$2y$10$abcdefghijklmnopqrstuv03', 0, 'code03', '2023-12-31 23:59:59'),
+('user04', 'user04@example.com', '$2y$10$abcdefghijklmnopqrstuv04', 0, 'code04', '2023-12-31 23:59:59'),
+('user05', 'user05@example.com', '$2y$10$abcdefghijklmnopqrstuv05', 1, NULL, NULL),
+('user06', 'user06@example.com', '$2y$10$abcdefghijklmnopqrstuv06', 0, 'code06', '2023-12-31 23:59:59'),
+('user07', 'user07@example.com', '$2y$10$abcdefghijklmnopqrstuv07', 1, NULL, NULL),
+('user08', 'user08@example.com', '$2y$10$abcdefghijklmnopqrstuv08', 0, 'code08', '2023-12-31 23:59:59'),
+('user09', 'user09@example.com', '$2y$10$abcdefghijklmnopqrstuv09', 1, NULL, NULL),
+('user10', 'user10@example.com', '$2y$10$abcdefghijklmnopqrstuv10', 0, 'code10', '2023-12-31 23:59:59'),
+('user11', 'user11@example.com', '$2y$10$abcdefghijklmnopqrstuv11', 1, NULL, NULL),
+('user12', 'user12@example.com', '$2y$10$abcdefghijklmnopqrstuv12', 0, 'code12', '2023-12-31 23:59:59'),
+('user13', 'user13@example.com', '$2y$10$abcdefghijklmnopqrstuv13', 1, NULL, NULL),
+('user14', 'user14@example.com', '$2y$10$abcdefghijklmnopqrstuv14', 0, 'code14', '2023-12-31 23:59:59'),
+('user15', 'user15@example.com', '$2y$10$abcdefghijklmnopqrstuv15', 1, NULL, NULL),
+('user16', 'user16@example.com', '$2y$10$abcdefghijklmnopqrstuv16', 0, 'code16', '2023-12-31 23:59:59'),
+('user17', 'user17@example.com', '$2y$10$abcdefghijklmnopqrstuv17', 1, NULL, NULL),
+('user18', 'user18@example.com', '$2y$10$abcdefghijklmnopqrstuv18', 0, 'code18', '2023-12-31 23:59:59'),
+('user19', 'user19@example.com', '$2y$10$abcdefghijklmnopqrstuv19', 1, NULL, NULL),
+('user20', 'user20@example.com', '$2y$10$abcdefghijklmnopqrstuv20', 0, 'code20', '2023-12-31 23:59:59');
 
 
 /* ───────────────────────────────────────────

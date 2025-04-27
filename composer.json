@@ -3,6 +3,7 @@
   "description": "A simple PHP shopping cart application.",
   "type": "project",
   "require": {
+    "phpmailer/phpmailer": "^6.10"
   },
   "license": "proprietary",
   "autoload": {
@@ -19,5 +20,3 @@
   "minimum-stability": "dev",
   "prefer-stable": true
 }
-
-

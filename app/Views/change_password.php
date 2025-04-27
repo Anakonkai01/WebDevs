@@ -3,86 +3,151 @@
 if (session_status() == PHP_SESSION_NONE) { session_start(); }
 if (!isset($_SESSION['user_id'])) { header('Location: ?page=login'); exit; }
 
-$errors = $errors ?? [];
-$flashMessage = $flashMessage ?? null; // Flash message is handled by header if layout is used
+// Lấy lỗi từ controller (nếu có redirect về)
+$errors = $_SESSION['form_errors'] ?? [];
+if (!empty($errors)) unset($_SESSION['form_errors']); // Xóa lỗi sau khi đọc
 
-// Helper functions (copy from register.php if not using full layout)
-function display_error_bs_cpw($field, $errors) { if (isset($errors[$field])) { echo '<div class="invalid-feedback">' . htmlspecialchars($errors[$field]) . '</div>'; } }
-function error_class_bs_cpw($field, $errors) { return isset($errors[$field]) ? 'is-invalid' : ''; }
+$flashMessage = $_SESSION['flash_message'] ?? null; // Flash message chung (ví dụ: đổi thành công)
+if ($flashMessage) unset($_SESSION['flash_message']); // Xóa sau khi đọc
 
-// Decide whether to use full layout or standalone page
-$useLayout = true; // Set to false for standalone page like login
+// Helper functions để hiển thị lỗi (sử dụng prefix để tránh trùng tên nếu dùng layout)
+function display_error_bs_cpw($field, $errors) {
+    if (isset($errors[$field])) {
+        echo '<div class="invalid-feedback d-block small mt-1">' . htmlspecialchars($errors[$field]) . '</div>'; // d-block để lỗi luôn hiện
+    }
+}
+function error_class_bs_cpw($field, $errors) {
+    return isset($errors[$field]) ? 'is-invalid' : '';
+}
+
+// Quyết định dùng layout hay trang độc lập
+$useLayout = false; // Đặt thành true nếu muốn dùng header/footer chung
 
 if ($useLayout) {
-    $pageTitle = 'Thay đổi mật khẩu';
+    $pageTitle = $pageTitle ?? 'Thay đổi mật khẩu';
     include_once __DIR__ . '/../layout/header.php';
 } else {
-    // Minimal standalone HTML head
     ?>
-    <!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Thay đổi mật khẩu</title>
-        <link rel="stylesheet" href="/webfinal/public/css/change_password.css">
-        
-    </head><body>
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Thay đổi mật khẩu</title>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <?php // Nhúng CSS tương tự login/register nếu cần ?>
+        <style>
+            body { background-color: #eef2f7; }
+            .change-pw-container { min-height: 100vh; }
+            .change-pw-card { max-width: 480px; width: 100%; border: none; border-radius: 0.75rem; }
+            .change-pw-card .card-body { padding: 2rem 2.5rem; }
+            .password-input-group .form-control {}
+            .password-toggle-btn { background-color: #fff; color: #6c757d; cursor: pointer; border: 1px solid #ced4da; border-left: none; }
+            .password-toggle-btn:hover, .password-toggle-btn:focus { background-color: #f8f9fa; box-shadow: none; z-index: 3; }
+            .input-group.has-validation .invalid-feedback { width: 100%; margin-top: 0.25rem; display: block; text-align: left; }
+        </style>
+    </head>
+    <body class="d-flex justify-content-center align-items-center change-pw-container p-3 p-md-4">
     <?php
 }
 ?>
 
-    <div class="container my-4">
-        <div class="row justify-content-center">
-            <div class="col-lg-6">
-                <div class="card shadow-sm change-pw-container">
-                    <div class="card-body p-4 p-lg-5">
-                        <h1 class="h3 mb-4 text-center">Thay đổi mật khẩu</h1>
+    <div class="card shadow-lg change-pw-card">
+        <div class="card-body">
+            <div class="text-center mb-4">
+                <a href="?page=home" class="text-decoration-none"><h1 class="h2 fw-bold text-primary mb-2">MyShop</h1></a>
+                <p class="text-muted">Thay đổi mật khẩu</p>
+            </div>
 
-                        <?php // Flash message display (handled by header if $useLayout is true) ?>
-                        <?php if (!$useLayout && $flashMessage && $flashMessage['type'] === 'error'): ?>
-                            <div class="alert alert-danger small" role="alert"> <?= htmlspecialchars($flashMessage['message']) ?> </div>
-                        <?php endif; ?>
+            <?php // Hiển thị flash message (nếu không dùng layout) ?>
+            <?php if (!$useLayout && $flashMessage && is_array($flashMessage)): ?>
+                <div class="alert alert-<?= htmlspecialchars($flashMessage['type'] ?? 'info') ?> alert-dismissible fade show small" role="alert">
+                    <?= htmlspecialchars($flashMessage['message'] ?? '') ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
 
-                        <form action="?page=handle_change_password" method="POST">
-                            <div class="form-floating mb-3 position-relative">
-                                <input type="password" class="form-control <?= error_class_bs_cpw('current_password', $errors) ?>" id="current_password" name="current_password" placeholder="Mật khẩu hiện tại" required >
-                                <label for="current_password">Mật khẩu hiện tại</label>
-                                <span class="password-toggle" onclick="togglePasswordVisibility('current_password', this)">
-                                    <i class="fas fa-eye"></i>
-                                </span>
-                                <?php display_error_bs_cpw('current_password', $errors); ?>
-                            </div>
-                            <div class="form-floating mb-3 position-relative">
-                                <input type="password" class="form-control <?= error_class_bs_cpw('new_password', $errors) ?>" id="new_password" name="new_password" placeholder="Mật khẩu mới" required>
-                                <label for="new_password">Mật khẩu mới (ít nhất 6 ký tự)</label>
-                                <span class="password-toggle" onclick="togglePasswordVisibility('new_password', this)">
-                                    <i class="fas fa-eye"></i>
-                                </span>
-                                <?php display_error_bs_cpw('new_password', $errors); ?>
-                            </div>
-                            <div class="form-floating mb-3 position-relative">
-                                <input type="password" class="form-control <?= error_class_bs_cpw('confirm_new_password', $errors) ?>" id="confirm_new_password" name="confirm_new_password" placeholder="Xác nhận mật khẩu mới" required>
-                                <label for="confirm_new_password">Xác nhận mật khẩu mới</label>
-                                <span class="password-toggle" onclick="togglePasswordVisibility('confirm_new_password', this)">
-                                    <i class="fas fa-eye"></i>
-                                </span>
-                                <?php display_error_bs_cpw('confirm_new_password', $errors); ?>
-                            </div>
-                            <button class="w-100 btn btn-lg btn-primary" type="submit">Đổi mật khẩu</button>
-                        </form>
-                        <div class="text-center mt-3">
-                            <a href="?page=profile" class="text-decoration-none small"><i class="fas fa-arrow-left me-1"></i> Quay lại Hồ sơ</a>
-                        </div>
+             <?php // Hiển thị lỗi database chung ?>
+            <?php if (isset($errors['database'])): ?>
+                <div class="alert alert-danger small" role="alert"><?= htmlspecialchars($errors['database']) ?></div>
+            <?php endif; ?>
+
+            <form action="?page=handle_change_password" method="POST" novalidate>
+                <?php // Input Group cho Mật khẩu hiện tại ?>
+                <div class="mb-3">
+                    <label for="current_password" class="form-label visually-hidden">Mật khẩu hiện tại</label>
+                    <div class="input-group input-group-lg has-validation password-input-group">
+                        <span class="input-group-text"><i class="fas fa-key fa-fw"></i></span>
+                        <input type="password" class="form-control <?= error_class_bs_cpw('current_password', $errors) ?>" id="current_password" name="current_password" placeholder="Mật khẩu hiện tại" required autofocus>
+                        <button class="btn btn-outline-secondary password-toggle-btn" type="button" onclick="togglePasswordVisibility('current_password', this)" aria-label="Hiện/Ẩn mật khẩu">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <?php display_error_bs_cpw('current_password', $errors); ?>
                     </div>
                 </div>
+
+                <?php // Input Group cho Mật khẩu mới ?>
+                <div class="mb-3">
+                    <label for="new_password" class="form-label visually-hidden">Mật khẩu mới</label>
+                    <div class="input-group input-group-lg has-validation password-input-group">
+                        <span class="input-group-text"><i class="fas fa-lock fa-fw"></i></span>
+                        <input type="password" class="form-control <?= error_class_bs_cpw('new_password', $errors) ?>" id="new_password" name="new_password" placeholder="Mật khẩu mới (ít nhất 6 ký tự)" required>
+                        <button class="btn btn-outline-secondary password-toggle-btn" type="button" onclick="togglePasswordVisibility('new_password', this)" aria-label="Hiện/Ẩn mật khẩu">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <?php display_error_bs_cpw('new_password', $errors); ?>
+                    </div>
+                </div>
+
+                <?php // Input Group cho Xác nhận mật khẩu mới ?>
+                <div class="mb-4">
+                    <label for="confirm_new_password" class="form-label visually-hidden">Xác nhận mật khẩu mới</label>
+                    <div class="input-group input-group-lg has-validation password-input-group">
+                        <span class="input-group-text"><i class="fas fa-check-circle fa-fw"></i></span>
+                        <input type="password" class="form-control <?= error_class_bs_cpw('confirm_new_password', $errors) ?>" id="confirm_new_password" name="confirm_new_password" placeholder="Xác nhận lại mật khẩu mới" required>
+                         <button class="btn btn-outline-secondary password-toggle-btn" type="button" onclick="togglePasswordVisibility('confirm_new_password', this)" aria-label="Hiện/Ẩn mật khẩu">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <?php display_error_bs_cpw('confirm_new_password', $errors); ?>
+                    </div>
+                </div>
+
+                <button class="w-100 btn btn-primary btn-lg" type="submit">
+                    <i class="fas fa-save me-2"></i>Đổi mật khẩu
+                </button>
+            </form>
+            <div class="text-center mt-4 pt-3 border-top">
+                <small><a href="?page=profile" class="text-decoration-none"><i class="fas fa-arrow-left me-1"></i> Quay lại Hồ sơ</a></small>
             </div>
         </div>
     </div>
 
 <?php
-if ($useLayout) {
-    include_once __DIR__ . '/../layout/footer.php';
-} else {
-    // Minimal standalone footer
+if (!$useLayout) {
     ?>
-    </body></html>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <?php // Nhúng JS chứa hàm togglePasswordVisibility ?>
+    <script>
+        function togglePasswordVisibility(inputId, buttonElement) {
+            const input = document.getElementById(inputId);
+            const icon = buttonElement.querySelector('i');
+            if (!input || !icon) return;
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = "password";
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
+    </body>
+    </html>
     <?php
+} else {
+    include_once __DIR__ . '/../layout/footer.php';
 }
 ?>
-<script src="/webfinal/public/js/change_password.js"></script>

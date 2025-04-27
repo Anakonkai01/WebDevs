@@ -2,13 +2,14 @@
 namespace App\Models;
 
 use App\Core\Database;
-use Exception; // Giữ lại Exception nếu dùng ở đâu đó
+use Exception; // Giữ lại nếu cần
+use DateTime; // Thêm để sử dụng DateTime cho expiry
 
 class User extends BaseModel{
     protected static string $table = 'users';
 
     /**
-     * Tạo người dùng mới (mặc định đã kích hoạt).
+     * Tạo người dùng mới (MẶC ĐỊNH CHƯA XÁC THỰC EMAIL).
      * @param string $username
      * @param string $email
      * @param string $password
@@ -17,9 +18,9 @@ class User extends BaseModel{
     public static function createAndGetId(string $username, string $email, string $password): int|false
     {
         $hash = password_hash($password, PASSWORD_DEFAULT);
-        // is_email_verified đã bị xóa khỏi bảng
-        $sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
-        $stmt = Database::prepare($sql,"sss",[$username, $email, $hash]);
+        // Thêm các cột mới vào câu lệnh INSERT với giá trị mặc định/NULL
+        $sql = "INSERT INTO users (username, email, password, is_email_verified, email_verification_code, email_verification_expires_at, password_reset_token, password_reset_expires_at) VALUES (?, ?, ?, 0, NULL, NULL, NULL, NULL)"; // Mặc định is_email_verified = 0
+        $stmt = Database::prepare($sql, "sss", [$username, $email, $hash]);
         if ($stmt && $stmt->execute()) {
             $lastId = $stmt->insert_id;
             $stmt->close();
@@ -66,50 +67,68 @@ class User extends BaseModel{
      * @param array $updates Mảng dạng ['username' => 'new_user', 'email' => 'new@email.com']
      * @return bool
      */
+    /**
+     * Cập nhật username và/hoặc email.
+     * @param int $userId
+     * @param array $updates Mảng dạng ['username' => 'new_user', 'email' => 'new@email.com', 'is_email_verified' => 0]
+     * @return bool
+     */
     public static function updateProfile(int $userId, array $updates): bool {
         if (empty($updates)) return true; // Không có gì để cập nhật
-        $setClauses = []; $params = []; $types = "";
+
+        $setClauses = [];
+        $params = [];
+        $types = "";
+
+        // Thêm 'is_email_verified' vào danh sách cột được phép cập nhật
+        $allowedColumns = ['username', 'email', 'is_email_verified'];
+
         foreach ($updates as $column => $value) {
-            // Chỉ cho phép cập nhật username và email
-            if (in_array($column, ['username', 'email'])) {
+            if (in_array($column, $allowedColumns)) {
                 $setClauses[] = "`" . $column . "` = ?";
                 $params[] = $value;
-                $types .= "s";
+                // Xác định kiểu dữ liệu (string hoặc integer)
+                $types .= ($column === 'is_email_verified') ? "i" : "s";
             } else {
-                // Ghi log hoặc bỏ qua nếu cố gắng cập nhật cột không hợp lệ
-                error_log("Cố gắng cập nhật cột không hợp lệ trong User::updateProfile (simplified): " . $column);
-                // return false; // Hoặc trả về false nếu muốn chặt chẽ hơn
+                error_log("Cố gắng cập nhật cột không hợp lệ trong User::updateProfile: " . $column);
             }
         }
 
-        // Nếu không có cột hợp lệ nào được chọn để cập nhật
         if (empty($setClauses)) {
-            return false; // Hoặc true nếu coi như thành công vì không có gì sai
+            return false; // Không có cột hợp lệ nào để cập nhật
         }
 
         $sql = "UPDATE users SET " . implode(', ', $setClauses) . " WHERE id = ?";
-        $params[] = $userId; $types .= "i";
+        $params[] = $userId;
+        $types .= "i"; // Thêm kiểu integer cho user ID
+
         $stmt = Database::prepare($sql, $types, $params);
+
         if ($stmt && $stmt->execute()) {
             $success = $stmt->affected_rows >= 0; // Chấp nhận 0 nếu không có thay đổi thực sự
             $stmt->close();
             return $success;
         }
-        if ($stmt) { error_log("Lỗi SQL updateProfile (simplified) ID $userId: " . $stmt->error); $stmt->close(); }
-        else { error_log("Lỗi prepare SQL updateProfile (simplified) ID $userId: " . Database::conn()->error); }
+
+        if ($stmt) { error_log("Lỗi SQL updateProfile ID $userId: " . $stmt->error); $stmt->close(); }
+        else { error_log("Lỗi prepare SQL updateProfile ID $userId: " . Database::conn()->error); }
         return false;
     }
 
 
+    /**
+     * Cập nhật mật khẩu và xóa token reset (nếu có).
+     * @param int $id User ID
+     * @param string $newPassword Mật khẩu mới (chưa hash)
+     * @return bool True nếu thành công
+     */
     public static function updatePassword(int $id, string $newPassword): bool {
         $hash = password_hash($newPassword, PASSWORD_DEFAULT);
-        // Không cần xóa token reset mật khẩu nữa
-        $sql = "UPDATE users SET password = ? WHERE id = ?";
+        // Cập nhật mật khẩu VÀ xóa token reset mật khẩu và thời gian hết hạn
+        $sql = "UPDATE users SET password = ?, password_reset_token = NULL, password_reset_expires_at = NULL WHERE id = ?";
         $stmt = Database::prepare($sql,"si",[$hash, $id]);
         if ($stmt && $stmt->execute()) {
-            // Password có thể giống hệt password cũ, affected_rows có thể là 0
-            // Nên coi là thành công nếu execute được
-            $success = true; //$stmt->affected_rows >= 0; // Chấp nhận 0 hoặc 1
+            $success = true; // Coi là thành công nếu execute được
             $stmt->close();
             return $success;
         }
@@ -127,13 +146,115 @@ class User extends BaseModel{
 
     public static function verifyPassword(int $id, string $password): bool {
         $user = self::find($id);
-        // Đảm bảo $user là mảng và có key 'password'
         if (is_array($user) && isset($user['password'])) {
             return password_verify($password, $user['password']);
         }
         return false;
     }
 
-    // --- CÁC HÀM LIÊN QUAN ĐẾN TOKEN EMAIL/RESET ĐÃ BỊ XÓA ---
+    // --- HÀM MỚI CHO XÁC THỰC EMAIL ---
+
+    /**
+     * Lưu mã xác thực email và thời gian hết hạn cho user.
+     * @param int $userId User ID
+     * @param string|null $code Mã xác thực (null để xóa)
+     * @param DateTime|null $expiry Thời gian hết hạn (null để xóa)
+     * @return bool True nếu thành công
+     */
+    public static function setEmailVerificationCode(int $userId, ?string $code, ?DateTime $expiry): bool {
+        $expiryTimestamp = $expiry ? $expiry->format('Y-m-d H:i:s') : null;
+        $sql = "UPDATE users SET email_verification_code = ?, email_verification_expires_at = ? WHERE id = ?";
+        $stmt = Database::prepare($sql, "ssi", [$code, $expiryTimestamp, $userId]);
+        if ($stmt && $stmt->execute()) {
+            $success = $stmt->affected_rows >= 0;
+            $stmt->close();
+            return $success;
+        }
+        if ($stmt) $stmt->close();
+        error_log("Lỗi SQL setEmailVerificationCode ID $userId: " . ($stmt ? $stmt->error : Database::conn()->error));
+        return false;
+    }
+
+    /**
+     * Lấy mã xác thực và thời gian hết hạn.
+     * @param int $userId User ID
+     * @return array|null Mảng chứa ['code' => ..., 'expires_at' => ...] hoặc null nếu không tìm thấy
+     */
+    public static function getEmailVerificationInfo(int $userId): ?array {
+        $sql = "SELECT email_verification_code, email_verification_expires_at FROM users WHERE id = ?";
+        $stmt = Database::prepare($sql, "i", [$userId]);
+        if ($stmt && $stmt->execute()) {
+            $result = $stmt->get_result();
+            $data = $result ? $result->fetch_assoc() : null;
+            $stmt->close();
+            if ($data) {
+                return [
+                    'code' => $data['email_verification_code'],
+                    'expires_at' => $data['email_verification_expires_at'] ? new DateTime($data['email_verification_expires_at']) : null
+                ];
+            }
+        }
+        if ($stmt) $stmt->close();
+        return null;
+    }
+
+    /**
+     * Đánh dấu email của user đã được xác thực.
+     * @param int $userId User ID
+     * @return bool True nếu thành công
+     */
+    public static function verifyEmail(int $userId): bool {
+        $sql = "UPDATE users SET is_email_verified = 1, email_verification_code = NULL, email_verification_expires_at = NULL WHERE id = ?";
+        $stmt = Database::prepare($sql, "i", [$userId]);
+        if ($stmt && $stmt->execute()) {
+            $success = $stmt->affected_rows === 1; // Chỉ true nếu thực sự cập nhật được 1 dòng
+            $stmt->close();
+            return $success;
+        }
+        if ($stmt) $stmt->close();
+        error_log("Lỗi SQL verifyEmail ID $userId: " . ($stmt ? $stmt->error : Database::conn()->error));
+        return false;
+    }
+
+    // --- HÀM MỚI CHO QUÊN MẬT KHẨU ---
+
+    /**
+     * Lưu token reset mật khẩu và thời gian hết hạn.
+     * @param int $userId User ID
+     * @param string|null $token Token (null để xóa)
+     * @param DateTime|null $expiry Thời gian hết hạn (null để xóa)
+     * @return bool True nếu thành công
+     */
+    public static function setPasswordResetToken(int $userId, ?string $token, ?DateTime $expiry): bool {
+        $expiryTimestamp = $expiry ? $expiry->format('Y-m-d H:i:s') : null;
+        $sql = "UPDATE users SET password_reset_token = ?, password_reset_expires_at = ? WHERE id = ?";
+        $stmt = Database::prepare($sql, "ssi", [$token, $expiryTimestamp, $userId]);
+        if ($stmt && $stmt->execute()) {
+            $success = $stmt->affected_rows >= 0;
+            $stmt->close();
+            return $success;
+        }
+        if ($stmt) $stmt->close();
+        error_log("Lỗi SQL setPasswordResetToken ID $userId: " . ($stmt ? $stmt->error : Database::conn()->error));
+        return false;
+    }
+
+    /**
+     * Tìm user bằng token reset mật khẩu và kiểm tra hạn sử dụng.
+     * @param string $token Token cần tìm
+     * @return array|null Thông tin user nếu token hợp lệ và chưa hết hạn, ngược lại null.
+     */
+    public static function findUserByResetToken(string $token): ?array {
+        $sql = "SELECT * FROM users WHERE password_reset_token = ? AND password_reset_expires_at > NOW()";
+        $stmt = Database::prepare($sql, "s", [$token]);
+        if ($stmt && $stmt->execute()) {
+            $result = $stmt->get_result();
+            $user = $result ? $result->fetch_assoc() : null;
+            $stmt->close();
+            return $user;
+        }
+        if ($stmt) $stmt->close();
+        return null;
+    }
 
 }
